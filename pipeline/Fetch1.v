@@ -1,9 +1,14 @@
 module Fetch1 (
-    output [127:0] inst,     // 2 ways, 2 instructions each block
-    input [31:0] pc
-    // TODO: operation type
-);
+    output [31:0] pc,
 
-// I cache
+    // segment-register input
+    input [31:0] next_pc,
+    
+    input clk,
+
+    // interface with TLB
+    // interface with ICache
+    output [31:0] v_addr
+);
     
 endmodule

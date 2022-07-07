@@ -1,9 +1,21 @@
 module Fetch2 (
-    output [63:0] ready_inst,
-    output ready,
-    input p_address_valid,
-    input [31:0] p_address,
-    input [127:0] inst
+    output [31:0] inst,
+
+    // segment-register input
+    input [31:0] pc,
+    output [31:0] pc_pass,
+
+    input clk,
+
+    // interface with TLB
+    input tlb_hit,
+    input [63:0] tlb_read,
+    
+    // interface with ICache
+    output [31:0] p_addr,
+    output p_addr_valid,
+    input cache_ready,
+    input [31:0] cache_read
 );
 
 endmodule
