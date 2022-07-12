@@ -1,10 +1,13 @@
 all: sim
 
 wave: sim
-	gtkwave DivU.vcd
+	gtkwave Div.vcd
+	gtkwave Mul.vcd
 
 sim: compile
-	./obj_dir/DivU
+	./obj_dir/Div
+	./obj_dir/Mul
 
 compile:
-	verilator --cc ../DivU.sv --exe --build DivU_tb.cpp -o DivU --trace -Wall
+	verilator --cc ../Div.sv --exe --build Div_tb.cpp -o Div --trace -Wall
+	verilator --cc ../Mul.sv --exe --build Mul_tb.cpp -o Mul --trace -Wall
