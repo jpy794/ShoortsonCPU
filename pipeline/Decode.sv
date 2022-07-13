@@ -30,31 +30,6 @@ module Decode (
     input rd_we
 );
 
-always @(*) begin
-    if (inst_bl) rd_index = 1;
-    else rd_index = inst[4:0];
-end
-
-RegFile regfile_instance(
-    .rj_read    (rj_read    ),
-    .rk_read    (rk_read    ),
-    .rd_write   (rd_wb      ),
-    .we         (rd_we      ),
-    .rj_index   (inst[9:5]  ),
-    .rk_index   (inst[14:10]),
-    .rd_index   (rd_wb_index),
-    .clk        (clk        )
-);
-
-// ImmGen
-imm_type_t imm_type;
-
-ImmGen immgen_instance(
-    .immediate_number   (immediate_number),
-    .inst               (inst),
-    .imm_type           (imm_type)
-);
-
 // instructions
 wire inst_add_w;
 wire inst_sub_w;
@@ -133,6 +108,10 @@ wire inst_ertn;
 wire inst_idle;
 
 // instruction types
+wire itype_alu;
+wire itype_br;
+wire itype_mem;
+
 wire alu_add, alu_sub, alu_and, alu_or, alu_nor, alu_xor, alu_sll, alu_srl, alu_sra;
 
 assign alu_add =    inst_add_w      |
@@ -153,10 +132,6 @@ assign alu_srl =    inst_srl_w  |
                     inst_srli_w;
 assign alu_sra =    inst_sra_w  |
                     inst_srai_w;
-
-wire itype_alu;
-wire itype_br;
-wire itype_mem;
 
 assign itype_alu =  alu_add     |
                     alu_sub     |
@@ -184,6 +159,31 @@ assign itype_mem =  inst_ld_b   |
                     inst_st_h   |
                     inst_st_w;
 
+always @(*) begin
+    if (inst_bl) rd_index = 1;
+    else rd_index = inst[4:0];
+end
+
+RegFile regfile_instance(
+    .rj_read    (rj_read    ),
+    .rk_read    (rk_read    ),
+    .rd_write   (rd_wb      ),
+    .we         (rd_we      ),
+    .rj_index   (inst[9:5]  ),
+    .rk_index   (inst[14:10]),
+    .rd_index   (rd_wb_index),
+    .clk        (clk        )
+);
+
+// ImmGen
+imm_type_t imm_type;
+
+ImmGen immgen_instance(
+    .immediate_number   (immediate_number),
+    .inst               (inst),
+    .imm_type           (imm_type)
+);
+
 // generate control signals from hotspot code
 // immediate number type
 always @(*) begin
@@ -195,7 +195,7 @@ always @(*) begin
         inst_lu12i_w, inst_pcaddu12i:                               imm_type = SI20;
         itype_br, inst_jirl:                                        imm_type = OFFS16;
         inst_b, inst_bl:                                            imm_type = OFFS26;
-        default:                                                    imm_type = imm_type_t'{NOTCARE};
+        default:                                                    imm_type = imm_type_t'(NOTCARE);
     endcase
 end
 
@@ -203,6 +203,8 @@ end
 wire execute_alu, execute_mul, execute_div, execute_cmp;
 
 alu_op_type_t alu_op_type;
+mul_op_type_t mul_op_type;
+div_op_type_t div_op_type;
 
 always @(*) begin
     case (1)
@@ -212,18 +214,18 @@ always @(*) begin
         end
         execute_mul: begin
             execute_type = MUL;
-            execute_op_type = 
+            execute_op_type = mul_op_type;
         end
         execute_div: begin
             execute_type = DIV;
-            execute_op_type = 
+            execute_op_type = div_op_type;
         end
         execute_cmp: begin
             execute_type = CMP;
             execute_op_type = NOTCARE;
         end
         default: begin
-            execute_type = execute_type_t'{NOTCARE};
+            execute_type = execute_type_t'(NOTCARE);
             execute_op_type = NOTCARE;
         end
     endcase
@@ -267,7 +269,7 @@ always @(*) begin
         alu_sll: alu_op_type = SLL;
         alu_srl: alu_op_type = SRL;
         alu_sra: alu_op_type = SRA;
-        default: alu_op_type = alu_op_type_t'{NOTCARE};
+        default: alu_op_type = alu_op_type_t'(NOTCARE);
     endcase
 end
 
@@ -289,6 +291,26 @@ always @(*) begin
         itype_br, inst_jirl,
         inst_b, inst_bl:            alu_src2_sel = IMM;
         default:                    alu_src2_sel = RK;
+    endcase
+end
+
+// mul, div control
+always @(*) begin
+    case (1)
+        inst_mul_w:     mul_op_type = LOW;
+        inst_mulh_w:    mul_op_type = HI;
+        inst_mulh_wu:   mul_op_type = HIU;
+        default:        mul_op_type = mul_op_type_t'(NOTCARE);
+    endcase
+end
+
+always @(*) begin
+    case (1)
+        inst_div_w:     div_op_type = Q;
+        inst_div_wu:    div_op_type = QU;
+        inst_mod_w:     div_op_type = R;
+        inst_mod_wu:    div_op_type = RU;
+        default:        div_op_type = div_op_type_t'(NOTCARE);
     endcase
 end
 
@@ -324,11 +346,11 @@ assign branch = itype_br    |
 
 always @(*) begin
     case (1)
-        inst_ld_b, inst_st_b:   number_length = 3'b100;
+        inst_ld_b, inst_st_b:   number_length = 3'b110;
         inst_ld_h, inst_st_h:   number_length = 3'b101;
-        inst_ld_bu:             number_length = 3'b000;
+        inst_ld_bu:             number_length = 3'b010;
         inst_ld_hu:             number_length = 3'b001;
-        default:                number_length = 3'b111;
+        default:                number_length = 3'b100;
     endcase
 end
 
@@ -358,7 +380,7 @@ always @(*) begin
         itype_alu, execute_mul, execute_div, execute_cmp:   writeback_src = EX;
         inst_bl, inst_jirl:                                 writeback_src = PCplus4;
         itype_mem, inst_ll_w:                               writeback_src = MEM;
-        default:                                            writeback_src = writeback_src_t'{NOTCARE};
+        default:                                            writeback_src = writeback_src_t'(NOTCARE);
     endcase
 end
 

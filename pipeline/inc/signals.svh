@@ -9,4 +9,8 @@ typedef enum logic [3:0] { ADD, SUB, AND, OR, NOR, XOR, SLL, SRL, SRA } alu_op_t
 typedef enum { RJ, PC, ZERO } alu_src1_sel_t;
 typedef enum { RK, IMM } alu_src2_sel_t;
 
+// for MUL, DIV
+typedef enum { LOW, HI, HIU } mul_op_type_t;
+typedef enum { Q, QU, R, RU } div_op_type_t;
+
 typedef enum logic [1:0] { EX, MEM, PCplus4 } writeback_src_t;
