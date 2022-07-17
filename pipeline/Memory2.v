@@ -3,16 +3,20 @@ module Memory2 (
 
     // segment-register input
     input [31:0] ex_result,
-    output [31:0] ex_result_pass,
+    output reg [31:0] ex_result_pass,
     input [4:0] rd_index,
-    output [4:0] rd_index_pass,
+    output reg [4:0] rd_index_pass,
     // SIG
     input [2:0] number_length,
-    output [2:0] number_length_pass,
+    output reg [2:0] number_length_pass,
     input [1:0] memory_rw,
     input writeback_valid,
-    output writeback_valid_pass,
+    output reg writeback_valid_pass,
+    input writeback_src,
+    output reg writeback_src_pass,
 
+    input stall, clear,
+    output reg clear_pass,
     input clk,
 
     // interface with TLB
@@ -27,5 +31,32 @@ module Memory2 (
     input cache_ready,
     input [31:0] cache_read
 );
+
+reg [1:0] memory_rw_pass;
+
+always @(posedge clk) begin
+    if (clear) begin
+        clear_pass <= 1;
+    end
+    else begin
+        clear_pass <= 0;
+        if (stall) begin
+            ex_result_pass <= ex_result_pass;
+            rd_index_pass <= rd_index_pass;
+            number_length_pass <= number_length_pass;
+            memory_rw_pass <= memory_rw_pass;
+            writeback_valid_pass <= writeback_valid_pass;
+            writeback_src_pass <= writeback_src_pass;
+        end
+        else begin
+            ex_result_pass <= ex_result;
+            rd_index_pass <= rd_index;
+            number_length_pass <= number_length;
+            memory_rw_pass <= memory_rw;
+            writeback_valid_pass <= writeback_valid;
+            writeback_src_pass <= writeback_src;
+        end
+    end
+end
 
 endmodule
