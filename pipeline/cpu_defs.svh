@@ -5,6 +5,11 @@
 
 localparam GRLEN = 32;
 
+/* access type enum */
+localparam CC = 1;
+localparam SUC = 0;
+/* access type enum end */
+
 /* tlb */
 localparam TLB_ENTRY_NUM = 16;
 localparam TLB_IDX_WID = $clog2(TLB_ENTRY_NUM);
@@ -21,6 +26,7 @@ typedef logic [ASID_WID-1:0] asid_t;
 typedef logic [5:0] ps_t;
 typedef logic [2-1:0] plv_t;
 typedef logic [2-1:0] mat_t;
+typedef logic [2-1:0] dat_t;
 typedef logic [GRLEN-1:12] pgd_base_t;
 
 typedef struct packed {
@@ -78,10 +84,7 @@ typedef enum esubcode_ecode_t {
     TLBR =  {1'h0, 6'h3f}       // tlb refill
 } esubcode_ecode_enum_t;
 
-/* tlb ins */
-typedef struct packed {
-    virt_t va;
-} csr_badv_t;
+/* tlb inst */
 
 typedef struct packed {
     vppn_t vppn;
@@ -127,10 +130,102 @@ typedef struct packed {
 typedef struct packed {
     logic [25:0] pa;
     logic [5:0] r0_1;
-} csr_tlbentry_t;
+} csr_tlbrentry_t;
 
 typedef struct packed {
-    esubcode_ecode_t esubcode_ecode;
+    logic pie_ipi;
+    logic pie_ti;
+    logic r0_1;
+    logic [7:0] pie_hw;
+    logic [1:0] pie_sw;
+} lie_t;
+
+typedef struct packed {
+    logic r_is_ipi;
+    logic r_is_ti;
+    logic r0_1;
+    logic [7:0] r_is_hw;
+    logic [1:0] is_sw;
+} is_t;
+
+typedef struct packed {
+    logic [8:0] r0_1;
+    esubcode_ecode_t r_esubcode_ecode;
+    logic [2:0] r0_2;
+    is_t is;
 } csr_estat_t;
+
+typedef struct packed {
+    logic [22:0] r0_1;
+    dat_t datm;
+    dat_t datf;
+    logic pg;
+    logic da;
+    logic ie;
+    plv_t plv;
+} csr_crmd_t;
+
+typedef struct packed {
+    logic [28:0] r0_1;
+    logic pie;
+    plv_t pplv;
+} csr_prmd_t;
+
+typedef struct packed {
+    logic [30:0] r0_1;
+    logic fpe;
+} csr_euen_t;
+
+typedef struct packed {
+    logic [18:0] r0_1;
+    lie_t lie;
+} csr_ecfg_t;
+
+typedef u32_t csr_era_t;
+typedef u32_t csr_badv_t;
+
+typedef struct packed {
+    logic [25:0] va;
+    logic [5:0] r0_1;
+} csr_eentry_t;
+
+typedef struct packed {
+    logic [22:0] r0_1;
+    logic [8:0] r_coreid;
+} csr_cpuid_t;
+
+typedef u32_t csr_save_t;
+
+// TODO: llbctl, dmw, tim
+
+typedef struct packed {
+    csr_crmd_t crmd;
+    csr_prmd_t prmd;
+    csr_euen_t euen;
+    csr_ecfg_t ecfg;
+    csr_estat_t estat;
+    csr_era_t era;
+    csr_badv_t badv;
+    csr_eentry_t eentry;
+    csr_cpuid_t cpuid;
+    csr_save_t [1:0] save;
+    // TODO: llbctl
+    csr_tlbidx_t tlbidx;
+    csr_tlbehi_t tlbehi;
+    csr_tlbelo_t [0:0] tlbelo;
+    csr_asid_t asid;
+    csr_pgd_t pgdl, pgdh, pgd;
+    csr_tlbrentry_t tlbrentry;
+    // TODO: dmw
+    // TODO: tim
+} csr_t;
+
+typedef struct packed {
+    logic we;
+    csr_asid_t asid;
+    csr_tlbehi_t tlbehi;
+    csr_tlbelo_t [0:0] tlbelo;
+    csr_tlbidx_t tlbidx;
+} tlb_wr_csr_req_t;
 
 `endif
