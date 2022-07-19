@@ -1,4 +1,4 @@
-`include "cpu_defs.svh"
+`include "../cpu_defs.svh"
 
 module TLB (
     input logic clk,
@@ -49,8 +49,8 @@ module TLB (
     always_ff @(posedge clk) begin
         case(1'b1)
         tlbwr | tlbfill: begin
-            if(rd_csr_estat.esubcode_ecode == TLBR) entrys[wr_idx].e <= ~rd_csr_tlbidx.ne;
-            else                                    entrys[wr_idx].e <= '1;
+            if(rd_csr_estat.r_esubcode_ecode == TLBR) entrys[wr_idx].e <= ~rd_csr_tlbidx.ne;
+            else                                      entrys[wr_idx].e <= '1;
 
             entrys[wr_idx].g <= rd_csr_tlbelo[0].g & rd_csr_tlbelo[1].g;
             entrys[wr_idx].vppn <= rd_csr_tlbehi.vppn;

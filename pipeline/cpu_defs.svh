@@ -133,19 +133,19 @@ typedef struct packed {
 } csr_tlbrentry_t;
 
 typedef struct packed {
-    logic pie_ipi;
-    logic pie_ti;
+    logic ipi;
+    logic ti;
     logic r0_1;
-    logic [7:0] pie_hw;
-    logic [1:0] pie_sw;
+    logic [7:0] hwi;
+    logic [1:0] swi;
 } lie_t;
 
 typedef struct packed {
-    logic r_is_ipi;
-    logic r_is_ti;
+    logic r_ipi;
+    logic r_ti;
     logic r0_1;
-    logic [7:0] r_is_hw;
-    logic [1:0] is_sw;
+    logic [7:0] r_hwi;
+    logic [1:0] swi;
 } is_t;
 
 typedef struct packed {
@@ -227,5 +227,20 @@ typedef struct packed {
     csr_tlbelo_t [0:0] tlbelo;
     csr_tlbidx_t tlbidx;
 } tlb_wr_csr_req_t;
+
+typedef struct packed {
+    logic is_excp;
+    esubcode_ecode_t esubcode_ecode;
+    virt_t badv;
+} excp_pass_t;
+
+typedef struct packed {
+    logic we;
+    csr_crmd_t crmd;
+    csr_prmd_t prmd;
+    csr_estat_t estat;
+    csr_era_t era;
+    csr_badv_t badv;
+} excp_wr_csr_req_t;
 
 `endif

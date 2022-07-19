@@ -14,9 +14,9 @@ module CSR (
     output csr_t tlb_rd,
     input tlb_wr_csr_req_t tlb_wr_req,
 
-    /* int */
-    input logic [7:0] int_hw,
-    input logic int_ti
+    /* excp */
+    output csr_t excp_rd,
+    input excp_wr_csr_req_t excp_wr_req
 );
 
     /* verilator lint_off UNOPTFLAT  */
@@ -24,8 +24,6 @@ module CSR (
     csr_t csr;
     /* verilator lint_on UNOPTFLAT */
     /* verilator lint_on BLKANDNBLK */
-
-    csr_crmd_t crmd;
 
     /* read */
     assign tlb_rd = csr;
@@ -73,16 +71,57 @@ module CSR (
     u32_t wr_data_masked;
     assign wr_data_masked = is_masked ? (rd_data & ~wr_data) | (wr_data & wr_mask) : wr_data;
 
+    /* write csr at wb stage */
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
-            
+            csr.crmd.plv <= 2'b0;
+            csr.crmd.ie <= 1'b0;
+            csr.crmd.da <= 1'b0;
+            csr.crmd.pg <= 1'b0;
+            csr.crmd.datf <= SUC;
+            csr.crmd.datm <= SUC;
+
+            csr.euen.fpe <= 1'b0;
+
+            {csr.ecfg[12:11], csr.ecfg[9:0]} <= 12'b0;      // lie
+
+            csr.estat.is.swi <= 2'b0;
+
+            /* TODO
+            csr.tcfg.en = 1'b0;
+            csr.llbcrl.klo = '0;
+            csr.dmw.plv0 = 1'b0;
+            csr.dmw.plv3 = 1'b0;
+            */
         end else begin
-            if(tlb_wr_req.we) begin
+            if(excp_wr_req.we) begin
+                /* wr from exception */
+                csr.crmd.plv <= excp_wr_req.crmd.plv;
+                csr.crmd.ie <= excp_wr_req.crmd.ie;
+                
+                csr.prmd.pplv <= excp_wr_req.prmd.pplv;
+                csr.prmd.pie <= excp_wr_req.prmd.pie;
+
+                csr.estat.r_esubcode_ecode <= excp_wr_req.estat.r_esubcode_ecode;
+                csr.estat.is.r_ipi <= excp_wr_req.estat.is.r_ipi;
+                csr.estat.is.r_ti <= excp_wr_req.estat.is.r_ti;
+                csr.estat.is.r_hwi <= excp_wr_req.estat.is.r_hwi;
+                csr.estat.is.swi <= excp_wr_req.estat.is.swi;
+
+                csr.era <= excp_wr_req.era;
+
+                csr.badv <= excp_wr_req.badv;
+            end else if(tlb_wr_req.we) begin
                 /* wr from tlb */
+                {csr.tlbidx[31], csr.tlbidx[29:24], csr.tlbidx[TLB_IDX_WID-1:0]} <= {tlb_wr_req.tlbidx[31], tlb_wr_req.tlbidx[29:24], tlb_wr_req.tlbidx[TLB_IDX_WID-1:0]};
+                csr.tlbehi[31:13] <= tlb_wr_req.tlbehi[31:13];
+                {csr.tlbelo[0][PALEN-5:8] ,csr.tlbelo[0][6:0]} <= {tlb_wr_req.tlbelo[0][PALEN-5:8] ,tlb_wr_req.tlbelo[0][6:0]};
+                {csr.tlbelo[1][PALEN-5:8] ,csr.tlbelo[1][6:0]} <= {tlb_wr_req.tlbelo[1][PALEN-5:8] ,tlb_wr_req.tlbelo[1][6:0]};
+                csr.asid[9:0] <= tlb_wr_req.asid[9:0];
             end else if(we) begin
                 /* wr from csr inst */
                 case(addr)
-                    'h0: crmd[8:0] <= wr_data_masked[8:0];
+                    'h0: csr.crmd[8:0] <= wr_data_masked[8:0];
                     'h1: csr.prmd[2:0] <= wr_data_masked[2:0];
                     'h2: csr.euen[0:0] <= wr_data_masked[0:0];
                     'h4: {csr.ecfg[12:11], csr.ecfg[9:0]} <= {wr_data_masked[12:11], wr_data_masked[9:0]};
@@ -121,7 +160,7 @@ module CSR (
     end
 
     /* r0 and r bits of csr */
-    assign crmd.r0_1 = '0;
+    assign csr.crmd.r0_1 = '0;
     assign csr.prmd.r0_1 = '0;
     assign csr.euen.r0_1 = '0;
     /* ecfg */
@@ -132,9 +171,6 @@ module CSR (
     assign csr.estat.r0_1 = '0;
     assign csr.estat.r0_2 = '0;
     assign csr.estat.is.r0_1 = '0;
-    assign csr.estat.is.r_is_ipi = 1'b0;       // ipi not implemented
-    assign csr.estat.is.r_is_hw = int_hw;
-    assign csr.estat.is.r_is_ti = int_ti;
     /* estat end */
     assign csr.eentry.r0_1 = '0;
     /* cpu id */
