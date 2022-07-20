@@ -243,4 +243,37 @@ typedef struct packed {
     csr_badv_t badv;
 } excp_wr_csr_req_t;
 
+/* btb */
+localparam INST_ALIGN_WID = 2;
+
+localparam BTB_SIZE = 128;
+localparam BTB_IDX_WID = $clog2(BTB_SIZE);
+localparam BTB_TARGET_WID = 32 - INST_ALIGN_WID;
+localparam BTB_TAG_WID = BTB_TARGET_WID - BTB_IDX_WID;
+
+typedef logic [BTB_IDX_WID-1:0] btb_idx_t;
+typedef logic [BTB_TAG_WID-1:0] btb_tag_t;
+typedef logic [BTB_TARGET_WID-1:0] btb_target_t;
+typedef struct packed {
+    btb_tag_t tag;
+    btb_target_t target;
+} btb_entry_t;
+
+/* to fetch */
+typedef struct packed {
+    logic valid;
+    u32_t npc;
+} btb_predict_t;
+
+/* from ex */
+typedef struct packed {
+    logic valid;            // valid for j / b inst
+    u32_t pc, npc;
+} btb_resolved_t;
+
+typedef struct packed {
+    logic valid;
+    u32_t pc;
+} wr_pc_req_t;
+
 `endif
