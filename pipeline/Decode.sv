@@ -18,12 +18,12 @@ module Decode (
     output writeback_src_t writeback_src,
 
     // segment-register input
-    input [31:0] pc,
-    output reg [31:0] pc_pass,
-    input [31:0] inst,
+    input [31:0] pc_RegInput,
+    output reg [31:0] pc,
+    input [31:0] inst_RegInput,
 
-    input stall, clear,
-    output reg clear_pass,
+    input stall_RegInput, clear_RegInput,
+    output reg clear,
     input clk,
 
     // writeback
@@ -32,21 +32,21 @@ module Decode (
     input rd_we
 );
 
-reg [31:0] inst_pass;
+reg [31:0] inst;
 
 always @(posedge clk) begin
-    if (clear) begin
-        clear_pass <= 1;
+    if (clear_RegInput) begin
+        clear <= 1;
     end
     else begin
-        clear_pass <= 0;
-        if (stall) begin
-            inst_pass <= inst_pass;
-            pc_pass <= pc_pass;
+        clear <= 0;
+        if (stall_RegInput) begin
+            inst    <= inst;
+            pc      <= pc;
         end
         else begin
-            inst_pass <= inst;
-            pc_pass <= pc;
+            inst    <= inst_RegInput;
+            pc      <= pc_RegInput;
         end
     end
 end
@@ -182,18 +182,18 @@ assign itype_mem =  inst_ld_b   |
 
 always @(*) begin
     if (inst_bl) rd_index = 1;
-    else rd_index = inst_pass[4:0];
+    else rd_index = inst[4:0];
 end
 
 RegFile regfile_instance(
-    .rj_read    (rj_read            ),
-    .rk_read    (rk_read            ),
-    .rd_write   (rd_wb              ),
-    .we         (rd_we              ),
-    .rj_index   (inst_pass[9:5]     ),
-    .rk_index   (inst_pass[14:10]   ),
-    .rd_index   (rd_wb_index        ),
-    .clk        (clk                )
+    .rj_read    (rj_read        ),
+    .rk_read    (rk_read        ),
+    .rd_write   (rd_wb          ),
+    .we         (rd_we          ),
+    .rj_index   (inst[9:5]      ),
+    .rk_index   (inst[14:10]    ),
+    .rd_index   (rd_wb_index    ),
+    .clk        (clk            )
 );
 
 // ImmGen
@@ -201,7 +201,7 @@ imm_type_t imm_type;
 
 ImmGen immgen_instance(
     .immediate_number   (immediate_number   ),
-    .inst               (inst_pass          ),
+    .inst               (inst               ),
     .imm_type           (imm_type           )
 );
 
@@ -425,13 +425,13 @@ wire [31:0] rd_d;
 wire [31:0] rj_d;
 wire [31:0] rk_d;
 
-assign op_31_26  = inst_pass[31:26];
-assign op_25_22  = inst_pass[25:22];
-assign op_21_20  = inst_pass[21:20];
-assign op_19_15  = inst_pass[19:15];
-assign rd   = inst_pass[ 4: 0];
-assign rj   = inst_pass[ 9: 5];
-assign rk   = inst_pass[14:10];
+assign op_31_26  = inst[31:26];
+assign op_25_22  = inst[25:22];
+assign op_21_20  = inst[21:20];
+assign op_19_15  = inst[19:15];
+assign rd   = inst[ 4: 0];
+assign rj   = inst[ 9: 5];
+assign rk   = inst[14:10];
 
 decoder_6_64 u_dec0(.in(op_31_26 ), .out(op_31_26_d ));
 decoder_4_16 u_dec1(.in(op_25_22 ), .out(op_25_22_d ));
@@ -494,13 +494,13 @@ assign inst_blt        = op_31_26_d[6'h18];
 assign inst_bge        = op_31_26_d[6'h19];
 assign inst_bltu       = op_31_26_d[6'h1a];
 assign inst_bgeu       = op_31_26_d[6'h1b];
-assign inst_lu12i_w    = op_31_26_d[6'h05] & ~inst_pass[25];
-assign inst_pcaddu12i  = op_31_26_d[6'h07] & ~inst_pass[25];
-assign inst_csrxchg    = op_31_26_d[6'h01] & ~inst_pass[25] & ~inst_pass[24] & (~rj_d[5'h00] & ~rj_d[5'h01]);  //rj != 0,1
-assign inst_ll_w       = op_31_26_d[6'h08] & ~inst_pass[25] & ~inst_pass[24];
-assign inst_sc_w       = op_31_26_d[6'h08] & ~inst_pass[25] &  inst_pass[24];
-assign inst_csrrd      = op_31_26_d[6'h01] & ~inst_pass[25] & ~inst_pass[24] & rj_d[5'h00];
-assign inst_csrwr      = op_31_26_d[6'h01] & ~inst_pass[25] & ~inst_pass[24] & rj_d[5'h01];
+assign inst_lu12i_w    = op_31_26_d[6'h05] & ~inst[25];
+assign inst_pcaddu12i  = op_31_26_d[6'h07] & ~inst[25];
+assign inst_csrxchg    = op_31_26_d[6'h01] & ~inst[25] & ~inst[24] & (~rj_d[5'h00] & ~rj_d[5'h01]);  //rj != 0,1
+assign inst_ll_w       = op_31_26_d[6'h08] & ~inst[25] & ~inst[24];
+assign inst_sc_w       = op_31_26_d[6'h08] & ~inst[25] &  inst[24];
+assign inst_csrrd      = op_31_26_d[6'h01] & ~inst[25] & ~inst[24] & rj_d[5'h00];
+assign inst_csrwr      = op_31_26_d[6'h01] & ~inst[25] & ~inst[24] & rj_d[5'h01];
 assign inst_rdcntid    = op_31_26_d[6'h00] & op_25_22_d[4'h0] & op_21_20_d[2'h0] & op_19_15_d[5'h00] & rk_d[5'h18] & rd_d[5'h00];
 assign inst_rdcntvl_w  = op_31_26_d[6'h00] & op_25_22_d[4'h0] & op_21_20_d[2'h0] & op_19_15_d[5'h00] & rk_d[5'h18] & rj_d[5'h00] & !rd_d[5'h00];
 assign inst_rdcntvh_w  = op_31_26_d[6'h00] & op_25_22_d[4'h0] & op_21_20_d[2'h0] & op_19_15_d[5'h00] & rk_d[5'h19] & rj_d[5'h00];

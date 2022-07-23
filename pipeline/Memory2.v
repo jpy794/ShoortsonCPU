@@ -2,21 +2,21 @@ module Memory2 (
     output [31:0] mem_result,
 
     // segment-register input
-    input [31:0] ex_result,
-    output reg [31:0] ex_result_pass,
-    input [4:0] rd_index,
-    output reg [4:0] rd_index_pass,
+    input [31:0] ex_result_RegInput,
+    output reg [31:0] ex_result,
+    input [4:0] rd_index_RegInput,
+    output reg [4:0] rd_index,
     // SIG
-    input [2:0] number_length,
-    output reg [2:0] number_length_pass,
-    input [1:0] memory_rw,
-    input writeback_valid,
-    output reg writeback_valid_pass,
-    input writeback_src,
-    output reg writeback_src_pass,
+    input [2:0] number_length_RegInput,
+    output reg [2:0] number_length,
+    input [1:0] memory_rw_RegInput,
+    input writeback_valid_RegInput,
+    output reg writeback_valid,
+    input writeback_src_RegInput,
+    output reg writeback_src,
 
-    input stall, clear,
-    output reg clear_pass,
+    input stall_RegInput, clear_RegInput,
+    output reg clear,
     input clk,
 
     // interface with TLB
@@ -32,29 +32,29 @@ module Memory2 (
     input [31:0] cache_read
 );
 
-reg [1:0] memory_rw_pass;
+reg [1:0] memory_rw;
 
 always @(posedge clk) begin
-    if (clear) begin
-        clear_pass <= 1;
+    if (clear_RegInput) begin
+        clear <= 1;
     end
     else begin
-        clear_pass <= 0;
-        if (stall) begin
-            ex_result_pass <= ex_result_pass;
-            rd_index_pass <= rd_index_pass;
-            number_length_pass <= number_length_pass;
-            memory_rw_pass <= memory_rw_pass;
-            writeback_valid_pass <= writeback_valid_pass;
-            writeback_src_pass <= writeback_src_pass;
+        clear <= 0;
+        if (stall_RegInput) begin
+            ex_result       <= ex_result;
+            rd_index        <= rd_index;
+            number_length   <= number_length;
+            memory_rw       <= memory_rw;
+            writeback_valid <= writeback_valid;
+            writeback_src   <= writeback_src;
         end
         else begin
-            ex_result_pass <= ex_result;
-            rd_index_pass <= rd_index;
-            number_length_pass <= number_length;
-            memory_rw_pass <= memory_rw;
-            writeback_valid_pass <= writeback_valid;
-            writeback_src_pass <= writeback_src;
+            ex_result       <= ex_result_RegInput;
+            rd_index        <= rd_index_RegInput;
+            number_length   <= number_length_RegInput;
+            memory_rw       <= memory_rw_RegInput;
+            writeback_valid <= writeback_valid_RegInput;
+            writeback_src   <= writeback_src_RegInput;
         end
     end
 end

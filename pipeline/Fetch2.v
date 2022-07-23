@@ -2,11 +2,11 @@ module Fetch2 (
     output reg [31:0] inst,
 
     // segment-register input
-    input [31:0] pc,
-    output reg [31:0] pc_pass,
+    input [31:0] pc_RegInput,
+    output reg [31:0] pc,
 
-    input stall, clear,
-    output reg clear_pass,
+    input stall_RegInput, clear_RegInput,
+    output reg clear,
     input clk,
 
     // interface with TLB
@@ -21,18 +21,18 @@ module Fetch2 (
 );
 
 always @(posedge clk) begin
-    if (clear) begin
-        clear_pass <= 1;
+    if (clear_RegInput) begin
+        clear <= 1;
     end
     else begin
-        clear_pass <= 0;
-        if (stall) begin
-            inst <= inst;
-            pc_pass <= pc_pass;
+        clear <= 0;
+        if (stall_RegInput) begin
+            inst    <= inst;
+            pc      <= pc;
         end
         else begin
-            inst <= cache_read;
-            pc_pass <= pc;
+            inst    <= cache_read;
+            pc      <= pc_RegInput;
         end
     end
 end

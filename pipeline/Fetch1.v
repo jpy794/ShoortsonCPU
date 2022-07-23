@@ -4,8 +4,8 @@ module Fetch1 (
     // segment-register input
     input [31:0] next_pc,
     
-    input stall, clear,
-    output reg clear_pass,
+    input stall_RegInput, clear_RegInput,
+    output reg clear,
     input clk,
 
     // interface with TLB
@@ -14,12 +14,12 @@ module Fetch1 (
 );
 
 always @(posedge clk) begin
-    if (clear) begin
-        clear_pass <= 1;
+    if (clear_RegInput) begin
+        clear <= 1;
     end
     else begin
-        clear_pass <= 0;
-        if (stall) begin
+        clear <= 0;
+        if (stall_RegInput) begin
             pc <= pc;
         end
         else begin
