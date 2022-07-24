@@ -1,0 +1,1 @@
+`define PASS(r_name) assign pass_out.r_name = pass_in_r.r_name

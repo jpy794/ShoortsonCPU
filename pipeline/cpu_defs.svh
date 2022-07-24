@@ -2,6 +2,8 @@
 `define CPU_DEFS_SVH
 
 `include "common_defs.svh"
+`include "decode.svh"
+`include "pipeline.svh"
 
 localparam GRLEN = 32;
 
@@ -9,6 +11,8 @@ localparam GRLEN = 32;
 localparam CC = 1;
 localparam SUC = 0;
 /* access type enum end */
+
+typedef logic [4:0] reg_idx_t;
 
 /* tlb */
 localparam TLB_ENTRY_NUM = 16;
@@ -229,7 +233,7 @@ typedef struct packed {
 } tlb_wr_csr_req_t;
 
 typedef struct packed {
-    logic is_excp;
+    logic valid;
     esubcode_ecode_t esubcode_ecode;
     virt_t badv;
 } excp_pass_t;
@@ -276,4 +280,148 @@ typedef struct packed {
     u32_t pc;
 } wr_pc_req_t;
 
+/* pipeline pass */
+typedef struct packed {
+    logic is_flush;
+    virt_t pc;
+    virt_t btb_pre;
+} fetch1_fetch2_pass_t;
+
+typedef struct packed {
+    logic is_flush;
+    virt_t pc;
+    virt_t btb_pre;
+    u32_t inst;
+} fetch2_decode_pass_t;
+
+typedef struct packed {
+    logic is_flush;
+    virt_t pc;
+    virt_t btb_pre;
+
+    logic is_mul, is_div, is_bru;
+    ex_out_sel_t ex_out_sel;
+    alu_a_sel_t alu_a_sel;
+    alu_b_sel_t alu_b_sel;
+    alu_op_t alu_op;
+    mul_op_t mul_op;
+    div_op_t div_op;
+    reg_idx_t rj, rk, rd;
+    u32_t rj_data, rkd_data;
+    u32_t imm;
+
+    /* for inst executed in wb */
+    logic is_wr_rd;
+    logic is_wr_rd_npc;
+
+    logic is_wr_csr;
+    logic is_mask_csr;
+    csr_addr_t csr_addr;
+    u32_t csr_data;
+
+    /* for inst executed in mem */
+    logic is_mem;
+    logic is_store;
+    byte_type_t byte_type;
+
+    logic is_cac;
+    
+    logic is_tlb;
+    tlb_op_t tlb_op;
+} decode_execute_pass_t;
+
+typedef struct packed {
+    logic is_flush;
+    virt_t pc;
+
+    u32_t ex_out;
+
+    /* for inst executed in wb */
+    logic is_wr_rd;
+    logic is_wr_rd_npc;
+    reg_idx_t rd;               // also cacop_code / invtlb_op
+
+    logic is_wr_csr;
+    csr_addr_t csr_addr;
+
+    /* for inst executed in mem */
+    logic is_mem;
+    logic is_store;
+    byte_type_t byte_type;
+    u32_t rkd_data;           // also store_data / invtlb_vppn([31:13])
+
+    logic is_cac;
+
+    logic is_tlb;
+    tlb_op_t tlb_op;
+    asid_t invtlb_asid;         // rj_data[9:0]
+} execute_memory1_pass_t;
+
+typedef struct packed {
+    logic is_flush;
+    virt_t pc;
+
+    u32_t ex_out;
+
+    /* for inst executed in wb */
+    logic is_wr_rd;
+    reg_idx_t rd;
+
+    logic is_wr_csr;
+    csr_addr_t csr_addr;
+} memory1_memory2_pass_t;
+
+typedef struct packed {
+    logic is_flush;
+    virt_t pc;
+
+    u32_t ex_mem_out;
+
+    /* for inst executed in wb */
+    logic is_wr_rd;             // two wrs should be mutually exclusive
+    reg_idx_t rd;
+
+    logic is_wr_csr;            // only need to check plv in ex
+    csr_addr_t csr_addr;
+} memory2_write_back_pass_t;
+/* pipeline pass end */
+
+/* forwarding */
+typedef struct packed {
+    logic valid;
+    reg_idx_t idx;
+    u32_t data;
+} forward_req_t;
+
+/* cacheop */
+typedef logic [1:0] cache_op_t;
+typedef enum cache_op_t {
+    C_INIT = 2'b00,
+    C_IDX_INV = 2'b01,
+    C_SRCH_INV = 2'b10
+}  cache_op_enum_t;
+
+typedef logic [2:0] icache_op_t;
+typedef enum icache_op_t {
+    IC_NOP =        3'b000,
+    IC_RW =         3'b001,
+    IC_INIT =       3'b100,
+    IC_IDX_INV =    3'b101,
+    IC_SRCH_INV =   3'b110
+} icache_op_enum_t;
+
+typedef struct packed {
+    logic valid;
+    logic [11:0] idx;
+    u32_t pa;
+    logic is_no_cache;
+} icache_rw_req_t;
+
+typedef struct packed {
+    logic valid;
+    cache_op_t op;
+    logic [11:0] idx;
+} icache_op_req_t;
+
+typedef logic [4:0] dcache_op_t;
 `endif

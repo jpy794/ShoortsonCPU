@@ -4,6 +4,7 @@ module BTB(
     input logic clk, rst_n,
 
     /* fetch1 */
+    input logic is_stall,
     input u32_t pc,
     output btb_predict_t predict_out,
 
@@ -34,7 +35,7 @@ DualPortBram #(
 ) U_Bram (
     .clk,
     .ena(1'b1),
-    .enb(1'b1),
+    .enb(~is_stall),
     .wea,
     .addra(wr_idx),
     .dina(wr_entry),
