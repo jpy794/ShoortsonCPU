@@ -322,6 +322,7 @@ typedef struct packed {
     /* for inst executed in mem */
     logic is_mem;
     logic is_store;
+    logic is_signed;
     byte_type_t byte_type;
 
     logic is_cac;
@@ -338,7 +339,8 @@ typedef struct packed {
 
     /* for inst executed in wb */
     logic is_wr_rd;
-    logic is_wr_rd_npc;
+    virt_t pc_plus4;
+    logic is_wr_rd_pc_plus4;
     reg_idx_t rd;               // also cacop_code / invtlb_op
 
     logic is_wr_csr;
@@ -347,6 +349,7 @@ typedef struct packed {
     /* for inst executed in mem */
     logic is_mem;
     logic is_store;
+    logic is_signed;
     byte_type_t byte_type;
     u32_t rkd_data;           // also store_data / invtlb_vppn([31:13])
 
@@ -363,8 +366,15 @@ typedef struct packed {
 
     u32_t ex_out;
 
+    logic is_mem;
+    logic is_store;
+    logic is_signed;
+    byte_type_t byte_type;
+    byte_en_t byte_en;          // addr[1:0]
+
     /* for inst executed in wb */
     logic is_wr_rd;
+    logic is_wr_rd_npc;
     reg_idx_t rd;
 
     logic is_wr_csr;
@@ -379,11 +389,12 @@ typedef struct packed {
 
     /* for inst executed in wb */
     logic is_wr_rd;             // two wrs should be mutually exclusive
+    logic is_wr_rd_npc;
     reg_idx_t rd;
 
     logic is_wr_csr;            // only need to check plv in ex
     csr_addr_t csr_addr;
-} memory2_write_back_pass_t;
+} memory2_writeback_pass_t;
 /* pipeline pass end */
 
 /* forwarding */
@@ -394,34 +405,23 @@ typedef struct packed {
 } forward_req_t;
 
 /* cacheop */
-typedef logic [1:0] cache_op_t;
-typedef enum cache_op_t {
+typedef enum logic [1:0] {
     C_INIT = 2'b00,
     C_IDX_INV = 2'b01,
     C_SRCH_INV = 2'b10
-}  cache_op_enum_t;
+}  cache_op_t;
 
-typedef logic [2:0] icache_op_t;
-typedef enum icache_op_t {
+typedef enum logic [2:0] {
     IC_NOP =        3'b000,
-    IC_RW =         3'b001,
+    IC_R =          3'b001,
     IC_INIT =       3'b100,
     IC_IDX_INV =    3'b101,
     IC_SRCH_INV =   3'b110
-} icache_op_enum_t;
+} icache_op_t;
 
-typedef struct packed {
-    logic valid;
-    logic [11:0] idx;
-    u32_t pa;
-    logic is_no_cache;
-} icache_rw_req_t;
-
-typedef struct packed {
-    logic valid;
-    cache_op_t op;
-    logic [11:0] idx;
-} icache_op_req_t;
-
-typedef logic [4:0] dcache_op_t;
+typedef enum logic [4:0] {
+    DC_NOP =        5'b00000,
+    DC_R   =        5'b01000,
+    DC_W   =        5'b10000    
+}dcache_op_t;
 `endif

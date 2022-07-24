@@ -168,14 +168,17 @@ module Execute (
     assign pass_out.is_flush = is_flush | pass_in_r.is_flush;
     assign pass_out.ex_out = ex_out;
     assign pass_out.invtlb_asid = pass_in_r.rj_data[9:0];
+    assign pass_out.pc_plus4 = pass_in_r.pc + 4;
 
     `PASS(pc);
     `PASS(is_wr_rd);
-    `PASS(is_wr_rd_npc);
+    `PASS(is_wr_rd_pc_plus4);
+    `PASS(rd);
     `PASS(is_wr_csr);
     `PASS(csr_addr);
     `PASS(is_mem);
     `PASS(is_store);
+    `PASS(is_signed);
     `PASS(byte_type);
     `PASS(rkd_data);
     `PASS(is_cac);

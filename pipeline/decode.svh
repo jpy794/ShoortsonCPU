@@ -39,9 +39,9 @@ typedef enum logic [2:0] {
 } tlb_op_t;
 
 typedef enum logic [1:0] {
-    BYTE,
-    HALF_WORD,
-    WORD
+    BYTE = 2'b10,
+    HALF_WORD = 2'b01,
+    WORD = 2'b00
 } byte_type_t;
 
 typedef logic [1:0] byte_en_t;

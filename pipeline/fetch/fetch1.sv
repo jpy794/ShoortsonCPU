@@ -18,8 +18,8 @@ module Fetch1 (
     /* from csr */
     input csr_t rd_csr,
 
-    /* itlb */
-    input itlb_entrys[TLB_ENTRY_NUM],
+    /* tlb */
+    input tlb_entrys[TLB_ENTRY_NUM],
 
     /* to icache */
     output logic [11:0] icache_idx,          // for index
@@ -35,61 +35,27 @@ module Fetch1 (
     output excp_pass_t excp_pass_out
 );
 
-    /* TODO: dmw */
-
-    /* tlb_lookup */
-    virt_t tlb_va;
-    mat_t tlb_mat;
-    esubcode_ecode_t tlb_ecode;
-    logic tlb_is_exc;
-    phy_t tlb_pa;
-    TLBLookup U_TLBLookup (
-        .entrys(itlb_entrys),
-
-        .asid(rd_csr.asid.asid),
-        .plv(rd_csr.crmd.plv),
-
-        .va(tlb_va),
+    mat_t mat;
+    phy_t pa;
+    excp_pass_t addr_excp;
+    AddrTrans U_AddrTrans (
+        .va(pc_r),
         .lookup_type(LOOKUP_FETCH),
+        .byte_type(WORD),
+        .mat,
+        .pa,
+        .excp(addr_excp),
 
-        .pa(tlb_pa),
-        .mat(tlb_mat),
-        .ecode(tlb_ecode),
-        .is_exc(tlb_is_exc)
+        .rd_csr,
+        .tlb_entrys
     );
 
     /* to cache */
     /* TODO: maybe flush */
-    assign icache_op = is_flush ? IC_NOP : IC_RW;
+    assign icache_op = is_flush ? IC_NOP : IC_R;
     assign icache_idx = pc_r[11:0];
-    assign icache_pa = tlb_pa;
-    assign icache_is_cached = tlb_mat[0];
-
-    /* addr translate */
-    logic is_direct;
-    assign is_direct = rd_csr.crmd.da; // maybe consider crmd.pg ?
-
-    logic is_dmw_found;
-    assign is_dmw_found = 1'b0; // TODO: dmw
-
-    logic is_tlb;
-    assign is_tlb = ~is_direct & ~is_dmw_found;
-
-
-    /* --- exception begin --- */
-    assign excp_pass_out.badv = pc_r;
-    always_comb begin
-        excp_pass_out.valid = 1'b0;
-        excp_pass_out.esubcode_ecode = tlb_ecode;
-        if(pc_r[1:0] != 2'b00) begin
-            /* fetch unaligned */
-            excp_pass_out.valid = 1'b1;
-            excp_pass_out.esubcode_ecode = ALE;
-        end else if(tlb_is_exc & is_tlb) begin
-            /* tlb exception */
-            excp_pass_out.valid = 1'b1;
-        end
-    end
+    assign icache_pa = pa;
+    assign icache_is_cached = mat[0];
 
 
     /* --- pipeline begin --- */
