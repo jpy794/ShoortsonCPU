@@ -1,8 +1,55 @@
 `include "cpu_defs.svh"
+`include "cache3/cache.svh"
 
 module CPUTop (
-    input logic clk, rst_n
+    input logic clk, rst_n,
     // TODO: connect cache
+    output logic [`AXI_ID_WIDTH]arid,
+    output logic [`ADDRESS_WIDTH]araddr,
+    output logic [`AXI_LEN_WIDTH]arlen,
+    output logic [`AXI_SIZE_WIDTH]arsize,
+    output logic [`AXI_BURST_WIDTH]arburst,
+    output logic [`AXI_LOCK_WIDTH]arlock,
+    output logic [`AXI_CACHE_WIDTH]arcache,
+    output logic [`AXI_PROT_WIDTH]arprot,
+    output logic arvalid,
+    input logic arready,
+    //write request
+    output logic [`AXI_ID_WIDTH]awid,
+    output logic [`ADDRESS_WIDTH]awaddr,
+    output logic [`AXI_LEN_WIDTH]awlen,
+    output logic [`AXI_SIZE_WIDTH]awsize,    
+    output logic [`AXI_BURST_WIDTH]awburst,
+    output logic [`AXI_LOCK_WIDTH]awlock,
+    output logic [`AXI_CACHE_WIDTH]awcache,
+    output logic [`AXI_PROT_WIDTH]awprot,
+    output logic awvalid,
+    input logic awready,
+    //read back
+    input logic [`AXI_ID_WIDTH]rid,
+    input logic [`DATA_WIDTH]rdata,
+    input logic [`AXI_RESP_WIDTH]rresp,
+    input logic rlast,
+    input logic rvalid,
+    output logic rready,
+    //write data
+    output logic [`AXI_ID_WIDTH]wid,   
+    output logic [`DATA_WIDTH]wdata,
+    output logic [`AXI_STRB_WIDTH]wstrb,
+    output logic wlast,
+    output logic wvalid,
+    input logic wready,
+    //write back
+    input logic [`AXI_ID_WIDTH]bid,
+    input logic [`AXI_RESP_WIDTH]bresp,
+    output logic bready,
+    input logic bvaild,
+
+    //TODO:DEBUG LINE
+    output [31:0]debug0_wb_pc,
+    output [3:0]debug0_wb_rf_wen,
+    output [4:0]debug0_wb_rf_wnum,
+    output [31:0]debug0_wb_rf_wdata
 );
 
     /* pass */
@@ -254,5 +301,132 @@ module CPUTop (
         .rd_csr(excp_rd_csr),
         .wr_csr_req(excp_wr_csr_req)
     );
+logic [`AXI_REQ_WIDTH]req_to_axi;
+logic [`BLOCK_WIDTH]wblock_to_axi;
+logic [`DATA_WIDTH]wword_to_axi;
+logic [`AXI_STRB_WIDTH]wword_en_to_axi;
+logic [`AXI_STRB_WIDTH]rword_en_to_axi;
+logic [`ADDRESS_WIDTH]ad_to_axi;
+logic cached_to_axi;
+
+logic [`BLOCK_WIDTH]rblock_from_axi;
+logic [`DATA_WIDTH]rword_from_axi;
+logic ready_from_axi;
+logic task_finish_from_axi;  
+    Cache cache(.clk(clk), 
+                .rstn(rst_n), 
+                .ins_va(icache_idx),
+                .ins_pa(icache_pa),
+                .ins_op(icache_op),
+                .ins_stall(icache_stall), 
+                .ins_cached(icache_is_cached), 
+                .ins(icache_data),
+                .icache_ready(icache_ready),
+                .data_va(dcache_idx),
+                .data_pa(dcache_pa),
+                .data_op({dcache_op, dcache_byte_type}),
+                .data_stall(dcache_stall),
+                .data_cached(dcache_is_cached),
+                .store_data(),
+                .load_data(dcache_data),
+                .dcache_ready(dcache_ready),
+                
+                .req_to_axi(req_to_axi), 
+                .wblock_to_axi(wblock_to_axi),
+                .wword_to_axi(wword_to_axi), 
+                .wword_en_to_axi(wword_en_to_axi),
+                .rword_en_to_axi(rword_en_to_axi), 
+                .ad_to_axi(ad_to_axi), 
+                .cached_to_axi(cached_to_axi), 
+                .rblock_from_axi(rblock_from_axi), 
+                .rword_from_axi(rword_from_axi), 
+                .ready_from_axi(ready_from_axi), 
+                .task_finish_from_axi(task_finish_from_axi));
+
+To_AXI to_axi(.clk(clk), 
+                .rstn(rst_n),
+                .req(req_to_axi),
+                .wblock(wblock_to_axi),
+                .wword(wword_to_axi),
+                .wword_en(wword_en_to_axi),
+                .ad(ad_to_axi),
+                .cached(cached_to_axi),
+                .task_finish(task_finish_from_axi),
+                .rblock(rblock_from_axi),
+                .rword(rword_from_axi),
+                .rword_en(rword_en_to_axi),
+                .arid(arid),
+                .araddr(araddr),
+                .arlen(arlen),
+                .arsize(arsize),
+                .arburst(arburst),
+                .arlock(arlock),
+                .arcache(arcache),
+                .arprot(arprot),
+                .arvalid(arvalid),
+                .arready(arready),
+                .awid(awid),
+                .awaddr(awaddr),
+                .awlen(awlen),
+                .awsize(awsize),
+                .awburst(awburst),
+                .awlock(awlock),
+                .awcache(awcache),
+                .awprot(awprot),
+                .awvalid(awvalid),
+                .awready(awready),
+                .rid(rid),
+                .rdata(rdata),
+                .rresp(rresp),
+                .rlast(rlast),
+                .rvalid(rvalid),
+                .rready(rready),
+                .wid(wid),
+                .wdata(wdata),
+                .wstrb(wstrb),
+                .wlast(wlast),
+                .wvaild(wvaild),
+                .wready(wready),
+                .bid(bid),
+                .bresp(bresp),
+                .bready(bready),
+                .bvaild(bvaild));
+
+// logic [`AXI_ID_WIDTH]arid;
+// logic [`ADDRESS_WIDTH]araddr;
+// logic [`AXI_LEN_WIDTH]arlen;
+// logic [`AXI_SIZE_WIDTH]arsize;
+// logic [`AXI_BURST_WIDTH]arburst;
+// logic [`AXI_LOCK_WIDTH]arlock;
+// logic [`AXI_CACHE_WIDTH]arcache;
+// logic [`AXI_PROT_WIDTH]arprot;
+// logic arvalid;
+// logic arready;
+// logic [`AXI_ID_WIDTH]awid;
+// logic [`ADDRESS_WIDTH]awaddr;
+// logic [`AXI_LEN_WIDTH]awlen;
+// logic [`AXI_SIZE_WIDTH]awsize;
+// logic [`AXI_LOCK_WIDTH]awlock;
+// logic [`AXI_CACHE_WIDTH]awcache;
+// logic [`AXI_PROT_WIDTH]awprot;
+// logic awvalid;
+// logic awready;
+// logic [`AXI_ID_WIDTH]rid;
+// logic [`DATA_WIDTH]rdata;
+// logic [`AXI_RESP_WIDTH]rresp;
+// logic rlast;
+// logic rvalid;
+// logic rready;
+// logic [`AXI_ID_WIDTH]wid;
+// logic [`DATA_WIDTH]wdata;
+// logic [`AXI_STRB_WIDTH]wstrb;
+// logic wlast;
+// logic wvaild;
+// logic wready;
+// logic [`AXI_ID_WIDTH]bid;
+// logic [`AXI_RESP_WIDTH]bresp;
+// logic bready;
+// logic bvaild;
+
 
 endmodule
