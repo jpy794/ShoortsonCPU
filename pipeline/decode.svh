@@ -1,19 +1,28 @@
 // for BRU
 typedef enum logic [3:0] {
-    BEQ,    // pc + imm
-    BNE,
-    BLT,
-    BLTU,
-    BGE,
-    BGEU,
-    B,
-    BL,     // pc + 4 -> rd / pc + imm
-    JIRL    // pc + 4 -> rd / rj + imm
+    JIRL = 4'b0011,     // pc + 4 -> rd / rj + imm
+    B = 4'b0100,
+    BL = 4'b0101,       // pc + 4 -> rd / pc + imm
+    BEQ = 4'b0110,      // pc + imm
+    BNE = 4'b0111,
+    BLT = 4'b1000,
+    BGE = 4'b1001,
+    BLTU = 4'b1010,
+    BGEU = 4'b1011
 } bru_op_t;
 
 // for MUL, DIV
-typedef enum logic [1:0] { LO, HI, HIU } mul_op_t;
-typedef enum logic [1:0] { Q, QU, R, RU } div_op_t;
+typedef enum logic [1:0] {
+    LO = 2'b00,
+    HI = 2'b01,
+    HIU = 2'b10
+} mul_op_t;
+typedef enum logic [1:0] {
+    Q = 2'b00,
+    QU = 2'b10,
+    R = 2'b01,
+    RU = 2'b11
+} div_op_t;
 
 // for ALU
 typedef enum logic [3:0] { ADD, SUB, AND, OR, NOR, XOR, SLL, SRL, SRA, SLT, SLTU } alu_op_t;
@@ -39,9 +48,9 @@ typedef enum logic [2:0] {
 } tlb_op_t;
 
 typedef enum logic [1:0] {
-    BYTE = 2'b10,
+    BYTE = 2'b00,
     HALF_WORD = 2'b01,
-    WORD = 2'b00
+    WORD = 2'b10
 } byte_type_t;
 
 typedef logic [1:0] byte_en_t;

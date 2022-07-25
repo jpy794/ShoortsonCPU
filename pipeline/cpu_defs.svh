@@ -306,13 +306,14 @@ typedef struct packed {
     alu_op_t alu_op;
     mul_op_t mul_op;
     div_op_t div_op;
-    reg_idx_t rj, rk, rd;
+    bru_op_t bru_op;
+    reg_idx_t rj, rkd, rd;
     u32_t rj_data, rkd_data;
     u32_t imm;
 
     /* for inst executed in wb */
     logic is_wr_rd;
-    logic is_wr_rd_npc;
+    logic is_wr_rd_pc_plus4;
 
     logic is_wr_csr;
     logic is_mask_csr;

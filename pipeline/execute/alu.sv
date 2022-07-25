@@ -9,36 +9,19 @@ module ALU (
 
 always_comb begin
     unique case (op_type)
-        ADD: begin
-            out = a + b;
-        end
-        SUB: begin
-            out = a - b;
-        end
-        AND: begin
-            out = a & b;
-        end
-        OR: begin
-            out = a | b;
-        end
-        NOR: begin
-            out = ~(a | b);
-        end
-        XOR: begin
-            out = a ^ b;
-        end
-        SLL: begin
-            out = a << b[4:0];
-        end
-        SRL: begin
-            out = a >> b[4:0];
-        end
-        SRA: begin
-            out = a >>> b[4:0];
-        end
-        default: begin
-            out = '0;
-        end
+        ADD:    out = a + b;
+        SUB:    out = a - b;
+        AND:    out = a & b;
+        OR:     out = a | b;
+        NOR:    out = ~(a | b);
+        XOR:    out = a ^ b;
+        SLL:    out = a << b[4:0];
+        SRL:    out = a >> b[4:0];
+        SRA:    out = a >>> b[4:0];
+        SLT:    out = {31'b0, $signed(a) < $signed(b)};
+        SLTU:   out = {31'b0, a < b};
+        default: out = '0;
+
     endcase
 end
 

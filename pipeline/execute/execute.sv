@@ -73,9 +73,8 @@ module Execute (
     always_comb begin
         alu_b = '0;
         unique case(pass_in_r.alu_b_sel)
-            RJ: alu_b = pass_in_r.rkd_data;
-            PC: alu_b = pass_in_r.imm;
-            ZERO: alu_b = 32'd4;
+            RKD: alu_b = pass_in_r.rkd_data;
+            IMM: alu_b = pass_in_r.imm;
             default: $stop;
         endcase
     end
@@ -90,7 +89,7 @@ module Execute (
     /* bru_out */
     logic br_taken;
     BRU U_BRU (
-        .op(bru_op),
+        .op(pass_in_r.bru_op),
         .a(rj_data),
         .b(rkd_data),
         .taken(br_taken)
@@ -100,7 +99,7 @@ module Execute (
              need totally re-implement here */
     u32_t npc;
     assign npc = br_taken ? alu_out : pass_in_r.pc + 4;
-    assign wr_pc_req.valid = npc != pass_in_r.btb_pre;
+    assign wr_pc_req.valid = pass_in_r.is_bru && (npc != pass_in_r.btb_pre);
     assign wr_pc_req.pc = npc;
 
     /* mul */
