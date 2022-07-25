@@ -13,6 +13,9 @@ module Fetch1 (
     /* execute stage set pc */
     input wr_pc_req_t ex_wr_pc_req,
 
+    /* writeback stage set pc */
+    input wr_pc_req_t excp_wr_pc_req,
+
     /* TODO: cache op */
 
     /* from csr */
@@ -76,7 +79,8 @@ module Fetch1 (
 
     /* fetch1 stage */
     always_comb begin
-        if(ex_wr_pc_req.valid)      npc = ex_wr_pc_req.pc;
+        if(excp_wr_pc_req)          npc = excp_wr_pc_req.pc;
+        else if(ex_wr_pc_req.valid) npc = ex_wr_pc_req.pc;
         else if(btb_predict.valid)  npc = btb_predict.npc;      // predict is based on pc(or the pc wr req) in last clk
         else                        npc = pc_r + 4;
     end

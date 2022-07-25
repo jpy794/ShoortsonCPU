@@ -14,9 +14,6 @@ module Execute (
     /* forwarding */
     input forward_req_t mem1_req, mem2_req,
 
-    /* from csr */
-    input csr_t rd_csr,
-
     /* pipeline */
     input logic is_stall,
     input logic is_flush,

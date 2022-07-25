@@ -11,8 +11,8 @@ module Decode (
     input u32_t csr_data,
 
     /* from regfile */
-    output reg_idx_t rj_out, rk_out,
-    input u32_t rj_data, rk_data,
+    output reg_idx_t rj_out, rkd_out,
+    input u32_t rj_data, rkd_data,
 
     /* ctrl */
     output logic load_use_stall,
@@ -436,7 +436,7 @@ module Decode (
 
         bad_inst = 1'b0;
         is_csr = 1'b0;
-        
+
         unique casez(inst)
             // TODO: rdcnt
             {17'b0000_0000_0001_0000_0, {15{1'b?}}}: inst_add_w = 1'b1;
@@ -518,7 +518,7 @@ module Decode (
 
     /* out */
     assign rj_out = rj;
-    assign rk_out = rkd;
+    assign rkd_out = rkd;
     assign csr_addr_out = csr_addr;
 
 

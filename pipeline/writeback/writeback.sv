@@ -18,8 +18,11 @@ module Writeback (
     input logic is_stall,
     input logic is_flush,
 
-    input memory2_writeback_pass_t pass_in
-    // excp_pass_in should be handled by ctrl module
+    input memory2_writeback_pass_t pass_in,
+    /* to exception */
+    output excp_pass_t excp_pass_out,
+    output virt_t pc_out,
+    output logic inst_ertn
 );
 
     memory1_memory2_pass_t pass_in_r;
@@ -36,6 +39,9 @@ module Writeback (
     logic wb_flush = is_flush | pass_in_r.is_flush;
 
     /* writeback stage */
+
+    // TODO
+    assign inst_ertn = 1'b0;
     
     assign reg_idx = pass_in_r.rd;
     assign reg_data = pass_in_r.is_wr_rd_pc_plus4 ? pass_in_r.pc_plus4 : pass_in_r.ex_mem_out;

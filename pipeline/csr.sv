@@ -1,4 +1,4 @@
-`include "../cpu_defs.svh"
+`include "cpu_defs.svh"
 
 module CSR (
     input logic clk, rst_n,
@@ -8,6 +8,15 @@ module CSR (
     output u32_t rd_data,
     input logic we,
     input u32_t wr_data,
+
+    /* if */
+    output csr_t if_rd,
+
+    /* id */
+    output csr_t id_rd,
+
+    /* mem1 */
+    output csr_t mem1_rd,
 
     /* tlb */
     output csr_t tlb_rd,
