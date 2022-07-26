@@ -8,7 +8,7 @@ module data (
     input logic [`BLOCK_EN]wea,
     input logic [`INDEX_WIDTH]addrb,
     input logic clkb,
-    input logic [`DATA_WIDTH]doutb
+    output logic [`DATA_WIDTH]doutb
 );
 logic enb;
 assign enb = 1'b1;
@@ -34,7 +34,7 @@ module tag (
     input logic [`BLOCK_EN]wea,
     input logic [`INDEX_WIDTH]addrb,
     input logic clkb,
-    input logic [`TAG_WIDTH]doutb
+    output logic [`TAG_WIDTH]doutb
 );
 logic enb;
 assign enb = 1'b1;
@@ -60,7 +60,7 @@ module vl (
     input logic [`BLOCK_EN]wea,
     input logic [`INDEX_WIDTH]addrb,
     input logic clkb,
-    input logic doutb
+    output logic doutb
 );
 logic enb;
 assign enb = 1'b1;
@@ -86,7 +86,7 @@ module llit (
     input logic [`BLOCK_EN]wea,
     input logic [`INDEX_WIDTH]addrb,
     input logic clkb,
-    input logic [7:0]doutb
+    output logic [7:0]doutb
 );
 logic enb;
 assign enb = 1'b1;
