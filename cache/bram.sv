@@ -10,6 +10,7 @@ module data (
     input logic clkb,
     input logic [`DATA_WIDTH]doutb
 );
+logic enb;
 assign enb = 1'b1;
 DualPortBram #(.WID(32), .SIZE(128))
 dualportbram(.clk(clk), 
@@ -35,6 +36,7 @@ module tag (
     input logic clkb,
     input logic [`TAG_WIDTH]doutb
 );
+logic enb;
 assign enb = 1'b1;
 DualPortBram #(.WID(20), .SIZE(128))
 dualportbram(.clk(clk), 
@@ -60,6 +62,7 @@ module vl (
     input logic clkb,
     input logic doutb
 );
+logic enb;
 assign enb = 1'b1;
 DualPortBram #(.WID(1), .SIZE(128))
 dualportbram(.clk(clk), 
@@ -85,8 +88,9 @@ module llit (
     input logic clkb,
     input logic [7:0]doutb
 );
+logic enb;
 assign enb = 1'b1;
-DualPortBram #(.WID(20), .SIZE(128))
+DualPortBram #(.WID(8), .SIZE(128))
 dualportbram(.clk(clk), 
              .ena(ena),
              .enb(enb),
