@@ -255,6 +255,7 @@ module CPUTop (
     );
 
     excp_pass_t excp_wb;
+    memory2_writeback_pass_t pass_wb;
     virt_t wb_pc;
     logic wb_ertn;
     Writeback U_Writeback (
@@ -274,9 +275,17 @@ module CPUTop (
         .excp_pass_in(excp_mem2),
 
         .excp_pass_out(excp_wb),
+        .pass_out(pass_wb),
         .pc_out(wb_pc),
         .inst_ertn(wb_ertn)
     );
+
+    /* debug */
+    assign debug0_wb_inst = pass_wb.inst;
+    assign debug0_wb_pc = pass_wb.pc;
+    assign debug0_wb_rf_wdata = pass_wb.is_wr_rd_pc_plus4 ? pass_wb.pc_plus4 : pass_wb.ex_mem_out;
+    assign debug0_wb_rf_wen = pass_wb.is_wr_rd;
+    assign debug0_wb_rf_wnum = pass_wb.rd;
 
     Exception U_Exception (
         .ti_in('0), .hwi_in('0),            // TODO: connect real interrupt

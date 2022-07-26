@@ -19,6 +19,8 @@ module Writeback (
 
     input memory2_writeback_pass_t pass_in,
     input excp_pass_t excp_pass_in,
+    /* debug */
+    output memory2_writeback_pass_t pass_out,
     /* to exception */
     output excp_pass_t excp_pass_out,
     output virt_t pc_out,
@@ -45,6 +47,7 @@ module Writeback (
     assign inst_ertn = 1'b0;
     assign excp_pass_out = excp_pass_in_r;
     assign pc_out = pass_in_r.pc;
+    assign pass_out = pass_in_r;
     
     assign reg_idx = pass_in_r.rd;
     assign reg_data = pass_in_r.is_wr_rd_pc_plus4 ? pass_in_r.pc_plus4 : pass_in_r.ex_mem_out;

@@ -100,6 +100,7 @@ module Memory1 (
     assign pass_out.byte_en = pass_in_r.ex_out[1:0];
 
     `PASS(pc);
+    `PASS(inst);
     `PASS(ex_out);
     `PASS(is_mem);
     `PASS(is_store);

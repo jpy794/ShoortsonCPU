@@ -91,6 +91,7 @@ module Memory2 (
     assign pass_out.ex_mem_out = ex_mem_out;
     
     `PASS(pc);
+    `PASS(inst);
     `PASS(is_wr_rd);
     `PASS(is_wr_rd_pc_plus4);
     `PASS(pc_plus4);

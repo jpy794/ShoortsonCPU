@@ -176,6 +176,7 @@ module Execute (
     assign pass_out.pc_plus4 = pass_in_r.pc + 4;
 
     `PASS(pc);
+    `PASS(inst);
     `PASS(is_wr_rd);
     `PASS(is_wr_rd_pc_plus4);
     `PASS(rd);

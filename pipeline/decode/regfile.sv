@@ -28,7 +28,7 @@ module RegFile (
         else                    rkd_data = regfile[rkd];
     end
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n)                      regfile[0] <= '0;
         else if(we && rd != 5'b0)       regfile[rd] <= rd_data;
     end

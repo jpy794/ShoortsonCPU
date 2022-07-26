@@ -298,6 +298,7 @@ typedef struct packed {
     logic is_flush;
     virt_t pc;
     virt_t btb_pre;
+    u32_t inst;
 
     logic is_mul, is_div, is_bru;
     ex_out_sel_t ex_out_sel;
@@ -335,6 +336,7 @@ typedef struct packed {
 typedef struct packed {
     logic is_flush;
     virt_t pc;
+    u32_t inst;
 
     u32_t ex_out;
 
@@ -364,6 +366,7 @@ typedef struct packed {
 typedef struct packed {
     logic is_flush;
     virt_t pc;
+    u32_t inst;
 
     u32_t ex_out;
 
@@ -386,6 +389,7 @@ typedef struct packed {
 typedef struct packed {
     logic is_flush;
     virt_t pc;
+    u32_t inst;
 
     u32_t ex_mem_out;
 
