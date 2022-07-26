@@ -74,7 +74,8 @@ module Execute (
         unique case(pass_in_r.alu_b_sel)
             RKD: alu_b = pass_in_r.rkd_data;
             IMM: alu_b = pass_in_r.imm;
-            default: $stop;
+            default: //$stop;
+                alu_b = '0;
         endcase
     end
 
@@ -123,7 +124,8 @@ module Execute (
             LO: mul_signed = 1'b0;
             HI: mul_signed = 1'b0;
             HIU: mul_signed = 1'b1;
-            default: $stop;
+            default: //$stop;
+                mul_signed = 1'b0;
         endcase
     end
 
@@ -144,7 +146,8 @@ module Execute (
                     LO: ex_out = mul_out[31:0];
                     HI: ex_out = mul_out[63:32];
                     HIU: ex_out = mul_out[63:32];
-                    default: $stop;
+                    default: //$stop;
+                        ex_out = alu_out;
                 endcase
             end
             //TODO: DIV: ex_out = div_out;

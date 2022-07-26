@@ -61,7 +61,8 @@ module Mul (
                 if(is_signed_r & neg_r) out <= -out_abs;
                 else                    out <= out_abs;
             end
-            default: $stop;
+          //  default: //$stop;
+
             endcase
         end
     end
@@ -82,7 +83,8 @@ module Mul (
                     if(en) next = S_MUL;
                     else   next = S_IDLE;
                 end
-                default: $stop;
+                default:// $stop;
+                next = state;
             endcase
         end
     end

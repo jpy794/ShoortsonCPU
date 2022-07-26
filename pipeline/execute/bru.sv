@@ -23,7 +23,8 @@ module BRU (
         B: taken = 1'b1;
         BL: taken = 1'b1;
         JIRL: taken = 1'b1;
-        default: $stop;
+        default: //$stop;
+            taken = 1'b1;
         endcase
     end
 

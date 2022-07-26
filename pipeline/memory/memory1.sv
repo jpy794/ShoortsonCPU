@@ -32,6 +32,9 @@ module Memory1 (
     output memory1_memory2_pass_t pass_out,
     output excp_pass_t excp_pass_out
 );
+    initial begin
+        pass_in_r.is_store = 1'b0;
+    end  //FIX
 
     execute_memory1_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;

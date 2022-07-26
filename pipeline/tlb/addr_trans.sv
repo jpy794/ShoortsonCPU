@@ -54,7 +54,8 @@ module AddrTrans (
             BYTE:       align_ok = 1'b1;
             HALF_WORD:  align_ok = ~va[0];
             WORD:       align_ok = ~va[1] & ~va[0];
-            default: $stop;
+            default: //$stop;
+                align_ok = 1'b0;
         endcase
     end
 
