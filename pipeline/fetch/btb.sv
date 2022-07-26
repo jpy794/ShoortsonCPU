@@ -1,4 +1,4 @@
-`include "../cpu_defs.svh"
+`include "cpu_defs.svh"
 /* btb should only predict control transfer inst */
 module BTB(
     input logic clk, rst_n,

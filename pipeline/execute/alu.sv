@@ -1,4 +1,4 @@
-`include "../cpu_defs.svh"
+`include "cpu_defs.svh"
 
 module ALU (
     input alu_op_t op,

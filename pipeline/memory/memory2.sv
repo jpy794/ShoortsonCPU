@@ -1,5 +1,4 @@
-`include "../cpu_defs.svh"
-`include "../pipeline.svh"
+`include "cpu_defs.svh"
 
 module Memory2 (
     input clk, rst_n,
@@ -9,7 +8,7 @@ module Memory2 (
 
     /* from dcache */
     input logic dcache_ready,
-    input u32_t dcache_data,
+    input u32_t rd_dcache_data,
 
     /* ctrl */
     output logic dcache_stall,
@@ -53,18 +52,18 @@ module Memory2 (
     logic [7:0] mem_byte;
     always_comb begin
         unique case(pass_in_r.byte_en)
-            2'b00:  mem_byte = dcache_data[7:0];
-            2'b01:  mem_byte = dcache_data[15:8];
-            2'b10:  mem_byte = dcache_data[23:16];
-            2'b11:  mem_byte = dcache_data[31:24];
+            2'b00:  mem_byte = rd_dcache_data[7:0];
+            2'b01:  mem_byte = rd_dcache_data[15:8];
+            2'b10:  mem_byte = rd_dcache_data[23:16];
+            2'b11:  mem_byte = rd_dcache_data[31:24];
             // full case
         endcase
     end
 
     logic [15:0] mem_half_word;
     always_comb begin
-        if(byte_en[0])  mem_half_word = dcache_data[31:16];
-        else            mem_half_word = dcache_data[15:0];
+        if(byte_en[0])  mem_half_word = rd_dcache_data[31:16];
+        else            mem_half_word = rd_dcache_data[15:0];
     end
 
     u32_t mem_out;
@@ -72,7 +71,7 @@ module Memory2 (
         unique case(pass_in_r.byte_type)
             BYTE:       mem_out = pass_in_r.is_signed ? {{24{mem_byte[7]}}, mem_byte} : {{24{1'b0}}, mem_byte};
             HALF_WORD:  mem_out = pass_in_r.is_signed ? {{16{mem_half_word[15]}}, mem_half_word} : {{16{1'b0}}, mem_half_word};
-            WORD:       mem_out = dcache_data;
+            WORD:       mem_out = rd_dcache_data;
         endcase
     end
 

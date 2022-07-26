@@ -1,4 +1,4 @@
-`include "../cpu_defs.svh"
+`include "cpu_defs.svh"
 
 module TLB (
     input logic clk,

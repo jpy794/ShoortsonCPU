@@ -1,5 +1,4 @@
-`include "../cpu_defs.svh"
-`include "../pipeline.svh"
+`include "cpu_defs.svh"
 
 module Memory1 (
     input clk, rst_n,
@@ -19,6 +18,7 @@ module Memory1 (
     output u32_t dcache_pa,
     output logic dcache_is_cached,
     output byte_type_t dcache_byte_type,
+    output u32_t wr_cache_data,
 
     /* pipeline */
     input logic is_stall,
@@ -82,6 +82,7 @@ module Memory1 (
             else                   dcache_op = DC_R;
         end
     end
+    assign wr_cache_data = pass_in_r.rkd_data;
 
 
     /* out to next stage */

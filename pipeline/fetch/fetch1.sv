@@ -1,4 +1,4 @@
-`include "../cpu_defs.svh"
+`include "cpu_defs.svh"
 
 module Fetch1 (
     input logic clk, rst_n,

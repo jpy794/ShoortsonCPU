@@ -1238,7 +1238,7 @@ end
 // logic ready_from_axi;
 // logic task_finish_from_axi;  
 
-Cache_pipline(.clk(clk), .rstn(rstn), .req_from_icache(icache_req_to_pipline), .req_ad_from_icache(icache_req_ad_to_pipline), .cached_from_icache(icache_cached_to_pipline),
+Cache_pipline U_Cache_pipline (.clk(clk), .rstn(rstn), .req_from_icache(icache_req_to_pipline), .req_ad_from_icache(icache_req_ad_to_pipline), .cached_from_icache(icache_cached_to_pipline),
                 .req_from_dcache(dcache_req_to_pipline), .req_ad_from_dcache(dcache_req_ad_to_pipline),
                 .wword_from_dcache(wword_to_pipline), .wword_en_from_dcache(dcache_wen_to_pipline), .wblock_from_dcache(wblock_to_pipline),
                 .rword_en_from_dcache(dcache_ren_to_pipline), .cached_from_dcache(dcache_cached_to_pipline), 

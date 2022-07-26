@@ -7,8 +7,8 @@ module Counter #(
 );
 
     always_ff @(posedge clk) begin
-        if(clr) cnt = '0;
-        else    cnt = cnt + 1;
+        if(clr) cnt <= '0;
+        else    cnt <= cnt + 1;
     end
 
 endmodule

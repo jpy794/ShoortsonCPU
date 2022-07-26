@@ -426,7 +426,7 @@ always_ff @(posedge clk)begin
             awcache <= `AXI_CACHE_CACHE;
         end
         `AXI_STATE_REQ_STORE_WORD: begin
-            awcache <= `AXI_CACHE_NONE;
+            awcache <= `AXI_CACHE_CACHE;
         end
     endcase 
 end

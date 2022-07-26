@@ -1,55 +1,34 @@
 `include "cpu_defs.svh"
-`include "cache3/cache.svh"
 
 module CPUTop (
     input logic clk, rst_n,
-    // TODO: connect cache
-    output logic [`AXI_ID_WIDTH]arid,
-    output logic [`ADDRESS_WIDTH]araddr,
-    output logic [`AXI_LEN_WIDTH]arlen,
-    output logic [`AXI_SIZE_WIDTH]arsize,
-    output logic [`AXI_BURST_WIDTH]arburst,
-    output logic [`AXI_LOCK_WIDTH]arlock,
-    output logic [`AXI_CACHE_WIDTH]arcache,
-    output logic [`AXI_PROT_WIDTH]arprot,
-    output logic arvalid,
-    input logic arready,
-    //write request
-    output logic [`AXI_ID_WIDTH]awid,
-    output logic [`ADDRESS_WIDTH]awaddr,
-    output logic [`AXI_LEN_WIDTH]awlen,
-    output logic [`AXI_SIZE_WIDTH]awsize,    
-    output logic [`AXI_BURST_WIDTH]awburst,
-    output logic [`AXI_LOCK_WIDTH]awlock,
-    output logic [`AXI_CACHE_WIDTH]awcache,
-    output logic [`AXI_PROT_WIDTH]awprot,
-    output logic awvalid,
-    input logic awready,
-    //read back
-    input logic [`AXI_ID_WIDTH]rid,
-    input logic [`DATA_WIDTH]rdata,
-    input logic [`AXI_RESP_WIDTH]rresp,
-    input logic rlast,
-    input logic rvalid,
-    output logic rready,
-    //write data
-    output logic [`AXI_ID_WIDTH]wid,   
-    output logic [`DATA_WIDTH]wdata,
-    output logic [`AXI_STRB_WIDTH]wstrb,
-    output logic wlast,
-    output logic wvalid,
-    input logic wready,
-    //write back
-    input logic [`AXI_ID_WIDTH]bid,
-    input logic [`AXI_RESP_WIDTH]bresp,
-    output logic bready,
-    input logic bvaild,
 
-    //TODO:DEBUG LINE
-    output [31:0]debug0_wb_pc,
-    output [3:0]debug0_wb_rf_wen,
-    output [4:0]debug0_wb_rf_wnum,
-    output [31:0]debug0_wb_rf_wdata
+    output logic is_icache_stall,           // TODO: impl this
+    output logic [11:0] icache_idx,
+    output logic [2:0] icache_op,
+    output logic icache_is_cached,
+    output logic [19:0] icache_pa,
+    input logic icache_ready,
+    input logic [31:0] icache_data,
+
+    output logic is_dcache_stall,           // TODO: impl this
+    output logic [11:0] dcache_idx,
+    output logic [2:0] dcache_op,
+    output logic dcache_is_cached,
+    output logic [19:0] dcache_pa,
+    input logic [31:0] dcache_ready,
+    input logic [31:0] wr_dcache_data,
+    output logic [31:0] rd_dcache_data,
+
+    // TODO: int
+    input logic [7:0] intrpt,
+
+    // TODO:DEBUG LINE
+    output logic [31:0] debug0_wb_pc,
+    output logic [3:0] debug0_wb_rf_wen,
+    output logic [4:0] debug0_wb_rf_wnum,
+    output logic [31:0] debug0_wb_rf_wdata,
+    output logic [31:0] debug0_wb_inst
 );
 
     /* pass */
@@ -71,7 +50,7 @@ module CPUTop (
     logic csr_we;
     assign csr_addr = csr_we ? csr_addr_wb : csr_addr_id;
 
-    csr_t tlb_rd_csr, excp_rd_csr, if_rd_csr, id_rd_csr, mem1_rd_csr;
+    csr_t tlb_rd_csr, excp_rd_csr, oif_rd_csr, id_rd_csr, mem1_rd_csr;
     excp_wr_csr_req_t excp_wr_csr_req;
     tlb_wr_csr_req_t tlb_wr_csr_req;
 
@@ -154,10 +133,10 @@ module CPUTop (
 
         .tlb_entrys(itlb_entrys),
 
-        .icache_idx(icache_idx),                // TODO: connect cache
-        .icache_op(icache_op),
-        .icache_pa(icache_pa),
-        .icache_is_cached(icache_is_cached),
+        .icache_idx,
+        .icache_op,
+        .icache_pa,
+        .icache_is_cached,
 
         .is_stall(stall_if1),
         .is_flush(flush_if1),
@@ -169,10 +148,10 @@ module CPUTop (
     Fetch2 U_Fetch2 (
         .clk, .rst_n,
 
-        .icache_ready(icache_ready),            // TODO: connect cache
-        .icache_data(icache_data),
+        .icache_ready,
+        .icache_data,
         /* ctrl */
-        .icache_stall(icache_stall),
+        .icache_stall,
 
         .is_stall(stall_if2),
         .is_flush(flush_if2), 
@@ -233,11 +212,12 @@ module CPUTop (
 
         .tlb_entrys(dtlb_lookup), 
         
-        .dcache_idx(dcache_idx),                // TODO: connect dcache
-        .dcache_op(dcache_op),
-        .dcache_pa(dcache_pa),
-        .dcache_is_cached(dcache_is_cached),
-        .dcache_byte_type(dcache_byte_type),
+        .dcache_idx,
+        .dcache_op,
+        .dcache_pa,
+        .dcache_is_cached,
+        .dcache_byte_type,
+        .wr_dcache_data,
 
         .is_stall(stall_mem1),
         .is_flush(flush_mem1), 
@@ -253,8 +233,9 @@ module CPUTop (
 
         .fwd_req(mem2_req),
 
-        .dcache_ready(dcache_ready),        // TODO: connect dcache
-        .dcache_data(dcache_data),
+        .dcache_ready,
+        .rd_cache_data,
+        /* ctrl */
         .dcache_stall,
 
         .is_stall(mem2_stall),
@@ -301,96 +282,6 @@ module CPUTop (
         .rd_csr(excp_rd_csr),
         .wr_csr_req(excp_wr_csr_req)
     );
-logic [`AXI_REQ_WIDTH]req_to_axi;
-logic [`BLOCK_WIDTH]wblock_to_axi;
-logic [`DATA_WIDTH]wword_to_axi;
-logic [`AXI_STRB_WIDTH]wword_en_to_axi;
-logic [`AXI_STRB_WIDTH]rword_en_to_axi;
-logic [`ADDRESS_WIDTH]ad_to_axi;
-logic cached_to_axi;
-
-logic [`BLOCK_WIDTH]rblock_from_axi;
-logic [`DATA_WIDTH]rword_from_axi;
-logic ready_from_axi;
-logic task_finish_from_axi;  
-    Cache cache(.clk(clk), 
-                .rstn(rst_n), 
-                .ins_va(icache_idx),
-                .ins_pa(icache_pa),
-                .ins_op(icache_op),
-                .ins_stall(icache_stall), 
-                .ins_cached(icache_is_cached), 
-                .ins(icache_data),
-                .icache_ready(icache_ready),
-                .data_va(dcache_idx),
-                .data_pa(dcache_pa),
-                .data_op({dcache_op, dcache_byte_type}),
-                .data_stall(dcache_stall),
-                .data_cached(dcache_is_cached),
-                .store_data(),
-                .load_data(dcache_data),
-                .dcache_ready(dcache_ready),
-                
-                .req_to_axi(req_to_axi), 
-                .wblock_to_axi(wblock_to_axi),
-                .wword_to_axi(wword_to_axi), 
-                .wword_en_to_axi(wword_en_to_axi),
-                .rword_en_to_axi(rword_en_to_axi), 
-                .ad_to_axi(ad_to_axi), 
-                .cached_to_axi(cached_to_axi), 
-                .rblock_from_axi(rblock_from_axi), 
-                .rword_from_axi(rword_from_axi), 
-                .ready_from_axi(ready_from_axi), 
-                .task_finish_from_axi(task_finish_from_axi));
-
-To_AXI to_axi(.clk(clk), 
-                .rstn(rst_n),
-                .req(req_to_axi),
-                .wblock(wblock_to_axi),
-                .wword(wword_to_axi),
-                .wword_en(wword_en_to_axi),
-                .ad(ad_to_axi),
-                .cached(cached_to_axi),
-                .task_finish(task_finish_from_axi),
-                .rblock(rblock_from_axi),
-                .rword(rword_from_axi),
-                .rword_en(rword_en_to_axi),
-                .arid(arid),
-                .araddr(araddr),
-                .arlen(arlen),
-                .arsize(arsize),
-                .arburst(arburst),
-                .arlock(arlock),
-                .arcache(arcache),
-                .arprot(arprot),
-                .arvalid(arvalid),
-                .arready(arready),
-                .awid(awid),
-                .awaddr(awaddr),
-                .awlen(awlen),
-                .awsize(awsize),
-                .awburst(awburst),
-                .awlock(awlock),
-                .awcache(awcache),
-                .awprot(awprot),
-                .awvalid(awvalid),
-                .awready(awready),
-                .rid(rid),
-                .rdata(rdata),
-                .rresp(rresp),
-                .rlast(rlast),
-                .rvalid(rvalid),
-                .rready(rready),
-                .wid(wid),
-                .wdata(wdata),
-                .wstrb(wstrb),
-                .wlast(wlast),
-                .wvaild(wvaild),
-                .wready(wready),
-                .bid(bid),
-                .bresp(bresp),
-                .bready(bready),
-                .bvaild(bvaild));
 
 // logic [`AXI_ID_WIDTH]arid;
 // logic [`ADDRESS_WIDTH]araddr;
