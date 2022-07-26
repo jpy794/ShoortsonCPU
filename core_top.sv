@@ -58,16 +58,17 @@ module core_top(
     logic [11:0] icache_idx;
     logic [2:0] icache_op;
     logic icache_is_cached;
-    logic [19:0] icache_pa;
+    logic [31:0] icache_pa;
     logic [31:0] icache_data;
     logic icache_ready;
 
     logic is_dcache_stall;
     logic [11:0] dcache_idx;
-    logic [2:0] dcache_op;
+    logic [4:0] dcache_op;
+    logic [1:0] dcache_byte_type;
     logic dcache_is_cached;
-    logic [19:0] dcache_pa;
-    logic [31:0] dcache_ready;
+    logic [31:0] dcache_pa;
+    logic dcache_ready;
     logic [31:0] rd_dcache_data, wr_dcache_data;
 
     CPUTop U_CPUTop (
@@ -101,7 +102,7 @@ module core_top(
         .icache_ready(icache_ready),
         .data_va(dcache_idx),
         .data_pa(dcache_pa[31:12]),
-        .data_op({dcache_op, dcache_byte_type}),
+        .data_op({dcache_op[4:2], dcache_byte_type}),
         .data_stall(is_dcache_stall),
         .data_cached(dcache_is_cached),
         .store_data(wr_dcache_data),
@@ -164,12 +165,12 @@ module core_top(
         .wdata(wdata),
         .wstrb(wstrb),
         .wlast(wlast),
-        .wvaild(wvaild),
+        .wvalid(wvalid),
         .wready(wready),
         .bid(bid),
         .bresp(bresp),
         .bready(bready),
-        .bvaild(bvaild)
+        .bvaild(bvalid)
     );
 
 endmodule

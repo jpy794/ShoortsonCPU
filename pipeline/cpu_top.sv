@@ -7,18 +7,19 @@ module CPUTop (
     output logic [11:0] icache_idx,
     output logic [2:0] icache_op,
     output logic icache_is_cached,
-    output logic [19:0] icache_pa,
+    output logic [31:0] icache_pa,
     input logic icache_ready,
     input logic [31:0] icache_data,
 
     output logic is_dcache_stall,           // TODO: impl this
     output logic [11:0] dcache_idx,
-    output logic [2:0] dcache_op,
+    output logic [4:0] dcache_op,
+    output logic [1:0] dcache_byte_type,
     output logic dcache_is_cached,
-    output logic [19:0] dcache_pa,
-    input logic [31:0] dcache_ready,
-    input logic [31:0] wr_dcache_data,
-    output logic [31:0] rd_dcache_data,
+    output logic [31:0] dcache_pa,
+    input logic dcache_ready,
+    output logic [31:0] wr_dcache_data,
+    input logic [31:0] rd_dcache_data,
 
     // TODO: int
     input logic [7:0] intrpt,
@@ -50,7 +51,7 @@ module CPUTop (
     logic csr_we;
     assign csr_addr = csr_we ? csr_addr_wb : csr_addr_id;
 
-    csr_t tlb_rd_csr, excp_rd_csr, oif_rd_csr, id_rd_csr, mem1_rd_csr;
+    csr_t tlb_rd_csr, excp_rd_csr, if_rd_csr, id_rd_csr, mem1_rd_csr;
     excp_wr_csr_req_t excp_wr_csr_req;
     tlb_wr_csr_req_t tlb_wr_csr_req;
 
@@ -66,9 +67,9 @@ module CPUTop (
         .id_rd(id_rd_csr),
         .mem1_rd(mem1_rd_csr),
         .tlb_rd(tlb_rd_csr),
-        .excp_rd(rd_from_csr_to_excp),
+        .excp_rd(excp_rd_csr),
         /* wr_req */
-        .tlb_wr_req(tlb_wr_req), 
+        .tlb_wr_req(tlb_wr_csr_req), 
         .excp_wr_req(excp_wr_csr_req)
     );
 
@@ -131,7 +132,7 @@ module CPUTop (
 
         .rd_csr(if_rd_csr),
 
-        .tlb_entrys(itlb_entrys),
+        .tlb_entrys(itlb_lookup),
 
         .icache_idx,
         .icache_op,
@@ -171,7 +172,7 @@ module CPUTop (
         .rj_out(rj),
         .rkd_out(rkd),
         .rj_data,
-        .rk_data,
+        .rkd_data,
         /* ctrl */
         .load_use_stall, 
         .is_stall(stall_id),
@@ -231,15 +232,15 @@ module CPUTop (
     Memory2 U_Memory2 (
         .clk, .rst_n,
 
-        .fwd_req(mem2_req),
+        .fwd_req(mem2_fwd_req),
 
         .dcache_ready,
-        .rd_cache_data,
+        .rd_dcache_data,
         /* ctrl */
         .dcache_stall,
 
-        .is_stall(mem2_stall),
-        .is_flush(mem2_flush),
+        .is_stall(stall_mem2),
+        .is_flush(flush_mem2),
         .pass_in(pass_mem1),
         .excp_pass_in(excp_mem1), 
         .pass_out(pass_mem2),
@@ -263,7 +264,7 @@ module CPUTop (
         .is_stall(stall_wb),
         .is_flush(flush_wb),
         .pass_in(pass_mem2),
-        .excp_pass_out(excp_wb),
+        .excp_pass_in(excp_mem2),
 
         .excp_pass_out(excp_wb),
         .pc_out(wb_pc),

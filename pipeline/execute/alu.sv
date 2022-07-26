@@ -8,7 +8,7 @@ module ALU (
 );
 
 always_comb begin
-    unique case (op_type)
+    unique case (op)
         ADD:    out = a + b;
         SUB:    out = a - b;
         AND:    out = a & b;

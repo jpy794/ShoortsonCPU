@@ -62,7 +62,7 @@ module Memory2 (
 
     logic [15:0] mem_half_word;
     always_comb begin
-        if(byte_en[0])  mem_half_word = rd_dcache_data[31:16];
+        if(pass_in_r.byte_en[0])  mem_half_word = rd_dcache_data[31:16];
         else            mem_half_word = rd_dcache_data[15:0];
     end
 
@@ -93,7 +93,7 @@ module Memory2 (
     `PASS(pc);
     `PASS(is_wr_rd);
     `PASS(is_wr_rd_pc_plus4);
-    `PASS(is_wr_rd_pc_plus4);
+    `PASS(pc_plus4);
     `PASS(rd);
     `PASS(is_wr_csr);
     `PASS(csr_addr);

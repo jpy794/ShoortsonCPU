@@ -9,7 +9,7 @@ module AddrTrans (
     output excp_pass_t excp,
 
     input csr_t rd_csr,
-    input tlb_entrys[TLB_ENTRY_NUM]
+    input tlb_entry_t tlb_entrys[TLB_ENTRY_NUM]
 );
 
     /* tlb_lookup */
@@ -19,7 +19,7 @@ module AddrTrans (
     logic tlb_is_exc;
     phy_t tlb_pa;
     TLBLookup U_TLBLookup (
-        .entrys(itlb_entrys),
+        .entrys(tlb_entrys),
 
         .asid(rd_csr.asid.asid),
         .plv(rd_csr.crmd.plv),

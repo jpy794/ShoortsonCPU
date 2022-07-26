@@ -10,15 +10,15 @@ module Memory1 (
     input csr_t rd_csr,
 
     /* tlb */
-    input tlb_entrys[TLB_ENTRY_NUM],
+    input tlb_entry_t tlb_entrys[TLB_ENTRY_NUM],
 
     /* to dcache */
     output logic [11:0] dcache_idx,          // for index
-    output logic [2:0] dcache_op,
+    output logic [4:0] dcache_op,
     output u32_t dcache_pa,
     output logic dcache_is_cached,
     output byte_type_t dcache_byte_type,
-    output u32_t wr_cache_data,
+    output u32_t wr_dcache_data,
 
     /* pipeline */
     input logic is_stall,
@@ -82,7 +82,7 @@ module Memory1 (
             else                   dcache_op = DC_R;
         end
     end
-    assign wr_cache_data = pass_in_r.rkd_data;
+    assign wr_dcache_data = pass_in_r.rkd_data;
 
 
     /* out to next stage */
@@ -97,7 +97,7 @@ module Memory1 (
     `PASS(byte_type);
     `PASS(is_wr_rd);
     `PASS(is_wr_rd_pc_plus4);
-    `PASS(is_wr_rd_pc_plus4);
+    `PASS(pc_plus4);
     `PASS(rd);
     `PASS(is_wr_csr);
     `PASS(csr_addr);
