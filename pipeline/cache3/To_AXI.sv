@@ -96,7 +96,15 @@ module To_AXI (
 // logic [`AXI_RESP_WIDTH]bresp;
 // logic bready;
 // logic bvaild;
+assign wid = `AXI_WRITE_ID;
+assign arlock = `AXI_LOCK_NORMAL;
+assign arcache = `AXI_CACHE_CACHE;
+assign awcache = `AXI_CACHE_CACHE;
 
+assign arprot = `AXI_PORT_DATA;
+assign awprot = `AXI_PORT_DATA;
+assign awid = `AXI_WRITE_ID;
+assign awlock = `AXI_LOCK_NORMAL;
 
 logic [`AXI_STATE_WIDTH]cs, ns;
 
@@ -318,9 +326,7 @@ always_ff @(posedge clk)begin
     endcase
 end
 
-always_ff @(posedge clk)begin
-    arlock <= `AXI_LOCK_NORMAL;
-end
+
 
 always_ff @(posedge clk)begin
     unique case(ns)
@@ -357,24 +363,7 @@ always_ff @(posedge clk)begin
     endcase
 end
 
-always_ff @(posedge clk)begin
-    unique case(ns)
-    `AXI_STATE_REQ_LOAD_BLOCK: begin
-        arcache <= `AXI_CACHE_CACHE;
-    end
-    `AXI_STATE_REQ_LOAD_WORD: begin
-        arcache <= `AXI_CACHE_NONE;
-    end
-    endcase
-end
 
-always_ff @(posedge clk)begin
-    arprot <= `AXI_PORT_INS;    //TODO
-end
-
-always_ff @(posedge clk)begin
-    awid <= `AXI_WRITE_ID;
-end
 
 always_ff @(posedge clk)begin
     unique case(ns)
@@ -475,13 +464,14 @@ always_ff @(posedge clk)begin
     endcase
 end
 
-always_ff @(posedge clk)begin
-    awprot <= `AXI_PORT_INS;
-end
+// always_ff @(posedge clk)begin
+//     awprot <= `AXI_PORT_INS;
+// end
 
-always_ff @(posedge clk)begin
-    awlock <= `AXI_LOCK_NORMAL;
-end
+// always_ff @(posedge clk)begin
+//     awlock <= `AXI_LOCK_NORMAL;
+// end
+
 
 always_ff @(posedge clk)begin
     unique case(ns)
@@ -515,9 +505,7 @@ always_ff @(posedge clk)begin
     endcase
 end
 
-always_ff @(posedge clk)begin
-    wid <= `AXI_WRITE_ID;
-end
+
 
 always_ff @(posedge clk)begin
     unique case(ns)
