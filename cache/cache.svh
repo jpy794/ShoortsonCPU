@@ -151,9 +151,9 @@
 `define REQ_TO_AXI_LOAD_BLOCK 3'b010
 `define REQ_TO_AXI_WRITE_WORD 3'b011
 `define REQ_TO_AXI_LOAD_WORD 3'b100
-`define REQ_TO_AXI_NONE 2'b00
+`define REQ_TO_AXI_NONE 3'b000
 //axi
-`define AXI_REQ_WIDTH 1 : 0
+`define AXI_REQ_WIDTH 2 : 0
 `define AXI_RESPONSE_WIDTH 2 : 0
 `define AXI_ID_WIDTH 3:0
 `define AXI_LEN_WIDTH 3 : 0

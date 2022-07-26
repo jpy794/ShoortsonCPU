@@ -143,14 +143,19 @@ always_comb begin
         end
         `AXI_STATE_LOAD_BLOCK_WAIT_ARREADY: begin
             if(arready)begin
+                ns = `AXI_STATE_LOAD_BLOCK_WAIT_RVALID;
+            end
+            else begin
+                ns = `AXI_STATE_LOAD_BLOCK_WAIT_ARREADY;
+            end
+        end
+        `AXI_STATE_LOAD_BLOCK_WAIT_RVALID: begin
+            if(rvalid)begin
                 ns = `AXI_STATE_LOAD_BLOCK_DATA0;
             end
             else begin
                 ns = `AXI_STATE_LOAD_BLOCK_WAIT_RVALID;
             end
-        end
-        `AXI_STATE_LOAD_BLOCK_WAIT_RVALID: begin
-            ns = `AXI_STATE_LOAD_BLOCK_DATA0;
         end
         `AXI_STATE_LOAD_BLOCK_DATA0: begin
             ns = `AXI_STATE_LOAD_BLOCK_DATA1;

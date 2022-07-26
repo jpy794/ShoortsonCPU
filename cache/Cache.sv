@@ -60,8 +60,8 @@ logic [`ICACHE_REQ_TO_PIPLINE_WIDTH]icache_req_to_pipline;
 logic [`ICACHE_OP_WIDTH]reg_ins_op;
 logic reg_ins_stall;
 logic reg_ins_cached;
-logic reg_ins_va;
-logic reg_ins_pa;
+logic [`VA_WIDTH]reg_ins_va;
+logic [`PA_WIDTH]reg_ins_pa;
 logic reg_rlru_from_icache;
 logic [`RESPONSE_FROM_PIPLINE]response_from_pipline;
 
@@ -95,7 +95,7 @@ always_ff @(posedge clk)begin
 end
 
 always_ff @(posedge clk)begin
-    reg_ins_stall <= reg_ins_op;
+    reg_ins_stall <= ins_stall;
 end
 
 always_ff @(posedge clk)begin
@@ -243,7 +243,7 @@ logic select_way_to_dcache;
 logic wlru_en_to_dcache;
 logic [`LLIT_WIDTH]rllit_from_dcache;
 logic rlru_from_dcache;
-logic rdirty_from_dcache;
+logic [`BLOCK]rdirty_from_dcache;
 logic hit_from_dcache;
 
 logic [`DCACHE_STATE_WIDTH]dcache_next_state;
@@ -257,7 +257,7 @@ logic [`DCACHE_STATE_WIDTH]reg_dcache_next_state;
 logic [`VA_WIDTH]reg_data_va;
 logic [`PA_WIDTH]reg_data_pa;
 logic reg_rlru_from_dcache;
-logic reg_last_dcache_next_state;
+logic [`DCACHE_STATE_WIDTH]reg_last_dcache_next_state;
 
 always_ff @(posedge clk)begin
     reg_data_stall <= data_stall;
@@ -686,7 +686,7 @@ always_ff @(posedge clk)begin
             dcache_req_to_pipline <= `DCACHE_REQ_TO_PIPLINE_STORE_WORD;
         end
         default: begin
-            dcache_req_to_pipline <= `ICACHE_REQ_TO_PIPLINE_NONE;
+            dcache_req_to_pipline <= `DCACHE_REQ_TO_PIPLINE_NONE;
         end
     endcase
 end
@@ -971,7 +971,7 @@ end
 
 always_ff @(posedge clk)begin
     if(~reg_data_stall)begin
-        unique case(reg_ins_op)
+        unique case(reg_data_op)
             `DCACHE_REQ_LOAD_ATOM: begin
                 if(reg_data_cached && ~hit_from_dcache)begin
                     dcache_cached_to_pipline <= `CACHED;
@@ -1159,7 +1159,7 @@ always_ff @(posedge clk)begin
                         dcache_ren_to_pipline <= 4'b1100;
                     end
                     else begin
-                        dcache_req_to_pipline <= 4'b0011;
+                        dcache_ren_to_pipline <= 4'b0011;
                     end
                 end
             end
