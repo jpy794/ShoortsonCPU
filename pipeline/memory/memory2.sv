@@ -93,7 +93,7 @@ module Memory2 (
     `PASS(pc);
     `PASS(is_wr_rd);
     `PASS(is_wr_rd_pc_plus4);
-    `PASS(is_wr_rd_pc_plus4);
+    `PASS(pc_plus4);
     `PASS(rd);
     `PASS(is_wr_csr);
     `PASS(csr_addr);

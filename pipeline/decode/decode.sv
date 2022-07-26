@@ -501,15 +501,15 @@ module Decode (
             {17'b00111000011100100, {15{1'b?}}}: inst_dbar = 1'b1;
             {17'b00111000011100101, {15{1'b?}}}: inst_ibar = 1'b1;
 
-            {6'b010011, {22{1'b?}}}: inst_jirl = 1'b1;
-            {6'b010100, {22{1'b?}}}: inst_b = 1'b1;
-            {6'b010101, {22{1'b?}}}: inst_bl = 1'b1;
-            {6'b010110, {22{1'b?}}}: inst_beq = 1'b1;
-            {6'b010111, {22{1'b?}}}: inst_bne = 1'b1;
-            {6'b011000, {22{1'b?}}}: inst_blt = 1'b1;
-            {6'b011001, {22{1'b?}}}: inst_bge = 1'b1;
-            {6'b011010, {22{1'b?}}}: inst_bltu = 1'b1;
-            {6'b011011, {22{1'b?}}}: inst_bgeu = 1'b1;
+            {6'b010011, {26{1'b?}}}: inst_jirl = 1'b1;
+            {6'b010100, {26{1'b?}}}: inst_b = 1'b1;
+            {6'b010101, {26{1'b?}}}: inst_bl = 1'b1;
+            {6'b010110, {26{1'b?}}}: inst_beq = 1'b1;
+            {6'b010111, {26{1'b?}}}: inst_bne = 1'b1;
+            {6'b011000, {26{1'b?}}}: inst_blt = 1'b1;
+            {6'b011001, {26{1'b?}}}: inst_bge = 1'b1;
+            {6'b011010, {26{1'b?}}}: inst_bltu = 1'b1;
+            {6'b011011, {26{1'b?}}}: inst_bgeu = 1'b1;
 
             default: bad_inst = 1'b1;
         endcase
@@ -546,7 +546,7 @@ module Decode (
     assign pass_out.rkd_data = rkd_data;
     assign pass_out.imm = imm;
     assign pass_out.is_wr_rd = is_wr_rd;
-    assign pass_out.is_wr_rd_is_wr_rd_pc_plus4 = is_br_wb;
+    assign pass_out.is_wr_rd_pc_plus4 = is_br_wb;
     assign pass_out.is_wr_csr = inst_csrwr | inst_csrxchg;
     assign pass_out.is_mask_csr = inst_csrxchg;
     assign pass_out.csr_addr = csr_addr;

@@ -58,7 +58,7 @@ module core_top(
     logic [11:0] icache_idx;
     logic [2:0] icache_op;
     logic icache_is_cached;
-    logic [19:0] icache_pa;
+    logic [31:0] icache_pa;
     logic [31:0] icache_data;
     logic icache_ready;
 
@@ -67,8 +67,8 @@ module core_top(
     logic [4:0] dcache_op;
     logic [1:0] dcache_byte_type;
     logic dcache_is_cached;
-    logic [19:0] dcache_pa;
-    logic [31:0] dcache_ready;
+    logic [31:0] dcache_pa;
+    logic dcache_ready;
     logic [31:0] rd_dcache_data, wr_dcache_data;
 
     CPUTop U_CPUTop (

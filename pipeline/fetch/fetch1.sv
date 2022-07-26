@@ -22,7 +22,7 @@ module Fetch1 (
     input csr_t rd_csr,
 
     /* tlb */
-    input tlb_entrys[TLB_ENTRY_NUM],
+    input tlb_entry_t tlb_entrys[TLB_ENTRY_NUM],
 
     /* to icache */
     output logic [11:0] icache_idx,          // for index
@@ -79,7 +79,7 @@ module Fetch1 (
 
     /* fetch1 stage */
     always_comb begin
-        if(excp_wr_pc_req)          npc = excp_wr_pc_req.pc;
+        if(excp_wr_pc_req.valid)    npc = excp_wr_pc_req.pc;
         else if(ex_wr_pc_req.valid) npc = ex_wr_pc_req.pc;
         else if(btb_predict.valid)  npc = btb_predict.npc;      // predict is based on pc(or the pc wr req) in last clk
         else                        npc = pc_r + 4;

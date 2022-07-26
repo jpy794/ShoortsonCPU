@@ -9,7 +9,7 @@ module AddrTrans (
     output excp_pass_t excp,
 
     input csr_t rd_csr,
-    input tlb_entrys[TLB_ENTRY_NUM]
+    input tlb_entry_t tlb_entrys[TLB_ENTRY_NUM]
 );
 
     /* tlb_lookup */

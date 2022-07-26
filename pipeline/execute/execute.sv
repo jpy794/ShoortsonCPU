@@ -24,7 +24,7 @@ module Execute (
 );
 
     /* pipeline regster */
-    fetch2_decode_pass_t pass_in_r;
+    decode_execute_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
     always_ff @(posedge clk) begin

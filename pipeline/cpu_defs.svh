@@ -375,7 +375,8 @@ typedef struct packed {
 
     /* for inst executed in wb */
     logic is_wr_rd;
-    logic is_wr_rd_npc;
+    logic is_wr_rd_pc_plus4;
+    virt_t pc_plus4;
     reg_idx_t rd;
 
     logic is_wr_csr;
@@ -390,7 +391,8 @@ typedef struct packed {
 
     /* for inst executed in wb */
     logic is_wr_rd;             // two wrs should be mutually exclusive
-    logic is_wr_rd_npc;
+    logic is_wr_rd_pc_plus4;
+    virt_t pc_plus4;
     reg_idx_t rd;
 
     logic is_wr_csr;            // only need to check plv in ex

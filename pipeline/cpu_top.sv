@@ -7,7 +7,7 @@ module CPUTop (
     output logic [11:0] icache_idx,
     output logic [2:0] icache_op,
     output logic icache_is_cached,
-    output logic [19:0] icache_pa,
+    output logic [31:0] icache_pa,
     input logic icache_ready,
     input logic [31:0] icache_data,
 
@@ -16,8 +16,8 @@ module CPUTop (
     output logic [4:0] dcache_op,
     output logic [1:0] dcache_byte_type,
     output logic dcache_is_cached,
-    output logic [19:0] dcache_pa,
-    input logic [31:0] dcache_ready,
+    output logic [31:0] dcache_pa,
+    input logic dcache_ready,
     output logic [31:0] wr_dcache_data,
     input logic [31:0] rd_dcache_data,
 
