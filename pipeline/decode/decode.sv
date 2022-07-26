@@ -6,7 +6,7 @@ module Decode (
     input logic clk, rst_n,
 
     /* from csr */
-    input csr_addr_t csr_addr_out,
+    output csr_addr_t csr_addr_out,
     input u32_t csr_data,
 
     /* from regfile */
@@ -439,7 +439,7 @@ module Decode (
         unique casez(inst)
             // TODO: rdcnt
             {17'b0000_0000_0001_0000_0, {15{1'b?}}}: inst_add_w = 1'b1;
-            {17'b0000_0000_0001_0001_0, {15{1'b?}}}: inst_sub_u = 1'b1;
+            {17'b0000_0000_0001_0001_0, {15{1'b?}}}: inst_sub_w = 1'b1;
             {17'b0000_0000_0001_0010_0, {15{1'b?}}}: inst_slt = 1'b1;
             {17'b0000_0000_0001_0010_1, {15{1'b?}}}: inst_sltu = 1'b1;
             {17'b0000_0000_0001_0100_0, {15{1'b?}}}: inst_nor = 1'b1;
@@ -543,7 +543,7 @@ module Decode (
     assign pass_out.rkd = rkd;
     assign pass_out.rd = rd;
     assign pass_out.rj_data = rj_data;
-    assign pass_out.rkd_data = rk_data;
+    assign pass_out.rkd_data = rkd_data;
     assign pass_out.imm = imm;
     assign pass_out.is_wr_rd = is_wr_rd;
     assign pass_out.is_wr_rd_is_wr_rd_pc_plus4 = is_br_wb;

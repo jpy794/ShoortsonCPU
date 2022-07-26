@@ -41,7 +41,7 @@ module TLB (
     always_ff @(posedge clk) begin
         unique case(tlb_op)
         TLBWR, TLBFILL: begin
-            if(rd_csr_estat.r_esubcode_ecode == TLBR) entrys[wr_idx].e <= ~rd_csr.tlbidx.ne;
+            if(rd_csr.estat.r_esubcode_ecode == TLBR) entrys[wr_idx].e <= ~rd_csr.tlbidx.ne;
             else                                      entrys[wr_idx].e <= '1;
 
             entrys[wr_idx].g <= rd_csr.tlbelo[0].g & rd_csr.tlbelo[1].g;
@@ -133,7 +133,7 @@ module TLB (
                 end
             end else begin
                 wr_csr_req.tlbidx.ne = '1;
-                wr_csr_asid.asid = '0;
+                wr_csr_req.asid.asid = '0;
                 wr_csr_req.tlbehi = '0;
                 wr_csr_req.tlbelo[0] = '0;
                 wr_csr_req.tlbelo[1] = '0;

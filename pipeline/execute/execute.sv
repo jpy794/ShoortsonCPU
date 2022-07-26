@@ -19,7 +19,7 @@ module Execute (
     input decode_execute_pass_t pass_in,
     input excp_pass_t excp_pass_in,
 
-    output execute_mem1_pass_t pass_out,
+    output execute_memory1_pass_t pass_out,
     output excp_pass_t excp_pass_out
 );
 
@@ -86,8 +86,8 @@ module Execute (
     logic br_taken;
     BRU U_BRU (
         .op(pass_in_r.bru_op),
-        .a(rj_data),
-        .b(rkd_data),
+        .a(rj_forwarded),
+        .b(rkd_forwarded),
         .taken(br_taken)
     );
     
@@ -99,14 +99,14 @@ module Execute (
     assign wr_pc_req.pc = npc;
 
     /* mul */
-    logic mul_en, mul_singed;
+    logic mul_en, mul_signed;
     u64_t mul_out;
     logic mul_done;
     Mul U_Mul (
         .clk, .rst_n,
         .is_flush(ex_flush),
-        .a(rj_data),
-        .b(rk_data),
+        .a(rj_forwarded),
+        .b(rkd_forwarded),
         .en(mul_en),
         .is_signed(mul_signed),
         .out(mul_out),
@@ -119,7 +119,7 @@ module Execute (
         case(pass_in_r.mul_op)
             LO: mul_signed = 1'b0;
             HI: mul_signed = 1'b0;
-            HIU: mul_singed = 1'b1;
+            HIU: mul_signed = 1'b1;
             default: $stop;
         endcase
     end
@@ -146,7 +146,7 @@ module Execute (
             end
             //TODO: DIV: ex_out = div_out;
             CSR: begin
-                if(is_mask_csr) ex_out = csr_masked;
+                if(pass_in_r.is_mask_csr) ex_out = csr_masked;
                 else            ex_out = pass_in_r.rkd_data;
             end
             default: ex_out = alu_out;

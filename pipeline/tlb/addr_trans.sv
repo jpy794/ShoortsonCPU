@@ -19,7 +19,7 @@ module AddrTrans (
     logic tlb_is_exc;
     phy_t tlb_pa;
     TLBLookup U_TLBLookup (
-        .entrys(itlb_entrys),
+        .entrys(tlb_entrys),
 
         .asid(rd_csr.asid.asid),
         .plv(rd_csr.crmd.plv),

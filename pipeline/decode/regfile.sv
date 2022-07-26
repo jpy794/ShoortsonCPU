@@ -19,18 +19,18 @@ module RegFile (
 
     /* fowarding */
     always_comb begin
-        if(we && (rj == rkd))    rj_data = rkd_data;
+        if(we && (rj == rd))    rj_data = rd_data;
         else                    rj_data = regfile[rj];
     end
 
     always_comb begin
-        if(we && (rj == rkd))    rk_data = rkd_data;
-        else                    rk_data = regfile[rk];
+        if(we && (rkd == rd))   rkd_data = rd_data;
+        else                    rkd_data = regfile[rkd];
     end
 
     always_ff @(posedge clk) begin
         if(~rst_n)                      regfile[0] <= '0;
-        else if(we && rkd != 5'b0)       regfile[rkd] <= rkd_data;
+        else if(we && rd != 5'b0)       regfile[rd] <= rd_data;
     end
 
 endmodule

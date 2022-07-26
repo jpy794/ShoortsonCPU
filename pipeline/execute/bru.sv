@@ -8,7 +8,7 @@ module BRU (
 
     logic eq, lt, ltu;
     assign eq = (a == b);
-    assign lt = ($signed(a) < $sgned(b));
+    assign lt = ($signed(a) < $signed(b));
     assign ltu = (a < b);
 
     always_comb begin

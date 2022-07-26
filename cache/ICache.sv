@@ -9,7 +9,7 @@ module ICache(
     input logic [`ADDRESS_WIDTH]ad,
     input logic [`ICACHE_STATE_WIDTH]control_en, 
 
-    input logic wlru_en_from_cahce,
+    input logic wlru_en_from_cache,
     input logic select_way,
     output logic rlru_to_cache,
 
@@ -47,7 +47,7 @@ assign hit = |way_hit;
 
 assign lru_wad = pa[`INDEX_PART];
 assign lru_rad = ad[`INDEX_PART];
-assign wlru_en = wlru_en_from_cahce;
+assign wlru_en = wlru_en_from_cache;
 assign rlru_to_cache = rlru;
 assign wlru = way_hit[1];       //lru部分不适用于拓展，目前的设计只能在way
 

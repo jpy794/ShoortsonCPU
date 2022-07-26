@@ -18,7 +18,7 @@ module Memory1 (
     output u32_t dcache_pa,
     output logic dcache_is_cached,
     output byte_type_t dcache_byte_type,
-    output u32_t wr_cache_data,
+    output u32_t wr_dcache_data,
 
     /* pipeline */
     input logic is_stall,
