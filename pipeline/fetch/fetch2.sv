@@ -36,7 +36,7 @@ module Fetch2 (
     assign icache_stall = ~icache_ready;
 
     /* out to next stage */
-    assign pass_out.is_flush = is_flush | pass_in_r.is_flush;
+    assign pass_out.is_flush = is_flush | pass_in_r.is_flush | icache_stall;
     assign pass_out.inst = icache_data;
 
     `PASS(pc);

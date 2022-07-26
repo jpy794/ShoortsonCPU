@@ -3,6 +3,9 @@
 module Memory1 (
     input clk, rst_n,
 
+    /* load use */
+    output load_use_t ld_use,
+
     /* forward */
     output forward_req_t fwd_req,
 
@@ -43,6 +46,10 @@ module Memory1 (
     end
 
     logic mem1_flush = is_flush | pass_in_r.is_flush;
+
+    /* load use */
+    assign ld_use.idx = pass_in_r.rd;
+    assign ld_use.valid = pass_in_r.is_wr_rd;
 
     /* forward */
     // be careful of load-use stall

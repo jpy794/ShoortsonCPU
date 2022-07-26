@@ -10,6 +10,9 @@ module Execute (
     /* TODO: branch resolved */
     output wr_pc_req_t wr_pc_req,
 
+    /* load use */
+    output load_use_t ld_use,
+
     /* forwarding */
     input forward_req_t mem1_req, mem2_req,
 
@@ -153,6 +156,10 @@ module Execute (
         endcase
     end
 
+    /* load use */
+    assign ld_use.idx = pass_in_r.rd;
+    assign ld_use.valid = pass_in_r.is_wr_rd;
+
     /* to ctrl */
     assign eu_stall = ((pass_in_r.is_mul) && !mul_done);
     // TODO: div   || ((pass_in_r.is_div) && !div_done);
@@ -160,7 +167,7 @@ module Execute (
 
 
     /* out to next stage */
-    assign pass_out.is_flush = is_flush | pass_in_r.is_flush;
+    assign pass_out.is_flush = ex_flush | eu_stall;
     assign pass_out.ex_out = ex_out;
     assign pass_out.invtlb_asid = pass_in_r.rj_data[9:0];
     assign pass_out.pc_plus4 = pass_in_r.pc + 4;

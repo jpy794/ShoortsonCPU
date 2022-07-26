@@ -13,6 +13,10 @@ module Decode (
     output reg_idx_t rj_out, rkd_out,
     input u32_t rj_data, rkd_data,
 
+    /* load use */
+    input load_use_t ex_ld_use,
+    input load_use_t mem1_ld_use,
+
     /* ctrl */
     output logic load_use_stall,
 
@@ -520,9 +524,54 @@ module Decode (
     assign rkd_out = rkd;
     assign csr_addr_out = csr_addr;
 
+    /* load use stall */
+    // TODO: rdcnt
+    logic is_use_rj;
+    assign is_use_rj = is_alu       |
+                       is_mem       |
+                       inst_jirl    |
+                       is_mul       |
+                       is_div       |
+                       inst_cacop   |
+                       inst_invtlb  |
+                       inst_csrxchg ;
+    logic is_use_rkd;
+    assign is_use_rkd = inst_invtlb |
+                        inst_add_w  |
+                        inst_sub_w  |
+                        inst_slt    |
+                        inst_sltu   |
+                        inst_nor    |
+                        inst_and    |
+                        inst_or     |
+                        inst_xor    |
+                        inst_sll_w  |
+                        inst_srl_w  |
+                        inst_sra_w  |
+                        is_mul      |
+                        is_div      |
+                        is_mem      |
+                        is_br_off   ;
+
+    always_comb begin
+        load_use_stall = 1'b0;
+        if(ex_ld_use.valid) begin
+            if(rj == ex_ld_use.idx && is_use_rj
+            || rkd == ex_ld_use.idx && is_use_rkd) begin
+                load_use_stall = 1'b1;
+            end
+        end
+        if(mem1_ld_use.valid) begin
+            if(rj == mem1_ld_use.idx && is_use_rj
+            || rkd == mem1_ld_use.idx && is_use_rkd) begin
+                load_use_stall = 1'b1;
+            end
+        end
+    end
+
 
     /* out to next stage */
-    assign pass_out.is_flush = is_flush | pass_in_r.is_flush;
+    assign pass_out.is_flush = id_flush | load_use_stall;
     assign pass_out.is_mul = is_mul;
     assign pass_out.is_div = is_div;
     assign pass_out.is_bru = is_br;

@@ -407,6 +407,12 @@ typedef struct packed {
     u32_t data;
 } forward_req_t;
 
+/* load use */
+typedef struct packed {
+    logic valid;
+    reg_idx_t idx;
+} load_use_t;
+
 /* cacheop */
 typedef enum logic [1:0] {
     C_INIT = 2'b00,

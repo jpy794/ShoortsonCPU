@@ -163,6 +163,7 @@ module CPUTop (
     );
 
     logic load_use_stall;
+    load_use_t ex_ld_use, mem1_ld_use;
     Decode U_Decode (
         .clk, .rst_n,
 
@@ -173,6 +174,9 @@ module CPUTop (
         .rkd_out(rkd),
         .rj_data,
         .rkd_data,
+
+        .ex_ld_use,
+        .mem1_ld_use,
         /* ctrl */
         .load_use_stall, 
         .is_stall(stall_id),
@@ -192,6 +196,8 @@ module CPUTop (
         .eu_stall,
         .bp_miss_flush,
         .wr_pc_req(ex_wr_pc_req),
+
+        .ld_use(ex_ld_use),
         /* forwarding */
         .mem1_req(mem1_fwd_req),
         .mem2_req(mem2_fwd_req),
@@ -207,6 +213,7 @@ module CPUTop (
     Memory1 U_Memory1 (
         .clk, .rst_n,
 
+        .ld_use(mem1_ld_use),
         .fwd_req(mem1_fwd_req), 
 
         .rd_csr(mem1_rd_csr),
@@ -284,41 +291,17 @@ module CPUTop (
         .wr_csr_req(excp_wr_csr_req)
     );
 
-// logic [`AXI_ID_WIDTH]arid;
-// logic [`ADDRESS_WIDTH]araddr;
-// logic [`AXI_LEN_WIDTH]arlen;
-// logic [`AXI_SIZE_WIDTH]arsize;
-// logic [`AXI_BURST_WIDTH]arburst;
-// logic [`AXI_LOCK_WIDTH]arlock;
-// logic [`AXI_CACHE_WIDTH]arcache;
-// logic [`AXI_PROT_WIDTH]arprot;
-// logic arvalid;
-// logic arready;
-// logic [`AXI_ID_WIDTH]awid;
-// logic [`ADDRESS_WIDTH]awaddr;
-// logic [`AXI_LEN_WIDTH]awlen;
-// logic [`AXI_SIZE_WIDTH]awsize;
-// logic [`AXI_LOCK_WIDTH]awlock;
-// logic [`AXI_CACHE_WIDTH]awcache;
-// logic [`AXI_PROT_WIDTH]awprot;
-// logic awvalid;
-// logic awready;
-// logic [`AXI_ID_WIDTH]rid;
-// logic [`DATA_WIDTH]rdata;
-// logic [`AXI_RESP_WIDTH]rresp;
-// logic rlast;
-// logic rvalid;
-// logic rready;
-// logic [`AXI_ID_WIDTH]wid;
-// logic [`DATA_WIDTH]wdata;
-// logic [`AXI_STRB_WIDTH]wstrb;
-// logic wlast;
-// logic wvaild;
-// logic wready;
-// logic [`AXI_ID_WIDTH]bid;
-// logic [`AXI_RESP_WIDTH]bresp;
-// logic bready;
-// logic bvaild;
+    assign is_icache_stall = stall_if2;
+    assign is_dcache_stall = stall_mem2;
 
+    assign stall_if1 =  dcache_stall | eu_stall | load_use_stall;
+    assign stall_if2 =  dcache_stall | eu_stall | load_use_stall;
+    assign stall_id  =  dcache_stall | eu_stall | load_use_stall;
+    assign stall_ex  =  dcache_stall | eu_stall;
+    assign stall_mem1 = dcache_stall;
+
+    assign flush_if1 = bp_miss_flush;
+    assign flush_if2 = bp_miss_flush;
+    assign flush_id = bp_miss_flush;
 
 endmodule

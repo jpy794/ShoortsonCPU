@@ -87,7 +87,7 @@ module Memory2 (
 
 
     /* out to next stage */
-    assign pass_out.is_flush = mem1_flush;
+    assign pass_out.is_flush = mem1_flush | dcache_stall;
     assign pass_out.ex_mem_out = ex_mem_out;
     
     `PASS(pc);
