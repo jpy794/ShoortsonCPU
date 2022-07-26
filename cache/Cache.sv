@@ -570,14 +570,14 @@ always_ff @(posedge clk)begin
                 `DCACHE_REQ_STORE_HALF_WORD: begin
                     if(reg_data_cached)begin
                         if(hit_from_dcache)begin
-                            dcache_next_state = `D_STORE;
+                            dcache_next_state <= `D_STORE;
                         end
                         else begin
                             if(rdirty_from_dcache)begin
                                 dcache_next_state <= `D_WAIT_STORE_STORE;
                             end 
                             else begin
-                                dcache_next_state = `D_WAIT_STORE;
+                                dcache_next_state <= `D_WAIT_STORE;
                             end
                         end
                     end
