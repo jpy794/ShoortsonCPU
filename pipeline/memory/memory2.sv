@@ -35,7 +35,7 @@ module Memory2 (
         end
     end
 
-    logic mem1_flush = is_flush | pass_in_r.is_flush;
+    logic mem2_flush = is_flush | pass_in_r.is_flush;
 
     /* forward */
     // be careful of load-use stall
@@ -87,7 +87,7 @@ module Memory2 (
 
 
     /* out to next stage */
-    assign pass_out.is_flush = mem1_flush | dcache_stall;
+    assign pass_out.is_flush = mem2_flush | dcache_stall;
     assign pass_out.ex_mem_out = ex_mem_out;
     
     `PASS(pc);

@@ -33,9 +33,6 @@ module AddrTrans (
         .is_exc(tlb_is_exc)
     );
 
-    assign mat = tlb_mat;
-    assign pa = tlb_pa;
-
     /* addr translate */
     logic is_direct;
     assign is_direct = rd_csr.crmd.da; // maybe consider crmd.pg ?
@@ -45,6 +42,27 @@ module AddrTrans (
 
     logic is_tlb;
     assign is_tlb = ~is_direct & ~is_dmw_found;
+
+    // TODO: dmw
+    always_comb begin
+        mat = tlb_mat;
+        pa = tlb_pa;
+        if(is_direct) begin
+            if(lookup_type == LOOKUP_FETCH) begin
+                mat = rd_csr.crmd.datf;
+            end else begin
+                mat = rd_csr.crmd.datm;
+            end
+            pa = va;
+        end else if(is_dmw_found) begin
+            /* dmw */
+
+        end else begin
+            /* tlb */
+            mat = tlb_mat;
+            pa = tlb_pa;
+        end
+    end
 
     /* align check */
     logic align_ok;

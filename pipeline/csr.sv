@@ -34,7 +34,11 @@ module CSR (
     /* verilator lint_on BLKANDNBLK */
 
     /* read */
+    assign if_rd = csr;
+    assign id_rd = csr;
+    assign mem1_rd = csr;
     assign tlb_rd = csr;
+    assign excp_rd = csr;
     always_comb begin
         case(addr)
             'h0: rd_data = csr.crmd;
@@ -82,7 +86,7 @@ module CSR (
         if(~rst_n) begin
             csr.crmd.plv <= 2'b0;
             csr.crmd.ie <= 1'b0;
-            csr.crmd.da <= 1'b0;
+            csr.crmd.da <= 1'b1;
             csr.crmd.pg <= 1'b0;
             csr.crmd.datf <= SUC;
             csr.crmd.datm <= SUC;

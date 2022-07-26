@@ -22,6 +22,7 @@ module Writeback (
     /* debug */
     output memory2_writeback_pass_t pass_out,
     /* to exception */
+    output logic wb_flush,
     output excp_pass_t excp_pass_out,
     output virt_t pc_out,
     output logic inst_ertn
@@ -33,13 +34,14 @@ module Writeback (
     always_ff @(posedge clk) begin
         if(~rst_n) begin
             pass_in_r.is_flush <= 1'b1;
+            excp_pass_in_r.valid <= 1'b0;
         end else if(~is_stall) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;
         end
     end
 
-    logic wb_flush = is_flush | pass_in_r.is_flush;
+    assign wb_flush = is_flush | pass_in_r.is_flush;
 
     /* writeback stage */
 

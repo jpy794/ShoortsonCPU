@@ -254,6 +254,7 @@ module CPUTop (
         .excp_pass_out(excp_mem2)
     );
 
+    logic wb_flush;
     excp_pass_t excp_wb;
     memory2_writeback_pass_t pass_wb;
     virt_t wb_pc;
@@ -274,6 +275,7 @@ module CPUTop (
         .pass_in(pass_mem2),
         .excp_pass_in(excp_mem2),
 
+        .wb_flush,
         .excp_pass_out(excp_wb),
         .pass_out(pass_wb),
         .pc_out(wb_pc),
@@ -290,6 +292,7 @@ module CPUTop (
     Exception U_Exception (
         .ti_in('0), .hwi_in('0),            // TODO: connect real interrupt
         /* from wb */
+        .wb_flush,
         .wb_ertn,                           // TODO: handle eret
         .pc_wb(wb_pc),
         .excp_wb,
@@ -308,9 +311,15 @@ module CPUTop (
     assign stall_id  =  dcache_stall | eu_stall | load_use_stall;
     assign stall_ex  =  dcache_stall | eu_stall;
     assign stall_mem1 = dcache_stall;
+    assign stall_mem2 = 1'b0;
+    assign stall_wb = 1'b0;
 
     assign flush_if1 = bp_miss_flush;
     assign flush_if2 = bp_miss_flush;
     assign flush_id = bp_miss_flush;
+    assign flush_ex = 1'b0;
+    assign flush_mem1 = 1'b0;
+    assign flush_mem2 = 1'b0;
+    assign flush_wb = 1'b0;
 
 endmodule

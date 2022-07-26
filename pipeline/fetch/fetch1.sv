@@ -93,4 +93,9 @@ module Fetch1 (
         end
     end
 
+    /* exeption */
+    assign excp_pass_out.valid = addr_excp.valid & ~is_flush;
+    assign excp_pass_out.esubcode_ecode = addr_excp.esubcode_ecode;
+    assign excp_pass_out.badv = addr_excp.badv;
+
 endmodule

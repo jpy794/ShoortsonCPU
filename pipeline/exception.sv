@@ -4,6 +4,7 @@ module Exception(
     input logic [7:0] hwi_in,
 
     /* wb stage */
+    input logic wb_flush,
     input logic wb_ertn,
     input u32_t pc_wb,
     input excp_pass_t excp_wb,
@@ -30,37 +31,43 @@ module Exception(
     logic is_excp = excp_wb.valid;
 
     always_comb begin
-        wr_csr_req.we = 1'b1;
+        wr_csr_req.we = 1'b0;
         wr_csr_req.crmd = rd_csr.crmd;
         wr_csr_req.prmd = rd_csr.prmd;
         wr_csr_req.estat = rd_csr.estat;
         wr_csr_req.era = rd_csr.era;
         wr_csr_req.badv = rd_csr.badv;
-        if(is_int) begin
-            wr_csr_req.crmd.plv = 2'b0;
-            wr_csr_req.crmd.ie = 1'b0;
+        if(~wb_flush) begin
+            if(is_int) begin
+                wr_csr_req.we = 1'b1;
 
-            wr_csr_req.prmd.pplv = rd_csr.crmd.plv;
-            wr_csr_req.prmd.pie = rd_csr.crmd.ie;
-            
-            wr_csr_req.era = pc_wb;
+                wr_csr_req.crmd.plv = 2'b0;
+                wr_csr_req.crmd.ie = 1'b0;
 
-            wr_csr_req.estat.is = int_vec;
-        end else if(is_excp) begin
-            wr_csr_req.crmd.plv = 2'b0;
-            wr_csr_req.crmd.ie = 1'b0;
+                wr_csr_req.prmd.pplv = rd_csr.crmd.plv;
+                wr_csr_req.prmd.pie = rd_csr.crmd.ie;
+                
+                wr_csr_req.era = pc_wb;
 
-            wr_csr_req.prmd.pplv = rd_csr.crmd.plv;
-            wr_csr_req.prmd.pie = rd_csr.crmd.ie;
-            
-            wr_csr_req.era = pc_wb;
+                wr_csr_req.estat.is = int_vec;
+            end else if(is_excp) begin
+                wr_csr_req.we = 1'b1;
 
-            wr_csr_req.estat.r_esubcode_ecode = excp_wb.esubcode_ecode;
-        end else if(wb_ertn) begin
-            wr_csr_req.crmd.plv = rd_csr.prmd.pplv;
-            wr_csr_req.crmd.ie = rd_csr.prmd.pie;
-        end else begin
-            wr_csr_req.we = 1'b0;
+                wr_csr_req.crmd.plv = 2'b0;
+                wr_csr_req.crmd.ie = 1'b0;
+
+                wr_csr_req.prmd.pplv = rd_csr.crmd.plv;
+                wr_csr_req.prmd.pie = rd_csr.crmd.ie;
+                
+                wr_csr_req.era = pc_wb;
+
+                wr_csr_req.estat.r_esubcode_ecode = excp_wb.esubcode_ecode;
+            end else if(wb_ertn) begin
+                wr_csr_req.we = 1'b1;
+
+                wr_csr_req.crmd.plv = rd_csr.prmd.pplv;
+                wr_csr_req.crmd.ie = rd_csr.prmd.pie;
+            end
         end
     end
 
