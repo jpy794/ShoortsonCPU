@@ -103,7 +103,7 @@ always_ff @(posedge clk)begin
 end
 
 always_comb begin
-    if(~ins_stall)begin
+    if(~ins_stall && rstn)begin
         unique case(ins_op)
             `ICACHE_REQ_LOAD_INS: ins_control_en = `I_LOAD;
             `ICACHE_REQ_INITIALIZE: ins_control_en = `I_WRITE_TAG;
@@ -440,7 +440,7 @@ always_ff @(posedge clk)begin
 end
 
 always_comb begin
-    if(~data_stall)begin
+    if(~data_stall && rstn)begin
         unique case(data_op)
             `DCACHE_REQ_LOAD_ATOM: dcache_control_en = `D_LOAD;
             `DCACHE_REQ_LOAD_WORD: dcache_control_en = `D_LOAD;
