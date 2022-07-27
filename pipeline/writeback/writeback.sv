@@ -58,5 +58,25 @@ module Writeback (
     assign csr_addr = pass_in_r.csr_addr;
     assign csr_data = pass_in_r.ex_mem_out;
     assign csr_we = ~wb_flush & pass_in_r.is_wr_csr;
+    
+    /* difftest */
+    DifftestInstrCommit DifftestInstrCommit(
+        .clock              (clk            ),
+        .coreid             (0              ),
+        .index              (0              ),
+        .valid              (reg_we | csr_we),
+        .pc                 (pass_in_r.pc   ),
+        .instr              (0              ),
+        .skip               (0              ),
+        .is_TLBFILL         (0 ),
+        .TLBFILL_index      (0 ),
+        .is_CNTinst         (0   ),
+        .timer_64_value     (0   ),
+        .wen                (reg_we        ),
+        .wdest              (reg_idx      ),
+        .wdata              (reg_data      ),
+        .csr_rstat          (0),
+        .csr_data           (0   )
+    );
 
 endmodule

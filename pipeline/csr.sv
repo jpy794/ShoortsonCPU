@@ -210,4 +210,37 @@ module CSR (
     /* pgd end */
     assign csr.tlbrentry.r0_1 = '0; 
 
+    /* difftest */
+    DifftestCSRRegState DifftestCSRRegState(
+        .clock              (clk                ),
+        .coreid             (0                  ),
+        .crmd               (csr.crmd           ),
+        .prmd               (csr.prmd           ),
+        .euen               (0                  ),
+        .ecfg               (csr.ecfg           ),
+        .estat              (csr.estat          ),
+        .era                (csr.era            ),
+        .badv               (csr.badv           ),
+        .eentry             (csr.eentry         ),
+        .tlbidx             (csr.tlbidx         ),
+        .tlbehi             (csr.tlbehi         ),
+        .tlbelo0            (csr.tlbelo[0]      ),
+        .tlbelo1            (csr.tlbelo[1]      ),
+        .asid               (csr.asid           ),
+        .pgdl               (csr.pgdl           ),
+        .pgdh               (csr.pgdh           ),
+        .save0              (csr.save[0]        ),
+        .save1              (csr.save[1]        ),
+        .save2              (csr.save[2]        ),
+        .save3              (csr.save[3]        ),
+        .tid                (0                  ),
+        .tcfg               (0                  ),
+        .tval               (0                  ),
+        .ticlr              (0                  ),
+        .llbctl             (0                  ),
+        .tlbrentry          (csr.tlbrentry      ),
+        .dmw0               (0                  ),
+        .dmw1               (0                  )
+    );
+
 endmodule
