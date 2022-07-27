@@ -98,16 +98,22 @@ always_comb begin
             endcase
         end
         `PIPLINE_REQ_STORE_BLOCK: begin
-            ns = `PIPLINE_STORE_BLOCK_WAIT_READY;
-        end
-        `PIPLINE_STORE_BLOCK_WAIT_READY: begin
+          //  ns = `PIPLINE_STORE_BLOCK_WAIT_READY;
             if(ready_from_axi)begin
                 ns = `PIPLINE_STORE_BLOCK_WAIT_FINISH;
             end
             else begin
-                ns = `PIPLINE_STORE_BLOCK_WAIT_READY;
+                ns = `PIPLINE_REQ_STORE_BLOCK;
             end
         end
+        // `PIPLINE_STORE_BLOCK_WAIT_READY: begin
+        //     if(ready_from_axi)begin
+        //         ns = `PIPLINE_STORE_BLOCK_WAIT_FINISH;
+        //     end
+        //     else begin
+        //         ns = `PIPLINE_STORE_BLOCK_WAIT_READY;
+        //     end
+        // end
         `PIPLINE_STORE_BLOCK_WAIT_FINISH: begin
             if(task_finish_from_axi)begin
                 ns = `PIPLINE_STORE_BLOCK_FINISH;
@@ -120,16 +126,22 @@ always_comb begin
             ns = `D_PIPLINE_REQ_LOAD_BLOCK;
         end
         `D_PIPLINE_REQ_LOAD_BLOCK: begin
-            ns = `D_PIPLINE_LOAD_BLOCK_WAIT_READY;
-        end
-        `D_PIPLINE_LOAD_BLOCK_WAIT_READY: begin
             if(ready_from_axi)begin
                 ns = `D_PIPLINE_LOAD_BLOCK_WAIT_FINISH;
             end
             else begin
-                ns = `D_PIPLINE_LOAD_BLOCK_WAIT_FINISH;
+                ns = `D_PIPLINE_REQ_LOAD_BLOCK;
             end
+            //ns = `D_PIPLINE_LOAD_BLOCK_WAIT_READY;
         end
+        // `D_PIPLINE_LOAD_BLOCK_WAIT_READY: begin
+        //     if(ready_from_axi)begin
+        //         ns = `D_PIPLINE_LOAD_BLOCK_WAIT_FINISH;
+        //     end
+        //     else begin
+        //         ns = `D_PIPLINE_LOAD_BLOCK_WAIT_FINISH;
+        //     end
+        // end
         `D_PIPLINE_LOAD_BLOCK_WAIT_FINISH: begin
             if(task_finish_from_axi)begin
                 ns = `D_PIPLINE_LOAD_BLOCK_FINISH;
@@ -142,16 +154,22 @@ always_comb begin
             ns = `PIPLINE_WAIT;
         end
         `PIPLINE_REQ_STORE_WORD: begin
-            ns = `PIPLINE_STORE_WORD_WAIT_READY;
-        end
-        `PIPLINE_STORE_BLOCK_WAIT_READY: begin
             if(ready_from_axi)begin
                 ns = `PIPLINE_STORE_WORD_WAIT_FINISH;
             end
             else begin
-                ns = `PIPLINE_STORE_WORD_WAIT_READY;
+                ns = `PIPLINE_REQ_STORE_WORD;
             end
+           // ns = `PIPLINE_STORE_WORD_WAIT_READY;
         end
+        // `PIPLINE_STORE_BLOCK_WAIT_READY: begin
+        //     if(ready_from_axi)begin
+        //         ns = `PIPLINE_STORE_WORD_WAIT_FINISH;
+        //     end
+        //     else begin
+        //         ns = `PIPLINE_STORE_WORD_WAIT_READY;
+        //     end
+        // end
         `PIPLINE_STORE_WORD_WAIT_FINISH: begin
             if(task_finish_from_axi)begin
                 ns = `PIPLINE_STORE_WORD_FINISH;
@@ -164,16 +182,22 @@ always_comb begin
             ns = `PIPLINE_WAIT;
         end
         `D_PIPLINE_REQ_LOAD_WORD: begin
-            ns = `D_PIPLINE_LOAD_WORD_WAIT_READY;
-        end
-        `D_PIPLINE_LOAD_WORD_WAIT_READY: begin
             if(ready_from_axi)begin
                 ns = `D_PIPLINE_LOAD_WORD_WAIT_FINISH;
             end
             else begin
-                ns = `D_PIPLINE_LOAD_WORD_WAIT_FINISH;
+                ns = `D_PIPLINE_REQ_LOAD_WORD;
             end
+            //ns = `D_PIPLINE_LOAD_WORD_WAIT_READY;
         end
+        // `D_PIPLINE_LOAD_WORD_WAIT_READY: begin
+        //     if(ready_from_axi)begin
+        //         ns = `D_PIPLINE_LOAD_WORD_WAIT_FINISH;
+        //     end
+        //     else begin
+        //         ns = `D_PIPLINE_LOAD_WORD_WAIT_FINISH;
+        //     end
+        // end
         `D_PIPLINE_LOAD_WORD_WAIT_FINISH: begin
             if(task_finish_from_axi)begin
                 ns= `D_PIPLINE_LOAD_WORD_FINISH;
@@ -186,16 +210,22 @@ always_comb begin
             ns = `PIPLINE_WAIT;
         end
         `I_PIPLINE_REQ_LOAD_BLOCK: begin
-            ns = `I_PIPLINE_LOAD_BLOCK_WAIT_READY;
-        end
-        `I_PIPLINE_LOAD_BLOCK_WAIT_READY: begin
             if(ready_from_axi)begin
                 ns = `I_PIPLINE_LOAD_BLOCK_WAIT_FINISH;
             end
             else begin
-                ns = `I_PIPLINE_LOAD_BLOCK_WAIT_READY;
+                ns = `I_PIPLINE_REQ_LOAD_BLOCK;
             end
+         //   ns = `I_PIPLINE_LOAD_BLOCK_WAIT_READY;
         end
+        // `I_PIPLINE_LOAD_BLOCK_WAIT_READY: begin
+        //     if(ready_from_axi)begin
+        //         ns = `I_PIPLINE_LOAD_BLOCK_WAIT_FINISH;
+        //     end
+        //     else begin
+        //         ns = `I_PIPLINE_LOAD_BLOCK_WAIT_READY;
+        //     end
+        // end
         `I_PIPLINE_LOAD_BLOCK_FINISH: begin
             if(task_finish_from_axi)begin
                 ns = `I_PIPLINE_LOAD_BLOCK_FINISH;
@@ -208,16 +238,21 @@ always_comb begin
             ns = `PIPLINE_WAIT;
         end
         `I_PIPLINE_REQ_LOAD_WORD: begin
-            ns = `I_PIPLINE_LOAD_WORD_WAIT_READY;
-        end
-        `I_PIPLINE_LOAD_WORD_WAIT_READY: begin
             if(ready_from_axi)begin
                 ns = `I_PIPLINE_LOAD_WORD_WAIT_FINISH;
             end
             else begin
-                ns = `I_PIPLINE_LOAD_WORD_WAIT_READY;
+                ns = `I_PIPLINE_REQ_LOAD_WORD;
             end
         end
+        // `I_PIPLINE_LOAD_WORD_WAIT_READY: begin
+        //     if(ready_from_axi)begin
+        //         ns = `I_PIPLINE_LOAD_WORD_WAIT_FINISH;
+        //     end
+        //     else begin
+        //         ns = `I_PIPLINE_LOAD_WORD_WAIT_READY;
+        //     end
+        // end
         `I_PIPLINE_LOAD_WORD_WAIT_FINISH: begin
             if(task_finish_from_axi)begin
                 ns = `I_PIPLINE_LOAD_WORD_FINISH;

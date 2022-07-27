@@ -63,6 +63,7 @@ logic reg_ins_cached;
 logic [`VA_WIDTH]reg_ins_va;
 logic [`PA_WIDTH]reg_ins_pa;
 logic reg_rlru_from_icache;
+logic reg_icache_ready;
 logic [`RESPONSE_FROM_PIPLINE]response_from_pipline;
 
 
@@ -88,6 +89,10 @@ end
 
 always_ff @(posedge clk)begin
     reg_ins_pa <= ins_pa;
+end
+
+always_ff @(posedge clk)begin
+    reg_icache_ready <= icache_ready;
 end
 
 always_ff @(posedge clk)begin
@@ -122,7 +127,7 @@ always_ff @(posedge clk)begin
         icache_next_state <= `I_NONE;
     end
     else begin
-        if(~reg_ins_stall)begin
+        if(~reg_ins_stall && reg_icache_ready)begin
             unique case(reg_ins_op)
                 `ICACHE_REQ_LOAD_INS: begin
                     if(reg_ins_cached)begin
@@ -146,21 +151,59 @@ always_ff @(posedge clk)begin
                     end
                 end
                 default: begin
-                    icache_next_state <= `I_NONE;   
+                    // if(response_from_pipline == `FINISH_ICACHE_REQ)begin
+                    //     if(icache_next_state == `I_REQ_BLOCK)begin
+                    //         icache_next_state <= `I_WRITE;
+                    //     end
+                    //     else if(icache_next_state ==  `I_REQ_WORD)begin
+                    //         icache_next_state <= `I_NONE;
+                    //     end
+                    // end
+                    // else begin
+                    //     if(icache_next_state == `I_WRITE)begin
+                    //         icache_next_state <= `I_LOAD;
+                    //     end
+                    //     else begin
+                    //         icache_next_state <= `I_NONE;
+                    //     end
+                    // end
+                    icache_next_state <= `I_NONE;
                 end
             endcase
         end
         else begin
-            if((response_from_pipline == `FINISH_ICACHE_REQ) && (icache_next_state == `I_REQ_BLOCK))begin
-                icache_next_state <= `I_WRITE;
-            end
-            else begin
-                if(icache_next_state == `I_WRITE)begin
-                    icache_next_state <= `I_LOAD;
+            // if(response_from_pipline == `FINISH_ICACHE_REQ)begin 
+            //     if(icache_next_state == `I_REQ_BLOCK)begin
+            //         icache_next_state <= `I_WRITE;
+            //     end
+            //     else if(icache_next_state == `I_REQ_WORD)begin
+            //         icache_next_state <= `I_NONE;
+            //     end
+            // end
+            // else begin
+            //     if(icache_next_state == `I_WRITE)begin
+            //         icache_next_state <= `I_LOAD;
+            //     end
+            //     else if(icache_next_state == `I_REQ_BLOCK)
+            //     else begin
+            //         icache_next_state <= `I_NONE;
+            //     end
+            // end
+            if(icache_next_state ==  `I_REQ_BLOCK)begin
+                if(response_from_pipline == `FINISH_ICACHE_REQ)begin
+                    icache_next_state <=  `I_WRITE;
                 end
-                else begin
+            end
+            else if(icache_next_state == `I_REQ_WORD)begin
+                if(response_from_pipline == `FINISH_ICACHE_REQ)begin
                     icache_next_state <= `I_NONE;
                 end
+            end
+            else if(icache_next_state == `I_WRITE)begin
+                icache_next_state <= `I_LOAD;
+            end
+            else begin
+                icache_next_state <= `I_NONE;
             end
         end
     end
@@ -181,7 +224,7 @@ always_ff @(posedge clk)begin
 end
 
 always_comb begin
-    if(~reg_ins_stall)begin
+    if(~reg_ins_stall && reg_icache_ready)begin
         unique case(reg_ins_op)
             `ICACHE_REQ_LOAD_INS: begin
                 if(reg_ins_cached)begin
@@ -205,6 +248,12 @@ always_comb begin
                 end
             end
             default: begin
+                // if(icache_next_state == `I_NONE)begin
+                //     icache_ready = `UNREADY;
+                // end
+                // else begin
+                //     icache_ready = `READY;
+                // end
                 icache_ready = `READY;
             end
         endcase

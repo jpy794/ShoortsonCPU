@@ -131,6 +131,7 @@ module core_top(
         .wword_en(wword_en_to_axi),
         .ad(ad_to_axi),
         .cached(cached_to_axi),
+        .ready_to_pipline(ready_from_axi),
         .task_finish(task_finish_from_axi),
         .rblock(rblock_from_axi),
         .rword(rword_from_axi),

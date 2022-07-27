@@ -14,6 +14,7 @@ module To_AXI (
     input logic cached,
 
     output logic task_finish,
+    output logic ready_to_pipline,
     output logic [`BLOCK_WIDTH]rblock,
     output logic [`DATA_WIDTH]rword,
     input logic [`WRITE_ENABLE]rword_en,
@@ -613,6 +614,9 @@ always_ff @(posedge clk)begin
         end
     endcase
 end
+
+
+assign ready_to_pipline = (cs == `AXI_STATE_WAIT)? `READY: `UNREADY;
 
 // always_ff @(posedge clk)begin
 //     rword_en <= 4'b1111;
