@@ -1,6 +1,7 @@
 `include "cpu_defs.svh"
 
 module AddrTrans (
+    input logic en,
     input virt_t va,
     input tlb_lookup_type_t lookup_type,
     input byte_type_t byte_type,
@@ -82,13 +83,15 @@ module AddrTrans (
     always_comb begin
         excp.valid = 1'b0;
         excp.esubcode_ecode = tlb_ecode;
-        if(~align_ok) begin
-            /* unaligned */
-            excp.valid = 1'b1;
-            excp.esubcode_ecode = ALE;
-        end else if(tlb_is_exc & is_tlb) begin
-            /* tlb exception */
-            excp.valid = 1'b1;
+        if(en) begin
+            if(~align_ok) begin
+                /* unaligned */
+                excp.valid = 1'b1;
+                excp.esubcode_ecode = ALE;
+            end else if(tlb_is_exc & is_tlb) begin
+                /* tlb exception */
+                excp.valid = 1'b1;
+            end
         end
     end
 

@@ -286,7 +286,7 @@ module CPUTop (
     assign debug0_wb_inst = pass_wb.inst;
     assign debug0_wb_pc = pass_wb.pc;
     assign debug0_wb_rf_wdata = pass_wb.is_wr_rd_pc_plus4 ? pass_wb.pc_plus4 : pass_wb.ex_mem_out;
-    assign debug0_wb_rf_wen = pass_wb.is_wr_rd;     
+    assign debug0_wb_rf_wen = {4{pass_wb.is_wr_rd}};
     assign debug0_wb_rf_wnum = pass_wb.rd;
 
     Exception U_Exception (

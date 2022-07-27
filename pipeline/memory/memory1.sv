@@ -52,7 +52,7 @@ module Memory1 (
 
     /* load use */
     assign ld_use.idx = pass_in_r.rd;
-    assign ld_use.valid = pass_in_r.is_wr_rd;
+    assign ld_use.valid = pass_in_r.is_mem & ~pass_in_r.is_store;
 
     /* forward */
     // be careful of load-use stall
@@ -69,6 +69,7 @@ module Memory1 (
     phy_t pa;
     excp_pass_t addr_excp;
     AddrTrans U_AddrTrans (
+        .en(~mem1_flush & pass_in_r.is_mem),
         .va(pass_in_r.ex_out),
         .lookup_type(pass_in_r.is_store ? LOOKUP_STORE : LOOKUP_LOAD),
         .byte_type(pass_in_r.byte_type),

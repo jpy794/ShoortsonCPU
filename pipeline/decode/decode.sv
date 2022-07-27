@@ -346,10 +346,10 @@ module Decode (
             is_uimm5:  imm = {27'b0, uimm5};
             is_uimm12: imm = {20'b0, uimm12};
             is_simm12: imm = {{20{simm12[11]}}, simm12};
-            is_simm14: imm = {{18{simm14[13]}}, simm14};
-            is_simm16: imm = {{16{simm16[15]}}, simm16};
-            is_simm20: imm = {{12{simm20[19]}}, simm20};
-            is_simm26: imm = {{6{simm26[25]}}, simm26};
+            is_simm14: imm = {{16{simm14[13]}}, simm14, 2'b0};
+            is_simm16: imm = {{14{simm16[15]}}, simm16, 2'b0};
+            is_simm20: imm = {simm20, 12'b0};
+            is_simm26: imm = {{4{simm26[25]}}, simm26, 2'b0};
             default: imm = '0;
         endcase
     end
