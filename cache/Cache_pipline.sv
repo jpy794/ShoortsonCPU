@@ -1,4 +1,3 @@
-`timescale 1ns / 1ps
 `include "cache.svh"
 
 module Cache_pipline(
@@ -14,7 +13,7 @@ module Cache_pipline(
     input logic [`DATA_WIDTH]wword_from_dcache,
     input logic [`BLOCK_WIDTH]wblock_from_dcache,
     input logic [`AXI_STRB_WIDTH]wword_en_from_dcache,
-    input logic [`AXI_STRB_WIDTH]rword_en_from_dcache,
+    input logic [`DCACHE_REQ_REN_WIDTH]rword_en_from_dcache,
     input logic cached_from_dcache,
 
     output logic [`BLOCK_WIDTH]rblock_to_cache,
@@ -26,7 +25,7 @@ module Cache_pipline(
     output logic [`BLOCK_WIDTH]wblock_to_axi,
     output logic [`DATA_WIDTH]wword_to_axi,
     output logic [`AXI_STRB_WIDTH]wword_en_to_axi,
-    output logic [`AXI_STRB_WIDTH]rword_en_to_axi,
+    output logic [`DCACHE_REQ_REN_WIDTH]rword_en_to_axi,
     output logic [`ADDRESS_WIDTH]ad_to_axi,
     output logic cached_to_axi,
 
@@ -226,7 +225,7 @@ always_comb begin
         //         ns = `I_PIPLINE_LOAD_BLOCK_WAIT_READY;
         //     end
         // end
-        `I_PIPLINE_LOAD_BLOCK_FINISH: begin
+        `I_PIPLINE_LOAD_BLOCK_WAIT_FINISH: begin
             if(task_finish_from_axi)begin
                 ns = `I_PIPLINE_LOAD_BLOCK_FINISH;
             end

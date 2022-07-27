@@ -13,7 +13,7 @@ module data (
 logic enb;
 assign enb = 1'b1;
 DualPortBram #(.WID(32), .SIZE(128))
-dualportbram(.clk(clk), 
+dualportbram(.clk(clka), 
              .ena(ena),
              .enb(enb),
              .wea(wea),
@@ -31,7 +31,7 @@ module tag (
     input logic clka,
     input logic [`TAG_WIDTH]dina,
     input logic ena,
-    input logic [`BLOCK_EN]wea,
+    input logic wea,
     input logic [`INDEX_WIDTH]addrb,
     input logic clkb,
     output logic [`TAG_WIDTH]doutb
@@ -39,7 +39,7 @@ module tag (
 logic enb;
 assign enb = 1'b1;
 DualPortBram #(.WID(20), .SIZE(128))
-dualportbram(.clk(clk), 
+dualportbram(.clk(clka), 
              .ena(ena),
              .enb(enb),
              .wea(wea),
@@ -57,7 +57,7 @@ module vl (
     input logic clka,
     input logic dina,
     input logic ena,
-    input logic [`BLOCK_EN]wea,
+    input logic wea,
     input logic [`INDEX_WIDTH]addrb,
     input logic clkb,
     output logic doutb
@@ -65,7 +65,7 @@ module vl (
 logic enb;
 assign enb = 1'b1;
 DualPortBram #(.WID(1), .SIZE(128))
-dualportbram(.clk(clk), 
+dualportbram(.clk(clka), 
              .ena(ena),
              .enb(enb),
              .wea(wea),
@@ -83,7 +83,7 @@ module llit (
     input logic clka,
     input logic [7:0]dina,
     input logic ena,
-    input logic [`BLOCK_EN]wea,
+    input logic wea,
     input logic [`INDEX_WIDTH]addrb,
     input logic clkb,
     output logic [7:0]doutb
@@ -91,7 +91,7 @@ module llit (
 logic enb;
 assign enb = 1'b1;
 DualPortBram #(.WID(8), .SIZE(128))
-dualportbram(.clk(clk), 
+dualportbram(.clk(clka), 
              .ena(ena),
              .enb(enb),
              .wea(wea),

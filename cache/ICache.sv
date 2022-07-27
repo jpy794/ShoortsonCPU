@@ -1,4 +1,3 @@
-`timescale 1ns / 1ps
 `include "cache.svh"
 
 module ICache(
@@ -171,21 +170,21 @@ end
 
 generate
     for(j = 0; j < `BLOCK_NUM; j = j + 1)begin: bram_data_0
-        data way0_data(.addra(way_wad), .clka(clk), .dina(way_wdata[j][0]), .ena(|way_wen[j][0]), .wea(way_wen[j][0]), 
+        data way0_data(.addra(way_wad), .clka(clk), .dina(way_wdata[j][0]), .ena(|way_wen[0]), .wea(way_wen[0]), 
                         .addrb(way_rad), .clkb(clk), .doutb(way_rdata[j][0]));
     end
 endgenerate
 
 generate
     for(j = 0; j < `BLOCK_NUM; j = j + 1)begin: bram_data_1
-        data way0_data(.addra(way_wad), .clka(clk), .dina(way_wdata[j][1]), .ena(|way_wen[j][1]), .wea(way_wen[j][1]), 
+        data way1_data(.addra(way_wad), .clka(clk), .dina(way_wdata[j][1]), .ena(|way_wen[1]), .wea(way_wen[1]), 
                         .addrb(way_rad), .clkb(clk), .doutb(way_rdata[j][1]));
     end
 endgenerate
 
 generate
     for(j = 0; j < `WAY_NUM; j = j + 1)begin: bram_v
-        vl way_vl(.addra(way_wad), .clka(clk), .dina(way_wv[j]), .ena(way_wv_en[j]), .wea(way_wv_en[j]), 
+        vl way_v(.addra(way_wad), .clka(clk), .dina(way_wv[j]), .ena(way_wv_en[j]), .wea(way_wv_en[j]), 
                         .addrb(way_rad), .clkb(clk), .doutb(way_rv[j]));
     end
 endgenerate
@@ -194,6 +193,12 @@ endgenerate
 vl lru(.addra(lru_wad), .clka(clk), .dina(wlru), .ena(wlru_en), .wea(wlru_en), 
                         .addrb(lru_rad), .clkb(clk), .doutb(rlru));
 
+generate
+    for(j = 0; j < `WAY_NUM; j = j + 1)begin: tag 
+        tag way_tag(.addra(way_wad), .clka(clk), .dina(way_wtag[j]), .ena(way_wtag_en[j]), .wea(way_wtag_en[j]),
+                        .addrb(way_rad), .clkb(clk), .doutb(way_rtag[j]));
+    end
+endgenerate
 
 endmodule
 

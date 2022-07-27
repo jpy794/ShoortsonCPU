@@ -1,4 +1,3 @@
-`timescale 1ns / 1ps 
 `include "cache.svh"
 
 module DCache (
@@ -491,5 +490,13 @@ generate
                         .addrb(way_rad), .clkb(clk), .doutb(way_rllit[j]));
     end
 endgenerate
+
+generate
+    for(j = 0; j < `WAY_NUM; j = j + 1)begin: tag 
+        tag way_tag(.addra(way_wad), .clka(clk), .dina(way_wtag[j]), .ena(way_wtag_en[j]), .wea(way_wtag_en[j]),
+                        .addrb(way_rad), .clkb(clk), .doutb(way_rtag[j]));
+    end
+endgenerate
+
 
 endmodule

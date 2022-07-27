@@ -1,5 +1,3 @@
-`timescale 1ns/1ps
-
 `include "cache.svh"
 
 module To_AXI (
@@ -17,7 +15,7 @@ module To_AXI (
     output logic ready_to_pipline,
     output logic [`BLOCK_WIDTH]rblock,
     output logic [`DATA_WIDTH]rword,
-    input logic [`WRITE_ENABLE]rword_en,
+    input logic [`DCACHE_REQ_REN_WIDTH]rword_en,
 
 
     //axi
@@ -351,17 +349,28 @@ always_ff @(posedge clk)begin
             arsize <= `AXI_SIZE_WORD;
         end
         `AXI_STATE_REQ_LOAD_WORD: begin
+            // unique case(rword_en)
+            //     4'b1111: begin
+            //         arsize <= `AXI_SIZE_WORD;
+            //     end
+            //     4'b1100: begin
+            //         arsize <= `AXI_SIZE_HALF_WORD;
+            //     end
+            //     4'b0011: begin
+            //         arsize <= `AXI_SIZE_HALF_WORD;
+            //     end
+            //     default: begin
+            //         arsize <= `AXI_SIZE_BYTE;
+            //     end
+            // endcase
             unique case(rword_en)
-                4'b1111: begin
+                `DCACHE_REQ_REN_WORD: begin
                     arsize <= `AXI_SIZE_WORD;
                 end
-                4'b1100: begin
+                `DCACHE_REQ_REN_HALF_WORD: begin
                     arsize <= `AXI_SIZE_HALF_WORD;
                 end
-                4'b0011: begin
-                    arsize <= `AXI_SIZE_HALF_WORD;
-                end
-                default: begin
+                `DCACHE_REQ_REN_BYTE: begin
                     arsize <= `AXI_SIZE_BYTE;
                 end
             endcase

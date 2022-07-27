@@ -3,7 +3,7 @@ module DualPortBram #(
   parameter SIZE = 256
 )(
   input logic clk,
-  input logic ena, enb, wea,
+  input logic ena, enb, wea,        //TO BE FIXED
   input logic [$clog2(SIZE)-1:0] addra, addrb,
   input logic [WID-1:0] dina,
   output logic [WID-1:0] doutb
