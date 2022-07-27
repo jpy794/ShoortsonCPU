@@ -151,44 +151,11 @@ always_ff @(posedge clk)begin
                     end
                 end
                 default: begin
-                    // if(response_from_pipline == `FINISH_ICACHE_REQ)begin
-                    //     if(icache_next_state == `I_REQ_BLOCK)begin
-                    //         icache_next_state <= `I_WRITE;
-                    //     end
-                    //     else if(icache_next_state ==  `I_REQ_WORD)begin
-                    //         icache_next_state <= `I_NONE;
-                    //     end
-                    // end
-                    // else begin
-                    //     if(icache_next_state == `I_WRITE)begin
-                    //         icache_next_state <= `I_LOAD;
-                    //     end
-                    //     else begin
-                    //         icache_next_state <= `I_NONE;
-                    //     end
-                    // end
                     icache_next_state <= `I_NONE;
                 end
             endcase
         end
         else begin
-            // if(response_from_pipline == `FINISH_ICACHE_REQ)begin 
-            //     if(icache_next_state == `I_REQ_BLOCK)begin
-            //         icache_next_state <= `I_WRITE;
-            //     end
-            //     else if(icache_next_state == `I_REQ_WORD)begin
-            //         icache_next_state <= `I_NONE;
-            //     end
-            // end
-            // else begin
-            //     if(icache_next_state == `I_WRITE)begin
-            //         icache_next_state <= `I_LOAD;
-            //     end
-            //     else if(icache_next_state == `I_REQ_BLOCK)
-            //     else begin
-            //         icache_next_state <= `I_NONE;
-            //     end
-            // end
             if(icache_next_state ==  `I_REQ_BLOCK)begin
                 if(response_from_pipline == `FINISH_ICACHE_REQ)begin
                     icache_next_state <=  `I_WRITE;
@@ -306,6 +273,7 @@ logic [`DCACHE_STATE_WIDTH]reg_dcache_next_state;
 logic [`VA_WIDTH]reg_data_va;
 logic [`PA_WIDTH]reg_data_pa;
 logic reg_rlru_from_dcache;
+logic reg_dcache_ready;
 logic [`DCACHE_STATE_WIDTH]reg_last_dcache_next_state;
 
 always_ff @(posedge clk)begin
@@ -336,6 +304,10 @@ always_ff @(posedge clk)begin
     reg_last_dcache_next_state <= dcache_next_state;
 end
 
+always_ff @(posedge clk)begin
+    reg_dcache_ready <= dcache_ready;
+end
+
 assign pa_to_dcache = {reg_data_pa , reg_data_va};
 //assign ad_to_dcache = (reg_data_stall)? {reg_data_pa, reg_data_va} : {{20{1'b0}}, data_va};
 always_comb begin
@@ -361,7 +333,7 @@ always_ff @(posedge clk)begin
     store_data_to_dcache <= store_data;
 end
 always_comb begin
-    if(~reg_data_stall)begin
+    if(~reg_data_stall )begin
         unique case(reg_data_op)
             `DCACHE_REQ_LOAD_ATOM: begin
                 if(reg_data_cached && hit_from_dcache)begin
@@ -516,7 +488,7 @@ always_ff @(posedge clk)begin
         dcache_next_state <= `D_NONE;
     end
     else begin
-        if(~reg_data_stall)begin
+        if(~reg_data_stall && reg_dcache_ready)begin
             unique case(reg_data_op)
                 `DCACHE_REQ_LOAD_ATOM: begin
                     if(reg_data_cached)begin
@@ -671,39 +643,104 @@ always_ff @(posedge clk)begin
             // if((response_from_pipline == `FINISH_DCACHE_REQ) && ((dcache_next_state == `D_WAIT_LOAD) || (dcache_next_state == `D_WAIT_STORE) || 
             // (dcache_next_state == `D_WAIT_STORE_STORE) || (dcache_next_state == `D_WAIT_STORE_LOAD) || (dcache_next_state == `D_WAIT_LOAD_ATOM) ||
             // (dcache_next_state == `D_WAIT_STORE_LOAD_ATOM)))begin
-            if((response_from_pipline == `FINISH_DCACHE_REQ) && (dcache_next_state > `D_WAIT_UNCACHED_WRITE))begin
-                dcache_next_state <= `D_WRITE;
-            end
-            else begin
-                if(dcache_next_state == `D_WRITE)begin
+        //     if((response_from_pipline == `FINISH_DCACHE_REQ) && (dcache_next_state > `D_WAIT_UNCACHED_WRITE))begin
+        //         dcache_next_state <= `D_WRITE;
+        //     end
+        //     else begin
+        //         if(dcache_next_state == `D_WRITE)begin
+        //             dcache_next_state <= `D_LOAD;
+        //         end
+        //         else if(dcache_next_state == `D_LOAD)begin
+        //             unique case(reg_dcache_next_state)
+        //                 `D_WAIT_LOAD_ATOM: dcache_next_state <= `D_SET_LLIT;
+        //                // `D_WAIT_LOAD: dcache_next_state <= `D_NONE;
+        //                 `D_WAIT_STORE: dcache_next_state <= `D_STORE;
+        //                // `D_WAIT_STORE_LOAD: dcache_next_state <= `D_NONE;
+        //                 `D_WAIT_STORE_LOAD_ATOM: dcache_next_state <= `D_SET_LLIT;
+        //                 `D_WAIT_STORE_STORE: dcache_next_state <= `D_STORE;
+        //                 default: dcache_next_state <= `D_NONE;
+        //             endcase
+        //         end
+        //         else if((dcache_next_state == `D_STORE) || (dcache_next_state == `D_SET_LLIT))begin
+        //             dcache_next_state <= `D_NONE;
+        //         end
+        //         else if(dcache_next_state == `D_CLEAR_LLIT)begin
+        //             if(cnt == `DCACHE_CNT_FINISH) begin
+        //                 dcache_next_state <= `D_NONE;
+        //             end
+        //             else begin
+        //                 cnt <= cnt + 1;
+        //             end
+        //         end
+        //         else begin
+        //             dcache_next_state <= `D_NONE;
+        //         end
+        //     end
+            unique case(dcache_next_state)
+                `D_WAIT_STORE: begin
+                    if(response_from_pipline == `FINISH_DCACHE_REQ)begin
+                        dcache_next_state <= `D_WRITE;
+                    end
+                end
+                `D_WAIT_LOAD: begin
+                    if(response_from_pipline == `FINISH_DCACHE_REQ)begin
+                        dcache_next_state <= `D_WRITE;
+                    end
+                end
+                `D_WAIT_LOAD_ATOM: begin
+                    if(response_from_pipline == `FINISH_DCACHE_REQ)begin
+                        dcache_next_state <= `D_WRITE;
+                    end
+                end
+                `D_WAIT_STORE_LOAD: begin
+                    if(response_from_pipline == `FINISH_DCACHE_REQ)begin
+                        dcache_next_state <= `D_WRITE;
+                    end
+                end
+                `D_WAIT_STORE_STORE: begin
+                    if(response_from_pipline == `FINISH_DCACHE_REQ)begin
+                        dcache_next_state <= `D_WRITE;
+                    end
+                end
+                `D_WAIT_STORE_LOAD_ATOM: begin
+                    if(response_from_pipline)begin
+                        dcache_next_state <= `D_WRITE;
+                    end
+                end
+                `D_WRITE: begin
                     dcache_next_state <= `D_LOAD;
                 end
-                else if(dcache_next_state == `D_LOAD)begin
+                `D_LOAD: begin
                     unique case(reg_dcache_next_state)
-                        `D_WAIT_LOAD_ATOM: dcache_next_state <= `D_SET_LLIT;
-                       // `D_WAIT_LOAD: dcache_next_state <= `D_NONE;
-                        `D_WAIT_STORE: dcache_next_state <= `D_STORE;
-                       // `D_WAIT_STORE_LOAD: dcache_next_state <= `D_NONE;
-                        `D_WAIT_STORE_LOAD_ATOM: dcache_next_state <= `D_SET_LLIT;
-                        `D_WAIT_STORE_STORE: dcache_next_state <= `D_STORE;
-                        default: dcache_next_state <= `D_NONE;
+                        `D_WAIT_LOAD_ATOM: begin
+                            dcache_next_state <= `D_SET_LLIT;
+                        end
+                        `D_WAIT_STORE: begin
+                            dcache_next_state <= `D_STORE;
+                        end
+                        `D_WAIT_STORE_LOAD: begin
+                            dcache_next_state <= `D_NONE;
+                        end
+                        `D_WAIT_STORE_LOAD_ATOM: begin
+                            dcache_next_state <= `D_SET_LLIT;
+                        end
+                        `D_WAIT_STORE_STORE: begin
+                            dcache_next_state <= `D_STORE;
+                        end
                     endcase
                 end
-                else if((dcache_next_state == `D_STORE) || (dcache_next_state == `D_SET_LLIT))begin
-                    dcache_next_state <= `D_NONE;
-                end
-                else if(dcache_next_state == `D_CLEAR_LLIT)begin
-                    if(cnt == `DCACHE_CNT_FINISH) begin
+                `D_CLEAR_LLIT: begin
+                    if(cnt == `DCACHE_CNT_FINISH)begin
                         dcache_next_state <= `D_NONE;
                     end
                     else begin
                         cnt <= cnt + 1;
                     end
                 end
-                else begin
+                default: begin
                     dcache_next_state <= `D_NONE;
                 end
-            end
+            endcase
         end
     end
 end
@@ -741,7 +778,7 @@ always_ff @(posedge clk)begin
 end
 
 always_comb begin
-    if(~reg_data_stall)begin
+    if(~reg_data_stall && reg_dcache_ready)begin
         unique case(reg_data_op)
             `DCACHE_REQ_LOAD_ATOM: begin
                 if(reg_data_cached)begin
