@@ -303,8 +303,8 @@ module CPUTop (
         .wr_csr_req(excp_wr_csr_req)
     );
 
-    assign is_icache_stall = stall_if2;
-    assign is_dcache_stall = stall_mem2;
+    assign is_icache_stall = dcache_stall | eu_stall | load_use_stall;
+    assign is_dcache_stall = 1'b0;
 
     assign stall_if1 =  dcache_stall | eu_stall | load_use_stall | icache_stall;
     assign stall_if2 =  dcache_stall | eu_stall | load_use_stall | icache_stall;
