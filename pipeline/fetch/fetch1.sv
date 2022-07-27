@@ -42,6 +42,7 @@ module Fetch1 (
     phy_t pa;
     excp_pass_t addr_excp;
     AddrTrans U_AddrTrans (
+        .en(~is_flush),
         .va(pc_r),
         .lookup_type(LOOKUP_FETCH),
         .byte_type(WORD),

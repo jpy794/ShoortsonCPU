@@ -161,7 +161,7 @@ module Execute (
 
     /* load use */
     assign ld_use.idx = pass_in_r.rd;
-    assign ld_use.valid = pass_in_r.is_wr_rd;
+    assign ld_use.valid = pass_in_r.is_mem & ~pass_in_r.is_store;
 
     /* to ctrl */
     assign eu_stall = ((pass_in_r.is_mul) && !mul_done);
