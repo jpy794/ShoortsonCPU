@@ -306,8 +306,8 @@ module CPUTop (
     assign is_icache_stall = stall_if2;
     assign is_dcache_stall = stall_mem2;
 
-    assign stall_if1 =  dcache_stall | eu_stall | load_use_stall;
-    assign stall_if2 =  dcache_stall | eu_stall | load_use_stall;
+    assign stall_if1 =  dcache_stall | eu_stall | load_use_stall | icache_stall;
+    assign stall_if2 =  dcache_stall | eu_stall | load_use_stall | icache_stall;
     assign stall_id  =  dcache_stall | eu_stall | load_use_stall;
     assign stall_ex  =  dcache_stall | eu_stall;
     assign stall_mem1 = dcache_stall;

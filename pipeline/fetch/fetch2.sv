@@ -23,7 +23,7 @@ module Fetch2 (
     fetch1_fetch2_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
             pass_in_r.is_flush <= 1'b1;
         end else if(~is_stall) begin
