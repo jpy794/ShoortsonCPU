@@ -610,8 +610,11 @@ module Decode (
 
     `PASS(pc);
     `PASS(btb_pre);
-    `PASS(inst);
 
     assign excp_pass_out = excp_pass_in_r;
+
+`ifdef DIFF_TEST
+    `PASS(inst);
+`endif
 
 endmodule

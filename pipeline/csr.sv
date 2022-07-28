@@ -210,13 +210,13 @@ module CSR (
     /* pgd end */
     assign csr.tlbrentry.r0_1 = '0; 
 
-    /* difftest */
+`ifdef DIFF_TEST
     DifftestCSRRegState DifftestCSRRegState(
         .clock              (clk                ),
         .coreid             (0                  ),
         .crmd               (csr.crmd           ),
         .prmd               (csr.prmd           ),
-        .euen               (0                  ),
+        .euen               (csr.euen           ),
         .ecfg               (csr.ecfg           ),
         .estat              (csr.estat          ),
         .era                (csr.era            ),
@@ -242,5 +242,6 @@ module CSR (
         .dmw0               (0                  ),
         .dmw1               (0                  )
     );
+`endif
 
 endmodule

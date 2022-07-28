@@ -49,7 +49,8 @@ module Memory1 (
         end
     end
 
-    logic mem1_flush = is_flush | pass_in_r.is_flush;
+    logic mem1_flush;
+    assign mem1_flush = is_flush | pass_in_r.is_flush;
 
     /* load use */
     assign ld_use.idx = pass_in_r.rd;
@@ -102,7 +103,6 @@ module Memory1 (
     assign pass_out.byte_en = pass_in_r.ex_out[1:0];
 
     `PASS(pc);
-    `PASS(inst);
     `PASS(ex_out);
     `PASS(is_mem);
     `PASS(is_store);
@@ -120,5 +120,15 @@ module Memory1 (
     assign excp_req.excp_pass = excp_pass_in_r.valid ? excp_pass_in_r : addr_excp;
     assign excp_req.epc = pass_in_r.pc;
     assign excp_req.inst_ertn = 1'b0;           // TODO: impl ertn
+
+`ifdef DIFF_TEST
+    `PASS(inst);
+
+    assign pass_out.is_ld = ~mem1_flush & pass_in_r.is_mem & ~pass_in_r.is_store;
+    assign pass_out.is_st = ~mem1_flush & pass_in_r.is_mem & pass_in_r.is_store;
+    assign pass_out.pa = pa;
+    assign pass_out.va = pass_in_r.ex_out;
+    assign pass_out.st_data = pass_in_r.rkd_data;
+`endif
 
 endmodule

@@ -33,10 +33,10 @@ module RegFile (
         else if(we && rd != 5'b0)       regfile[rd] <= rd_data;
     end
 
-    /* difftest */
+`ifdef DIFF_TEST
     DifftestGRegState DifftestGRegState(
         .clock              (clk            ),
-        .coreid             (0              ),
+        .coreid             ('0             ),
         .gpr_0              (regfile[0]     ),
         .gpr_1              (regfile[1]     ),
         .gpr_2              (regfile[2]     ),
@@ -70,5 +70,6 @@ module RegFile (
         .gpr_30             (regfile[30]    ),
         .gpr_31             (regfile[31]    )
     );
+`endif
 
 endmodule

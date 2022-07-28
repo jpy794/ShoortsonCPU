@@ -18,7 +18,7 @@ module Memory2 (
     input logic is_flush,
     input memory1_memory2_pass_t pass_in,
 
-    output memory2_writeback_pass_t pass_out,
+    output memory2_writeback_pass_t pass_out
 );
 
     memory1_memory2_pass_t pass_in_r;
@@ -94,5 +94,15 @@ module Memory2 (
     `PASS(rd);
     `PASS(is_wr_csr);
     `PASS(csr_addr);
+
+`ifdef DIFF_TEST
+    `PASS(inst);
+    
+    `PASS(is_ld);
+    `PASS(is_st);
+    `PASS(va);
+    `PASS(pa);
+    `PASS(st_data);
+`endif
 
 endmodule

@@ -251,8 +251,16 @@ module CPUTop (
         .is_stall(stall_mem2),
         .is_flush(flush_mem2),
         .pass_in(pass_mem1),
-        .pass_out(pass_mem2),
+        .pass_out(pass_mem2)
     );
+
+`ifdef DIFF_TEST
+    excp_event_t excp_event[3];
+    always_ff @(posedge clk) begin
+        excp_event[1] <= excp_event[0];
+        excp_event[2] <= excp_event[1];
+    end
+`endif
 
     Writeback U_Writeback (
         .clk, .rst_n,
@@ -267,7 +275,11 @@ module CPUTop (
 
         .is_stall(stall_wb),
         .is_flush(flush_wb),
-        .pass_in(pass_mem2),
+        .pass_in(pass_mem2)
+
+`ifdef DIFF_TEST
+        ,.excp_event_in(excp_event[2])
+`endif
     );
 
     /* debug */
@@ -289,6 +301,9 @@ module CPUTop (
 
         .rd_csr(excp_rd_csr),
         .wr_csr_req(excp_wr_csr_req)
+`ifdef DIFF_TEST
+        ,.excp_event_out(excp_event[0])
+`endif
     );
 
     assign is_icache_stall = dcache_stall | eu_stall | load_use_stall;

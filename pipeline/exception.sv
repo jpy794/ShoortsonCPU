@@ -15,6 +15,10 @@ module Exception(
     /* csr */
     input csr_t rd_csr,
     output excp_wr_csr_req_t wr_csr_req
+
+`ifdef DIFF_TEST
+    ,output excp_event_t excp_event_out
+`endif
 );
 
     logic is_excp;
@@ -56,6 +60,7 @@ module Exception(
             wr_csr_req.era = req.epc;
 
             wr_csr_req.estat.is = int_vec;
+            wr_csr_req.estat.r_esubcode_ecode = INT;
         end else if(is_excp) begin
             wr_csr_req.we = 1'b1;
 
@@ -75,5 +80,12 @@ module Exception(
             wr_csr_req.crmd.ie = rd_csr.prmd.pie;
         end
     end
+
+`ifdef DIFF_TEST
+    assign excp_event_out.valid = wr_csr_req.we;
+    assign excp_event_out.ecode = wr_csr_req.estat.r_esubcode_ecode[5:0];
+    assign excp_event_out.is_eret = is_ertn;
+    assign excp_event_out.int_no = int_vec[12:2];
+`endif
 
 endmodule

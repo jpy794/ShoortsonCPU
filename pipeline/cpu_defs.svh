@@ -5,6 +5,8 @@
 `include "decode.svh"
 `include "pipeline.svh"
 
+`define DIFF_TEST
+
 localparam GRLEN = 32;
 
 /* access type enum */
@@ -246,6 +248,13 @@ typedef struct packed {
 } excp_req_t;
 
 typedef struct packed {
+    logic valid;
+    logic is_eret;
+    logic [10:0] int_no;
+    logic [5:0] ecode;
+} excp_event_t;
+
+typedef struct packed {
     logic we;
     csr_crmd_t crmd;
     csr_prmd_t prmd;
@@ -305,7 +314,6 @@ typedef struct packed {
     logic is_flush;
     virt_t pc;
     virt_t btb_pre;
-    u32_t inst;
 
     logic is_mul, is_div, is_bru;
     ex_out_sel_t ex_out_sel;
@@ -338,12 +346,14 @@ typedef struct packed {
     
     logic is_tlb;
     tlb_op_t tlb_op;
+`ifdef DIFF_TEST
+    u32_t inst;
+`endif
 } decode_execute_pass_t;
 
 typedef struct packed {
     logic is_flush;
     virt_t pc;
-    u32_t inst;
 
     u32_t ex_out;
 
@@ -368,12 +378,15 @@ typedef struct packed {
     logic is_tlb;
     tlb_op_t tlb_op;
     asid_t invtlb_asid;         // rj_data[9:0]
+
+`ifdef DIFF_TEST
+    u32_t inst;
+`endif
 } execute_memory1_pass_t;
 
 typedef struct packed {
     logic is_flush;
     virt_t pc;
-    u32_t inst;
 
     u32_t ex_out;
 
@@ -391,12 +404,18 @@ typedef struct packed {
 
     logic is_wr_csr;
     csr_addr_t csr_addr;
+`ifdef DIFF_TEST
+    u32_t inst;
+
+    logic is_ld, is_st;
+    virt_t va, pa;
+    u32_t st_data;
+`endif
 } memory1_memory2_pass_t;
 
 typedef struct packed {
     logic is_flush;
     virt_t pc;
-    u32_t inst;
 
     u32_t ex_mem_out;
 
@@ -408,6 +427,14 @@ typedef struct packed {
 
     logic is_wr_csr;            // only need to check plv in ex
     csr_addr_t csr_addr;
+
+`ifdef DIFF_TEST
+    u32_t inst;
+
+    logic is_ld, is_st;
+    virt_t va, pa;
+    u32_t st_data;
+`endif
 } memory2_writeback_pass_t;
 /* pipeline pass end */
 
