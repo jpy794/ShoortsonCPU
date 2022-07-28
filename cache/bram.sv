@@ -12,15 +12,19 @@ module data (
 );
 logic enb;
 assign enb = 1'b1;
-DualPortBram #(.WID(32), .SIZE(128))
-dualportbram(.clk(clka), 
-             .ena(ena),
-             .enb(enb),
-             .wea(wea),
-             .addra(addra),
-             .addrb(addrb),
-             .dina(dina),
-             .doutb(doutb) );
+ByteEnDualPortBram #(
+    .WID(32),
+    .SIZE(128)
+) U1_ByteEnDualPortBram (
+    .clk(clka), 
+    .ena(ena),
+    .enb(enb),
+    .wea(wea),
+    .addra(addra),
+    .addrb(addrb),
+    .dina(dina),
+    .doutb(doutb)
+);
     
 endmodule
 
