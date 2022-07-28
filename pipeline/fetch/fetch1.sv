@@ -67,7 +67,7 @@ module Fetch1 (
     u32_t pc_r;
 
     /* pass */
-    assign pass_out.is_flush = is_flush;
+    assign pass_out.is_flush = is_flush | is_stall;
     assign pass_out.pc = pc_r;
     assign pass_out.btb_pre = npc;
 
@@ -89,7 +89,7 @@ module Fetch1 (
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
             pc_r <= 32'h1c000000;
-        end else if(~is_stall) begin
+        end else if(is_flush | ~is_stall) begin
             pc_r <= npc;
         end
     end

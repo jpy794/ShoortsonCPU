@@ -6,6 +6,7 @@ module Fetch2 (
     /* from cache */
     input logic icache_ready,
     input u32_t icache_data,
+    input logic icache_data_valid,
 
     /* ctrl */
     output logic icache_stall,
@@ -36,7 +37,7 @@ module Fetch2 (
     assign if2_flush = is_flush | pass_in_r.is_flush;
 
     /* out for ctrl */
-    assign icache_stall = ~icache_ready & ~if2_flush;
+    assign icache_stall = ~icache_data_valid & ~if2_flush;
 
     /* out to next stage */
     assign pass_out.is_flush = if2_flush | icache_stall;

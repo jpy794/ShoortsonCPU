@@ -11,6 +11,8 @@ module Cache(
     input logic icache_cached,
     output logic [`DATA_WIDTH]ins,
     output logic icache_ready,
+    output logic icache_busy,
+    output logic icache_data_valid,
 
     //dcache
     input logic [`VA_WIDTH]data_va,
@@ -91,41 +93,44 @@ always_ff @(posedge clk)begin
     end
 end
 
+logic [`ICACHE_STATE_WIDTH] icache_nobusy_ns;
 always_comb begin
-    unique case(icache_cs)
-        `ICACHE_WAIT: begin
-            if(~icache_stall)begin
-                unique case(icache_op)
-                    `ICACHE_REQ_LOAD_INS: begin
-                        if(icache_cached)begin
-                            icache_ns = `ICACHE_LOOKUP;
-                        end
-                        else begin
-                            icache_ns = `ICACHE_REQ_LOAD_WORD;
-                        end
-                    end
-                    `ICACHE_REQ_INITIALIZE: begin
-                        icache_ns = `ICACHE_WRITE_TAG;
-                    end
-                    `ICACHE_REQ_HIT_INVALIDATA: begin
-                        if(icache_cached)begin
-                            icache_ns = `ICACHE_LOOKUP;
-                        end
-                        else begin
-                            icache_ns = `ICACHE_WAIT;
-                        end
-                    end
-                    `ICACHE_REQ_INDEX_INVALIDATA: begin
-                        icache_ns = `ICACHE_INDEX_WRITE_V;
-                    end
-                    default: begin
-                        icache_ns = `ICACHE_WAIT;
-                    end
-            endcase
+    unique case(icache_op)
+        `ICACHE_REQ_LOAD_INS: begin
+            if(icache_cached)begin
+                icache_nobusy_ns = `ICACHE_LOOKUP;
             end
             else begin
-                icache_ns = `ICACHE_WAIT;
+                icache_nobusy_ns = `ICACHE_REQ_LOAD_WORD;
             end
+        end
+        `ICACHE_REQ_INITIALIZE: begin
+            icache_nobusy_ns = `ICACHE_WRITE_TAG;
+        end
+        `ICACHE_REQ_HIT_INVALIDATA: begin
+            if(icache_cached)begin
+                icache_nobusy_ns = `ICACHE_LOOKUP;
+            end
+            else begin
+                icache_nobusy_ns = `ICACHE_WAIT;
+            end
+        end
+        `ICACHE_REQ_INDEX_INVALIDATA: begin
+            icache_nobusy_ns = `ICACHE_INDEX_WRITE_V;
+        end
+        default: begin
+            icache_nobusy_ns = `ICACHE_WAIT;
+        end
+    endcase
+end
+
+always_comb begin
+    icache_busy = 1'b1;
+    icache_data_valid = 1'b0;
+    unique case(icache_cs)
+        `ICACHE_WAIT: begin
+            icache_busy = 1'b0;
+            icache_ns = icache_nobusy_ns;
         end
         `ICACHE_LOOKUP: begin
             if(~hit_from_icache && (reg_icache_op == `ICACHE_REQ_LOAD_INS))begin
@@ -135,33 +140,14 @@ always_comb begin
                 icache_ns = `ICACHE_HIT_WRITE_V;
             end
             else begin
-                unique case(icache_op)
-                `ICACHE_REQ_LOAD_INS: begin
-                    if(icache_cached)begin
-                        icache_ns = `ICACHE_LOOKUP;
-                    end
-                    else begin
-                        icache_ns = `ICACHE_REQ_LOAD_WORD;
-                    end
+                icache_data_valid = 1'b1;
+                if(~icache_stall) begin
+                    icache_busy = 1'b0;
+                    icache_ns = icache_nobusy_ns;
+                end else begin
+                    icache_busy = 1'b1;
+                    icache_ns = `ICACHE_LOOKUP;
                 end
-                `ICACHE_REQ_INITIALIZE: begin
-                    icache_ns = `ICACHE_WRITE_TAG;
-                end
-                `ICACHE_REQ_HIT_INVALIDATA: begin
-                    if(icache_cached)begin
-                        icache_ns = `ICACHE_LOOKUP;
-                    end
-                    else begin
-                        icache_ns = `ICACHE_WAIT;
-                    end
-                end
-                `ICACHE_REQ_INDEX_INVALIDATA: begin
-                    icache_ns = `ICACHE_INDEX_WRITE_V;
-                end
-                default: begin
-                    icache_ns = `ICACHE_WAIT;
-                end
-            endcase
             end
         end
         `ICACHE_REQ_LOAD_WORD: begin
@@ -172,10 +158,20 @@ always_comb begin
         end
         `ICACHE_LOAD_WORD_WAIT: begin
             if(response_from_pipline == `FINISH_ICACHE_REQ)begin
-                icache_ns = `ICACHE_WAIT;
+                icache_ns = `ICACHE_LOAD_WORD_DONE;
             end
             else begin
                 icache_ns = `ICACHE_LOAD_WORD_WAIT;
+            end
+        end
+        `ICACHE_LOAD_WORD_DONE: begin
+            icache_data_valid = 1'b1;
+            if(~icache_stall) begin
+                icache_busy = 1'b0;
+                icache_ns = icache_nobusy_ns;
+            end else begin
+                icache_busy = 1'b1;
+                icache_ns = `ICACHE_LOAD_WORD_DONE;
             end
         end
         `ICACHE_LOAD_BLOCK_WAIT: begin
@@ -190,6 +186,7 @@ always_comb begin
             icache_ns = `ICACHE_LOOKUP;
         end
         `ICACHE_WRITE_TAG: begin
+            icache_busy = 1'b0;
             unique case(icache_op)
                 `ICACHE_REQ_LOAD_INS: begin
                     if(icache_cached)begin
@@ -219,6 +216,7 @@ always_comb begin
             endcase
         end 
         `ICACHE_INDEX_WRITE_V: begin
+            icache_busy = 1'b0;
             unique case(icache_op)
                 `ICACHE_REQ_LOAD_INS: begin
                     if(icache_cached)begin
@@ -248,6 +246,7 @@ always_comb begin
             endcase
         end
         `ICACHE_HIT_WRITE_V: begin
+            icache_busy = 1'b0;
             unique case(icache_op)
                 `ICACHE_REQ_LOAD_INS: begin
                     if(icache_cached)begin
@@ -282,12 +281,11 @@ always_comb begin
     endcase
 end
 
-
 //contract with cpu
 always_comb begin
     unique case(icache_cs)
         `ICACHE_WAIT: begin
-            icache_ready = 1'b1;
+            icache_ready = 1'b0;
         end
         `ICACHE_LOOKUP: begin
             icache_ready = 1'b1;
@@ -305,7 +303,7 @@ always_comb begin
 end
 logic [`DATA_WIDTH]rword_from_pipline;
 always_comb begin
-    if(icache_cs == `ICACHE_WAIT)begin
+    if(icache_cs == `ICACHE_LOAD_WORD_DONE)begin
         ins = rword_from_pipline;
     end
     else begin

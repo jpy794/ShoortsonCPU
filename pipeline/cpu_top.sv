@@ -10,6 +10,7 @@ module CPUTop (
     output logic [31:0] icache_pa,
     input logic icache_ready,
     input logic [31:0] icache_data,
+    input logic icache_busy, icache_data_valid,
 
     output logic is_dcache_stall,           // TODO: impl this
     output logic [11:0] dcache_idx,
@@ -151,6 +152,7 @@ module CPUTop (
 
         .icache_ready,
         .icache_data,
+        .icache_data_valid,
         /* ctrl */
         .icache_stall,
 
@@ -309,7 +311,7 @@ module CPUTop (
     assign is_icache_stall = dcache_stall | eu_stall | load_use_stall;
     assign is_dcache_stall = 1'b0;
 
-    assign stall_if1 =  dcache_stall | eu_stall | load_use_stall | icache_stall;
+    assign stall_if1 =  dcache_stall | eu_stall | load_use_stall | icache_stall | icache_busy;
     assign stall_if2 =  dcache_stall | eu_stall | load_use_stall | icache_stall;
     assign stall_id  =  dcache_stall | eu_stall | load_use_stall;
     assign stall_ex  =  dcache_stall | eu_stall;
