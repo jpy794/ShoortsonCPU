@@ -51,6 +51,8 @@ logic [`PIPLINE_STATE_WIDTH]cs, ns;
 
 logic [`ICACHE_REQ_TO_PIPLINE_WIDTH]reg_req_from_icache;
 logic [`ADDRESS_WIDTH]reg_req_ad_from_icache;
+logic [`DCACHE_REQ_TO_PIPLINE_WIDTH]reg_req_from_dcache;
+logic [`ADDRESS_WIDTH]reg_req_ad_from_dcache;
 
 assign wblock_to_axi = wblock_from_dcache;
 assign wword_to_axi = wword_from_dcache; 
@@ -81,6 +83,24 @@ always_ff @(posedge clk)begin
         reg_req_ad_from_icache <= req_ad_from_icache;
     end
 end
+
+always_ff @(posedge clk)begin
+    if(ns == `PIPLINE_WAIT && cs != `PIPLINE_WAIT)begin
+        reg_req_from_dcache <= `DCACHE_REQ_TO_PIPLINE_NONE;
+    end
+    else begin
+        if(req_from_icache != `DCACHE_REQ_TO_PIPLINE_NONE)begin
+            reg_req_from_dcache <= req_from_dcache;
+        end
+    end
+end
+
+always_ff @(posedge clk)begin
+    if(req_from_icache != `DCACHE_REQ_TO_PIPLINE_NONE)begin
+        reg_req_ad_from_dcache <= req_ad_from_dcache;
+    end
+end
+
 always_ff @(posedge clk)begin
     if(!rstn)begin
         cs <= `PIPLINE_WAIT;
@@ -93,7 +113,7 @@ end
 always_comb begin
     unique case(cs)
         `PIPLINE_WAIT: begin
-            unique case(req_from_dcache)
+            unique case(reg_req_from_dcache)
                 `DCACHE_REQ_TO_PIPLINE_LOAD_STORE_BLOCK: begin
                     ns = `PIPLINE_REQ_STORE_BLOCK;
                 end
@@ -356,16 +376,16 @@ end
 always_ff @(posedge clk)begin
     unique case(ns)
         `PIPLINE_REQ_STORE_BLOCK: begin
-            ad_to_axi <= req_ad_from_dcache;
+            ad_to_axi <= reg_req_ad_from_dcache;
         end
         `PIPLINE_REQ_STORE_WORD: begin
-            ad_to_axi <= req_ad_from_dcache;
+            ad_to_axi <= reg_req_ad_from_dcache;
         end
         `D_PIPLINE_REQ_LOAD_BLOCK: begin
-            ad_to_axi <= req_ad_from_dcache;
+            ad_to_axi <= reg_req_ad_from_dcache;
         end
         `D_PIPLINE_REQ_LOAD_WORD: begin
-            ad_to_axi <= req_ad_from_dcache;
+            ad_to_axi <= reg_req_ad_from_dcache;
         end
         `I_PIPLINE_REQ_LOAD_WORD: begin
             ad_to_axi <= reg_req_ad_from_icache;
