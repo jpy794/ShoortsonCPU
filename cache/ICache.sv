@@ -79,14 +79,14 @@ endgenerate
 
 always_comb begin                         
     unique case(control_en)
-        `I_LOAD: begin
+        `ICACHE_LOOKUP: begin
             for(i = 0; i < `WAY_NUM; i = i + 1)begin
                 way_wen[i] = `DATA_WRITE_UNABLE; 
                 way_wtag_en[i] = `UNABLE;
                 way_wv_en[i] = `UNABLE;
             end
         end
-        `I_WRITE_TAG: begin
+        `ICACHE_WRITE_TAG: begin
             for(i = 0; i < `WAY_NUM; i = i + 1)begin
                 way_wen[i] = `DATA_WRITE_UNABLE;
                 way_wv_en[i] = `UNABLE;      
@@ -100,7 +100,7 @@ always_comb begin
                 way_wtag_en[1] = `UNABLE;
             end 
         end
-        `I_WRITE_V: begin
+        `ICACHE_INDEX_WRITE_V: begin
             for(i = 0; i < `WAY_NUM; i = i + 1)begin
                 way_wen[i] = `DATA_WRITE_UNABLE;
                 way_wtag_en[i] = `UNABLE;
@@ -114,7 +114,21 @@ always_comb begin
                 way_wv_en[1] = `UNABLE;
             end
         end
-        `I_WRITE: begin
+        `ICACHE_HIT_WRITE_V: begin
+            for(i = 0; i < `WAY_NUM; i = i + 1)begin
+                way_wen[i] = `DATA_WRITE_UNABLE;
+                way_wtag_en[i] = `UNABLE;
+            end
+            if(ad[0])begin
+                way_wv_en[0] = `UNABLE;
+                way_wv_en[1] = `ENABLE;
+            end
+            else begin
+                way_wv_en[0] = `ENABLE;
+                way_wv_en[1] = `UNABLE;
+            end
+        end
+        `ICACHE_WRITE: begin
             if(select_way)begin
                 way_wen[0] = `DATA_WRITE_UNABLE;
                 way_wtag_en[0] = `UNABLE;

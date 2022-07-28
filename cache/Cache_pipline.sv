@@ -18,7 +18,7 @@ module Cache_pipline(
 
     output logic [`BLOCK_WIDTH]rblock_to_cache,
     output logic [`ADDRESS_WIDTH]rword_to_cache,
-    output logic [`RESPONSE_FROM_PIPLINE]response,
+    output logic [`RESPONSE_FROM_PIPLINE_WIDTH]response,
 
     //from axi
     output logic [`AXI_REQ_WIDTH]req_to_axi,
@@ -49,6 +49,9 @@ module Cache_pipline(
 
 logic [`PIPLINE_STATE_WIDTH]cs, ns;
 
+logic [`ICACHE_REQ_TO_PIPLINE_WIDTH]reg_req_from_icache;
+logic [`ADDRESS_WIDTH]reg_req_ad_from_icache;
+
 assign wblock_to_axi = wblock_from_dcache;
 assign wword_to_axi = wword_from_dcache; 
 assign rblock_to_cache = rblock_from_axi;
@@ -56,6 +59,28 @@ assign rword_to_cache = rword_from_axi;
 assign wword_en_to_axi = wword_en_from_dcache;
 assign rword_en_to_axi = rword_en_from_dcache;
 
+always_ff @(posedge clk)begin
+    if(~rstn)begin
+        reg_req_from_icache <= `ICACHE_REQ_TO_PIPLINE_NONE;
+    end
+    else begin
+        if(ns == `PIPLINE_WAIT && 
+            cs != `PIPLINE_WAIT)begin
+                reg_req_from_icache <= `ICACHE_REQ_TO_PIPLINE_NONE;
+        end
+        else begin
+            if(req_from_icache != `ICACHE_REQ_TO_PIPLINE_NONE)begin
+                reg_req_from_icache <= req_from_icache;
+            end
+        end
+    end
+end
+
+always_ff @(posedge clk)begin
+    if(req_from_icache != `ICACHE_REQ_TO_PIPLINE_NONE)begin
+        reg_req_ad_from_icache <= req_ad_from_icache;
+    end
+end
 always_ff @(posedge clk)begin
     if(!rstn)begin
         cs <= `PIPLINE_WAIT;
@@ -82,7 +107,7 @@ always_comb begin
                     ns = `PIPLINE_REQ_STORE_WORD;
                 end
                 default: begin
-                    unique case(req_from_icache)
+                    unique case(reg_req_from_icache)
                         `ICACHE_REQ_TO_PIPLINE_BLOCK: begin
                             ns = `I_PIPLINE_REQ_LOAD_BLOCK;
                         end
@@ -199,7 +224,7 @@ always_comb begin
         // end
         `D_PIPLINE_LOAD_WORD_WAIT_FINISH: begin
             if(task_finish_from_axi)begin
-                ns= `D_PIPLINE_LOAD_WORD_FINISH;
+                ns= `PIPLINE_WAIT;
             end
             else begin
                 ns = `D_PIPLINE_LOAD_WORD_WAIT_FINISH;
@@ -286,8 +311,12 @@ always_ff @(posedge clk)begin
         `PIPLINE_REQ_STORE_WORD: begin
             req_to_axi <= `REQ_TO_AXI_WRITE_WORD;
         end
-        default:
+        // `PIPLINE_WAIT: begin
+        //     req_to_axi <= `REQ_TO_AXI_NONE;
+        // end
+        default: begin
             req_to_axi <= `REQ_TO_AXI_NONE;
+        end
     endcase
 end
 
@@ -339,10 +368,10 @@ always_ff @(posedge clk)begin
             ad_to_axi <= req_ad_from_dcache;
         end
         `I_PIPLINE_REQ_LOAD_WORD: begin
-            ad_to_axi <= req_ad_from_icache;
+            ad_to_axi <= reg_req_ad_from_icache;
         end
         `I_PIPLINE_REQ_LOAD_BLOCK: begin
-            ad_to_axi <= req_ad_from_icache;
+            ad_to_axi <= reg_req_ad_from_icache;
         end
     endcase
 end
@@ -355,8 +384,10 @@ always_ff @(posedge clk)begin
         `D_PIPLINE_LOAD_BLOCK_FINISH: begin
             response <= `FINISH_DCACHE_REQ;
         end
-        `D_PIPLINE_LOAD_WORD_FINISH: begin
-            response <= `FINISH_DCACHE_REQ; 
+        `D_PIPLINE_LOAD_WORD_WAIT_FINISH: begin
+            if(task_finish_from_axi)begin
+                response <= `FINISH_DCACHE_REQ; 
+            end
         end
         `I_PIPLINE_LOAD_BLOCK_FINISH: begin
             response <= `FINISH_ICACHE_REQ;
@@ -367,4 +398,35 @@ always_ff @(posedge clk)begin
         default: response <= `FINISH_CACHE_REQ_NONE;
     endcase
 end
+
+// always_ff @(posedge clk)begin
+//     if(!rstn)begin
+//         response_req_to_cache <= `RECEIVE_REQ_NONE;
+//     end
+//     else begin
+//         unique case(ns)
+//             `I_PIPLINE_REQ_LOAD_BLOCK: begin
+//                 response_req_to_cache <= `RECEIVE_REQ_FROM_ICACHE;
+//             end
+//             `I_PIPLINE_REQ_LOAD_WORD: begin
+//                 response_req_to_cache <= `RECEIVE_REQ_FROM_ICACHE;
+//             end
+//             `D_PIPLINE_REQ_LOAD_BLOCK: begin
+//                 response_req_to_cache <= `RECEIVE_REQ_FROM_DCACHE;
+//             end
+//             `D_PIPLINE_REQ_LOAD_WORD: begin
+//                 response_req_to_cache <= `RECEIVE_REQ_FROM_DCACHE;
+//             end
+//             `PIPLINE_REQ_STORE_BLOCK: begin
+//                 response_req_to_cache <= `RECEIVE_REQ_FROM_DCACHE;
+//             end
+//             `PIPLINE_REQ_STORE_WORD: begin
+//                 response_req_to_cache <= `RECEIVE_REQ_FROM_DCACHE;
+//             end
+//             default: begin
+//                 response_req_to_cache <= `RECEIVE_REQ_NONE;
+//             end
+//         endcase
+//     end
+// end
 endmodule

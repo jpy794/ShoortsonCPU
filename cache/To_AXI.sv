@@ -107,6 +107,31 @@ assign awlock = `AXI_LOCK_NORMAL;
 
 logic [`AXI_STATE_WIDTH]cs, ns;
 
+logic [`AXI_REQ_WIDTH]reg_req_from_pipline;
+logic [`ADDRESS_WIDTH]reg_ad;
+
+always_ff @(posedge clk)begin
+    if(~rstn)begin
+        reg_req_from_pipline <= `REQ_TO_AXI_NONE;
+    end
+    else begin
+        if(ns == `AXI_STATE_WAIT && cs != `AXI_STATE_WAIT)begin
+            reg_req_from_pipline <= `REQ_TO_AXI_NONE;
+        end
+        else begin
+            if(req != `REQ_TO_AXI_NONE)begin
+                reg_req_from_pipline <= req;
+            end
+        end
+    end
+end
+
+always_ff @(posedge clk)begin
+    if(req != `REQ_TO_AXI_NONE)begin
+        reg_ad <= ad;
+    end
+end
+
 always_ff @(posedge clk)begin
     if(!rstn)begin
         cs <= `AXI_STATE_WAIT;
@@ -119,7 +144,7 @@ end
 always_comb begin
     unique case(cs)
         `AXI_STATE_WAIT: begin
-            unique case(req)
+            unique case(reg_req_from_pipline)
                 `REQ_TO_AXI_LOAD_BLOCK: begin
                     ns = `AXI_STATE_REQ_LOAD_BLOCK;
                 end
@@ -293,30 +318,35 @@ end
 always_ff @(posedge clk)begin
     unique case(ns)
         `AXI_STATE_REQ_LOAD_BLOCK: begin
-            araddr <= {ad[31:4], {4{1'b0}}};
+            araddr <= {reg_ad[31:4], {4{1'b0}}};
         end
         `AXI_STATE_REQ_LOAD_WORD: begin
-            araddr <= ad;
+            araddr <= reg_ad;
         end
     endcase
 end
 
 always_ff @(posedge clk)begin
-    unique case(ns)
-        `AXI_STATE_WAIT: arvalid <= `UNREADY;
-        `AXI_STATE_REQ_LOAD_BLOCK: begin
-            arvalid <= `READY;
-        end
-        `AXI_STATE_REQ_LOAD_WORD: begin
-            arvalid <= `READY;
-        end
-        `AXI_STATE_LOAD_BLOCK_WAIT_RVALID: begin
-            arvalid <= `UNREADY;
-        end
-        `AXI_STATE_LOAD_WORD_WAIT_RVALID: begin
-            arvalid <= `UNREADY;
-        end
-    endcase
+    if(~rstn)begin
+        arvalid <= `UNREADY;
+    end
+    else begin
+        unique case(ns)
+            `AXI_STATE_WAIT: arvalid <= `UNREADY;
+            `AXI_STATE_REQ_LOAD_BLOCK: begin
+                arvalid <= `READY;
+            end
+            `AXI_STATE_REQ_LOAD_WORD: begin
+                arvalid <= `READY;
+            end
+            `AXI_STATE_LOAD_BLOCK_WAIT_RVALID: begin
+                arvalid <= `UNREADY;
+            end
+            `AXI_STATE_LOAD_WORD_WAIT_RVALID: begin
+                arvalid <= `UNREADY;
+            end
+        endcase
+    end
 end
 
 always_ff @(posedge clk)begin
@@ -383,10 +413,10 @@ end
 always_ff @(posedge clk)begin
     unique case(ns)
         `AXI_STATE_REQ_STORE_BLOCK: begin
-            awaddr <= {ad[31:4], {4{1'b0}}};
+            awaddr <= {reg_ad[31:4], {4{1'b0}}};
         end
         `AXI_STATE_REQ_STORE_WORD: begin
-            awaddr <= ad;
+            awaddr <= reg_ad;
         end
     endcase
 end
@@ -446,23 +476,28 @@ always_ff @(posedge clk)begin
     endcase 
 end
 always_ff @(posedge clk)begin
-    unique case(ns)
-        `AXI_STATE_REQ_STORE_BLOCK: begin
-            awvalid <= `READY;
-        end
-        `AXI_STATE_REQ_STORE_WORD: begin
-            awvalid <= `READY;
-        end
-        `AXI_STATE_STORE_BLOCK_WAIT_WREADY: begin
-            awvalid <= `UNREADY;
-        end
-        `AXI_STATE_STORE_WORD_WAIT_WREADY: begin
-            awvalid <= `UNREADY;
-        end
-        `AXI_STATE_WAIT: begin
-            awvalid <= `UNREADY;
-        end
-    endcase 
+    if(~rstn)begin
+        awvalid <= `UNREADY;
+    end
+    else begin
+        unique case(ns)
+            `AXI_STATE_REQ_STORE_BLOCK: begin
+                awvalid <= `READY;
+            end
+            `AXI_STATE_REQ_STORE_WORD: begin
+                awvalid <= `READY;
+            end
+            `AXI_STATE_STORE_BLOCK_WAIT_WREADY: begin
+                awvalid <= `UNREADY;
+            end
+            `AXI_STATE_STORE_WORD_WAIT_WREADY: begin
+                awvalid <= `UNREADY;
+            end
+            `AXI_STATE_WAIT: begin
+                awvalid <= `UNREADY;
+            end
+        endcase 
+    end
 end
 
 always_ff @(posedge clk)begin
@@ -548,34 +583,44 @@ always_ff @(posedge clk)begin
 end
 
 always_ff @(posedge clk)begin
-    unique case(ns)
-        `AXI_STATE_REQ_STORE_BLOCK: begin
-            wvalid <= 1'b1;
-        end
-        `AXI_STATE_REQ_STORE_WORD: begin
-            wvalid <= 1'b1;
-        end
-        `AXI_STATE_STORE_BLOCK_WAIT_BVALID: begin
-            wvalid <= 1'b0;
-        end
-        `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
-            wvalid <= 1'b0;
-        end
-    endcase
+    if(~rstn)begin
+        wvalid <= `UNREADY;
+    end
+    else begin
+        unique case(ns)
+            `AXI_STATE_REQ_STORE_BLOCK: begin
+                wvalid <= 1'b1;
+            end
+            `AXI_STATE_REQ_STORE_WORD: begin
+                wvalid <= 1'b1;
+            end
+            `AXI_STATE_STORE_BLOCK_WAIT_BVALID: begin
+                wvalid <= 1'b0;
+            end
+            `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
+                wvalid <= 1'b0;
+            end
+        endcase
+    end
 end
 
 always_ff @(posedge clk)begin
-    unique case(ns)
-        `AXI_STATE_STORE_BLOCK_WAIT_BVALID: begin
-            bready <= `READY;
-        end
-        `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
-            bready <= `READY;
-        end
-        `AXI_STATE_WAIT: begin
-            bready <= `UNREADY;
-        end
-    endcase
+    if(~rstn)begin
+        bready <= `UNREADY;
+    end 
+    else begin
+        unique case(ns)
+            `AXI_STATE_STORE_BLOCK_WAIT_BVALID: begin
+                bready <= `READY;
+            end
+            `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
+                bready <= `READY;
+            end
+            `AXI_STATE_WAIT: begin
+                bready <= `UNREADY;
+            end
+        endcase
+    end
 end
 
 always_ff @(posedge clk)begin
