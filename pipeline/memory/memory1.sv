@@ -30,7 +30,8 @@ module Memory1 (
     input excp_pass_t excp_pass_in,
 
     output memory1_memory2_pass_t pass_out,
-    output excp_pass_t excp_pass_out
+    
+    output excp_req_t excp_req
 );
     initial begin
         pass_in_r.is_store = 1'b0;
@@ -39,7 +40,7 @@ module Memory1 (
     execute_memory1_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk , negedge rst_n) begin
         if(~rst_n) begin
             pass_in_r.is_flush <= 1'b1;
         end else if(~is_stall) begin
@@ -114,6 +115,10 @@ module Memory1 (
     `PASS(is_wr_csr);
     `PASS(csr_addr);
 
-    assign excp_pass_out = excp_pass_in_r.valid ? excp_pass_in_r : addr_excp;
+    /* exception */
+    assign excp_req.valid = ~mem1_flush;
+    assign excp_req.excp_pass = excp_pass_in_r.valid ? excp_pass_in_r : addr_excp;
+    assign excp_req.epc = pass_in_r.pc;
+    assign excp_req.inst_ertn = 1'b0;           // TODO: impl ertn
 
 endmodule

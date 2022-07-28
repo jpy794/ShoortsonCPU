@@ -32,11 +32,13 @@ module Fetch2 (
         end
     end
 
+    logic if2_flush = is_flush | pass_in_r.is_flush;
+
     /* out for ctrl */
-    assign icache_stall = ~icache_ready;
+    assign icache_stall = ~icache_ready & ~if2_flush;
 
     /* out to next stage */
-    assign pass_out.is_flush = is_flush | pass_in_r.is_flush | icache_stall;
+    assign pass_out.is_flush = if2_flush | icache_stall;
     assign pass_out.inst = icache_data;
 
     `PASS(pc);

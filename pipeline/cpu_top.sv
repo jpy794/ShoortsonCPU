@@ -210,6 +210,7 @@ module CPUTop (
         .excp_pass_out(excp_ex)
     );
 
+    excp_req_t excp_req;
     Memory1 U_Memory1 (
         .clk, .rst_n,
 
@@ -232,7 +233,8 @@ module CPUTop (
         .pass_in(pass_ex),
         .excp_pass_in(excp_ex), 
         .pass_out(pass_mem1),
-        .excp_pass_out(excp_mem1)
+        
+        .excp_req
     );
 
     logic dcache_stall;
@@ -249,16 +251,9 @@ module CPUTop (
         .is_stall(stall_mem2),
         .is_flush(flush_mem2),
         .pass_in(pass_mem1),
-        .excp_pass_in(excp_mem1), 
         .pass_out(pass_mem2),
-        .excp_pass_out(excp_mem2)
     );
 
-    logic wb_flush;
-    excp_pass_t excp_wb;
-    memory2_writeback_pass_t pass_wb;
-    virt_t wb_pc;
-    logic wb_ertn;
     Writeback U_Writeback (
         .clk, .rst_n,
 
@@ -273,31 +268,24 @@ module CPUTop (
         .is_stall(stall_wb),
         .is_flush(flush_wb),
         .pass_in(pass_mem2),
-        .excp_pass_in(excp_mem2),
-
-        .wb_flush,
-        .excp_pass_out(excp_wb),
-        .pass_out(pass_wb),
-        .pc_out(wb_pc),
-        .inst_ertn(wb_ertn)
     );
 
     /* debug */
-    assign debug0_wb_inst = pass_wb.inst;
-    assign debug0_wb_pc = pass_wb.pc;
-    assign debug0_wb_rf_wdata = pass_wb.is_wr_rd_pc_plus4 ? pass_wb.pc_plus4 : pass_wb.ex_mem_out;
-    assign debug0_wb_rf_wen = {4{pass_wb.is_wr_rd}};
-    assign debug0_wb_rf_wnum = pass_wb.rd;
+    assign debug0_wb_inst = '0;
+    assign debug0_wb_pc = '0;
+    assign debug0_wb_rf_wdata = '0;
+    assign debug0_wb_rf_wen = '0;
+    assign debug0_wb_rf_wnum = '0;
 
+    logic excp_flush;
     Exception U_Exception (
         .ti_in('0), .hwi_in('0),            // TODO: connect real interrupt
-        /* from wb */
-        .wb_flush,
-        .wb_ertn,                           // TODO: handle eret
-        .pc_wb(wb_pc),
-        .excp_wb,
+        /* from mem1 */
+        .req(excp_req),
 
         .wr_pc_req(excp_wr_pc_req),
+
+        .excp_flush,
 
         .rd_csr(excp_rd_csr),
         .wr_csr_req(excp_wr_csr_req)
@@ -314,11 +302,11 @@ module CPUTop (
     assign stall_mem2 = 1'b0;
     assign stall_wb = 1'b0;
 
-    assign flush_if1 = bp_miss_flush;
-    assign flush_if2 = bp_miss_flush;
-    assign flush_id = bp_miss_flush;
-    assign flush_ex = 1'b0;
-    assign flush_mem1 = 1'b0;
+    assign flush_if1 = bp_miss_flush | excp_flush;
+    assign flush_if2 = bp_miss_flush | excp_flush;
+    assign flush_id = bp_miss_flush | excp_flush;
+    assign flush_ex = excp_flush;
+    assign flush_mem1 = excp_flush;
     assign flush_mem2 = 1'b0;
     assign flush_wb = 1'b0;
 

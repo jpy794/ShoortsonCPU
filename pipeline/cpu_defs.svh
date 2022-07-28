@@ -239,6 +239,13 @@ typedef struct packed {
 } excp_pass_t;
 
 typedef struct packed {
+    logic valid;
+    logic inst_ertn;
+    virt_t epc;
+    excp_pass_t excp_pass;
+} excp_req_t;
+
+typedef struct packed {
     logic we;
     csr_crmd_t crmd;
     csr_prmd_t prmd;
