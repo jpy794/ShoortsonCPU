@@ -258,7 +258,12 @@ always_comb begin
             end
         end
         `AXI_STATE_REQ_LOAD_WORD: begin
-            ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY;
+            if(arready)begin
+                ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
+            end
+            else begin
+                ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY;
+            end
         end
         `AXI_STATE_LOAD_WORD_WAIT_ARREADY: begin
             if(arready)begin
