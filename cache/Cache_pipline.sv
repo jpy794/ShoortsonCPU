@@ -262,7 +262,7 @@ always_comb begin
         // end
         `D_PIPLINE_LOAD_WORD_WAIT_FINISH: begin
             if(task_finish_from_axi)begin
-                ns= `PIPLINE_WAIT;
+                ns= `D_PIPLINE_LOAD_WORD_FINISH;
             end
             else begin
                 ns = `D_PIPLINE_LOAD_WORD_WAIT_FINISH;
@@ -422,10 +422,8 @@ always_ff @(posedge clk)begin
         `D_PIPLINE_LOAD_BLOCK_FINISH: begin
             response <= `FINISH_DCACHE_REQ;
         end
-        `D_PIPLINE_LOAD_WORD_WAIT_FINISH: begin
-            if(task_finish_from_axi)begin
-                response <= `FINISH_DCACHE_REQ; 
-            end
+        `D_PIPLINE_LOAD_WORD_FINISH: begin
+            response <= `FINISH_DCACHE_REQ;
         end
         `I_PIPLINE_LOAD_BLOCK_FINISH: begin
             response <= `FINISH_ICACHE_REQ;
