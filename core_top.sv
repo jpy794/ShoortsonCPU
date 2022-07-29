@@ -87,6 +87,7 @@ module core_top(
     logic [`DATA_WIDTH]rword_from_axi;
     logic ready_from_axi;
     logic task_finish_from_axi;
+    logic [`REQ_FROM_WIDTH]req_from_to_axi;
 
     Cache cache (
         .clk(aclk),
@@ -120,7 +121,8 @@ module core_top(
         .rblock_from_axi(rblock_from_axi),
         .rword_from_axi(rword_from_axi),
         .ready_from_axi(ready_from_axi),
-        .task_finish_from_axi(task_finish_from_axi)
+        .task_finish_from_axi(task_finish_from_axi),
+        .req_from_to_axi(req_from_to_axi)
     );
 
     AXI_bridge axi_bridge (
@@ -172,7 +174,8 @@ module core_top(
         .bid(bid),
         .bresp(bresp),
         .bready(bready),
-        .bvalid(bvalid)
+        .bvalid(bvalid),
+        .req_from(req_from_to_axi)
     );
 
 endmodule

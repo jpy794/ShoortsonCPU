@@ -36,7 +36,8 @@ module Cache(
     input logic [`BLOCK_WIDTH]rblock_from_axi,
     input logic [`DATA_WIDTH]rword_from_axi,
     input logic ready_from_axi,
-    input logic task_finish_from_axi   
+    input logic task_finish_from_axi   ,
+    output logic [`REQ_FROM_WIDTH]req_from_to_axi
 
 );
 //pipline
@@ -713,7 +714,7 @@ always_comb begin
 end
 
 always_comb begin
-    dcache_wen_to_pipline = 4'b0000;
+    wen_to_dcache = 4'b0000;
     if(dcache_ns == `D_STORE)begin
         unique case(reg_dcache_op)
             `DCACHE_REQ_STORE_ATOM: begin
@@ -889,7 +890,8 @@ Cache_pipline U_Cache_pipline (.clk(clk), .rstn(rstn),
                 .rblock_from_axi(rblock_from_axi), 
                 .rword_from_axi(rword_from_axi), 
                 .ready_from_axi(ready_from_axi), 
-                .task_finish_from_axi(task_finish_from_axi));
+                .task_finish_from_axi(task_finish_from_axi),
+                .req_from_to_axi(req_from_to_axi));
 
 
 endmodule

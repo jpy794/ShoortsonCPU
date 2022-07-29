@@ -16,6 +16,7 @@ module AXI_bridge (
     output logic [`BLOCK_WIDTH]rblock,
     output logic [`DATA_WIDTH]rword,
     input logic [`DCACHE_REQ_REN_WIDTH]rword_en,
+    input logic [`REQ_FROM_WIDTH]req_from,
 
 
     //axi
@@ -122,20 +123,47 @@ always_comb begin
                     axi_ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY;
                 end
                 `REQ_TO_AXI_WRITE_WORD: begin
+                    axi_ns = `AXI_STATE_STORE_WORD_WAIT_AWREADY;
+                end
+                `REQ_TO_AXI_WRITE_BLOCK: begin
                     axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_AWREADY;
+                end
+                `REQ_TO_AXI_LOAD_BLOCK: begin
+                    axi_ns = `AXI_STATE_LOAD_BLOCK_WAIT_ARREADY;
                 end
                 default: begin
                     axi_ns =  `AXI_STATE_WAIT;
                 end
             endcase
         end
+        // `AXI_STATE_LOAD_WORD_WAIT_ARREADY: begin
+        //     if(arready)begin
+        //         axi_ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
+        //     end
+        //     else begin
+        //         axi_ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY;
+        //     end
+        // end
+        // `AXI_STATE_LOAD_WORD_WAIT_RVALID: begin
+        //     if(rvalid)begin
+        //         axi_ns = `AXI_STATE_LOAD_WORD_SUCCESS;
+        //     end
+        //     else begin
+        //         axi_ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
+        //     end
+        // end
+        // `AXI_STATE_LOAD_WORD_SUCCESS: begin
+        //     axi_ns = `AXI_STATE_WAIT;
         `AXI_STATE_LOAD_WORD_WAIT_ARREADY: begin
             if(arready)begin
-                axi_ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
+                axi_ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY_SUCCESS;
             end
             else begin
                 axi_ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY;
             end
+        end
+        `AXI_STATE_LOAD_WORD_WAIT_ARREADY_SUCCESS: begin
+            axi_ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
         end
         `AXI_STATE_LOAD_WORD_WAIT_RVALID: begin
             if(rvalid)begin
@@ -150,28 +178,75 @@ always_comb begin
         end
         `AXI_STATE_STORE_WORD_WAIT_AWREADY: begin
             if(awready)begin
-                axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY;
+                axi_ns = `AXI_STATE_STORE_WORD_WAIT_AWREADY_SUCCESS;
             end
             else begin
-                axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
+                axi_ns = `AXI_STATE_STORE_WORD_WAIT_AWREADY;
             end
         end
+        `AXI_STATE_STORE_WORD_WAIT_AWREADY_SUCCESS: begin
+            axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY;
+        end
+        // `AXI_STATE_STORE_WORD_WAIT_WREADY: begin
+        //     if(wready)begin
+        //         axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
+        //     end
+        //     else begin
+        //         axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY;
+        //     end
+        // end
+        // `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
+        //     if(bvalid)begin
+        //         axi_ns = `AXI_STATE_WAIT;
+        //     end
+        //     else begin
+        //         axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
+        //     end
+        // end
         `AXI_STATE_STORE_WORD_WAIT_WREADY: begin
             if(wready)begin
-                axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
+                axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY_SUCCESS;
             end
             else begin
                 axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY;
             end
+        end
+        `AXI_STATE_STORE_WORD_WAIT_WREADY_SUCCESS: begin
+            axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
         end
         `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
             if(bvalid)begin
-                axi_ns = `AXI_STATE_WAIT;
+                axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID_SUCCESS;
             end
             else begin
                 axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
             end
         end
+        `AXI_STATE_STORE_WORD_WAIT_BVALID_SUCCESS: begin
+            axi_ns = `AXI_STATE_WAIT;
+        end
+        // `AXI_STATE_STORE_BLOCK_WAIT_AWREADY: begin
+        //     if(awready)begin
+        //         axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_AWREADY_SUCCESS;
+        //     end
+        //     else begin  
+        //         axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_AWREADY;
+        //     end
+        // end
+        // `AXI_STATE_STORE_BLOCK_WAIT_AWREADY_SUCCESS: begin
+        //     axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_WREADY;
+        // end
+        // `AXI_STATE_STORE_BLOCK_WAIT_WREADY: begin
+        //     if(wready)begin
+        //         axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_WREADY_SUCCESS;
+        //     end
+        //     else begin
+        //         axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_WREADY;
+        //     end
+        // end
+        // `AXI_STATE_STORE_BLOCK_WAIT_WREADY_SUCCESS: begin
+        //     axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_BVALID;
+        // end
         default: begin
             axi_ns = `AXI_STATE_WAIT;
         end
@@ -189,7 +264,7 @@ always_ff @(posedge clk or negedge rstn)begin
         arvalid <= 1'b0;
     end
     else begin
-        if(axi_ns == `AXI_STATE_LOAD_WORD_WAIT_ARREADY)begin
+        if(axi_ns == `AXI_STATE_LOAD_WORD_WAIT_ARREADY || axi_ns == `AXI_STATE_LOAD_WORD_WAIT_ARREADY_SUCCESS)begin
             arvalid <= 1'b1;
         end
         else begin
@@ -203,7 +278,7 @@ always_ff @(posedge clk or negedge rstn)begin
         rready <= 1'b0;
     end
     else begin
-        if(axi_ns == `AXI_STATE_LOAD_WORD_WAIT_RVALID)begin
+        if(axi_ns == `AXI_STATE_LOAD_WORD_WAIT_RVALID || axi_ns == `AXI_STATE_LOAD_WORD_SUCCESS)begin
             rready <= 1'b1;
         end
         else begin
@@ -221,18 +296,20 @@ always_ff @(posedge clk)begin
 end
 
 always_ff @(posedge clk or negedge rstn)begin
-    if(~rstn)begin
-        awvalid <= 1'b0;
-    end
-    else begin  
-        if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_AWREADY)begin
-            awvalid <= 1'b1;
-        end
-        else begin
-            awvalid <= 1'b0;
-        end
-    end
+     if(~rstn)begin
+         awvalid <= 1'b0;
+     end
+     else begin  
+         if((axi_ns == `AXI_STATE_STORE_WORD_WAIT_AWREADY) || (axi_ns == `AXI_STATE_STORE_WORD_WAIT_AWREADY_SUCCESS))begin
+             awvalid <= 1'b1;
+         end
+         else begin
+             awvalid <= 1'b0;
+         end
+     end
 end
+
+//assign awvalid = (axi_cs == `AXI_STATE_STORE_WORD_WAIT_AWREADY)? 1'b1: 1'b0;
 
 always_ff @(posedge clk)begin
     if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_AWREADY)begin
@@ -246,7 +323,7 @@ always_ff @(posedge clk or negedge rstn)begin
         wvalid <= 1'b0;
     end
     else begin
-        if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_WREADY)begin
+        if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_WREADY || axi_ns == `AXI_STATE_STORE_WORD_WAIT_WREADY_SUCCESS)begin
             wvalid <= 1'b1;
         end
         else begin
@@ -274,13 +351,26 @@ always_ff @(posedge clk or negedge rstn)begin
         bready <= 1'b0;
     end
     else begin
-        if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_BVALID)begin
+        if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_BVALID || axi_ns == `AXI_STATE_STORE_WORD_WAIT_BVALID_SUCCESS)begin
             bready <= 1'b1;
         end
         else begin
             bready <= 1'b0;
         end
     end
+end
+
+always_ff @(posedge clk)begin
+    unique case (axi_ns)
+        `AXI_STATE_LOAD_WORD_WAIT_ARREADY: begin
+            if(req_from == `REQ_FROM_DCACHE)begin
+                arid <= 1'b1;
+            end
+            else if(req_from == `REQ_FROM_ICACHE)begin
+                arid <= 1'b0;
+            end
+        end
+    endcase
 end
 
 assign task_finish = (axi_ns == `AXI_STATE_WAIT && axi_cs != `AXI_STATE_WAIT)? 1'b1:1'b0;

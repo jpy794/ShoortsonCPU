@@ -28,6 +28,7 @@ module Cache_pipline(
     output logic [`DCACHE_REQ_REN_WIDTH]rword_en_to_axi,
     output logic [`ADDRESS_WIDTH]ad_to_axi,
     output logic cached_to_axi,
+    output logic [`REQ_FROM_WIDTH]req_from_to_axi,
 
     input logic [`BLOCK_WIDTH]rblock_from_axi,
     input logic [`DATA_WIDTH]rword_from_axi,
@@ -410,6 +411,29 @@ always_ff @(posedge clk)begin
         end
         `I_PIPLINE_REQ_LOAD_BLOCK: begin
             ad_to_axi <= reg_req_ad_from_icache;
+        end
+    endcase
+end
+
+always_ff @(posedge clk)begin
+    unique case(ns)
+        `PIPLINE_REQ_STORE_BLOCK: begin
+            req_from_to_axi <= `REQ_FROM_DCACHE;
+        end
+        `PIPLINE_REQ_STORE_WORD: begin
+            req_from_to_axi <= `REQ_FROM_DCACHE;
+        end
+        `D_PIPLINE_REQ_LOAD_BLOCK: begin
+            req_from_to_axi <= `REQ_FROM_DCACHE;
+        end
+        `D_PIPLINE_REQ_LOAD_WORD: begin
+            req_from_to_axi <= `REQ_FROM_DCACHE;
+        end
+        `I_PIPLINE_REQ_LOAD_WORD: begin
+            req_from_to_axi <= `REQ_FROM_ICACHE;
+        end
+        `I_PIPLINE_REQ_LOAD_BLOCK: begin
+            req_from_to_axi <= `REQ_FROM_ICACHE;
         end
     endcase
 end
