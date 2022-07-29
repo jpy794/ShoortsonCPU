@@ -4,7 +4,6 @@ module Execute (
     input logic clk, rst_n,
 
     /* ctrl */
-    output logic eu_stall,
     output logic bp_miss_flush,
 
     /* TODO: branch resolved */
@@ -17,8 +16,8 @@ module Execute (
     input forward_req_t mem1_req, mem2_req,
 
     /* pipeline */
-    input logic is_stall,
-    input logic is_flush,
+    input logic flush, next_rdy_in,
+    output logic rdy_in,
     input decode_execute_pass_t pass_in,
     input excp_pass_t excp_pass_in,
 
@@ -30,17 +29,23 @@ module Execute (
     decode_execute_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
-            pass_in_r.is_flush <= 1'b1;
-        end else if(~is_stall) begin
+            pass_in_r.valid <= 1'b0;
+        end else if(rdy_in) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;
         end
     end
 
-    logic ex_flush;
-    assign ex_flush = is_flush | pass_in_r.is_flush;
+    logic eu_stall;
+    logic rdy_out;
+    logic ex_flush, ex_stall;
+    assign ex_flush = flush | ~pass_in_r.valid;
+    assign ex_stall = ~next_rdy_in | eu_stall;
+
+    assign rdy_in = ex_flush | ~ex_stall;
+    assign rdy_out = ~ex_flush & ~ex_stall;        // only use this for pass_out.valid
 
     excp_pass_t ex_excp;
 
@@ -170,7 +175,7 @@ module Execute (
 
 
     /* out to next stage */
-    assign pass_out.is_flush = ex_flush | eu_stall;
+    assign pass_out.valid = rdy_out;
     assign pass_out.ex_out = ex_out;
     assign pass_out.invtlb_asid = pass_in_r.rj_data[9:0];
     assign pass_out.pc_plus4 = pass_in_r.pc + 4;

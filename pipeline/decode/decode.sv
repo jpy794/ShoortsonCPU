@@ -17,12 +17,9 @@ module Decode (
     input load_use_t ex_ld_use,
     input load_use_t mem1_ld_use,
 
-    /* ctrl */
-    output logic load_use_stall,
-
     /* pipeline */
-    input logic is_stall,
-    input logic is_flush,
+    input logic flush, next_rdy_in,
+    output logic rdy_in,
     input fetch2_decode_pass_t pass_in,
     input excp_pass_t excp_pass_in,
 
@@ -35,15 +32,21 @@ module Decode (
 
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
-            pass_in_r.is_flush <= 1'b1;
-        end else if(~is_stall) begin
+            pass_in_r.valid <= 1'b0;
+        end else if(rdy_in) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;
         end
     end
 
-    logic id_flush;
-    assign id_flush = is_flush | pass_in_r.is_flush;
+    logic load_use_stall;
+    logic rdy_out;
+    logic id_flush, id_stall;
+    assign id_flush = flush | ~pass_in_r.valid;
+    assign id_stall = ~next_rdy_in | load_use_stall;
+
+    assign rdy_in = id_flush | ~id_stall;
+    assign rdy_out = ~id_flush & ~id_stall;        // only use this for pass_out.valid
 
     u32_t inst;
     assign inst = pass_in_r.inst;
@@ -571,7 +574,7 @@ module Decode (
 
 
     /* out to next stage */
-    assign pass_out.is_flush = id_flush | load_use_stall;
+    assign pass_out.valid = rdy_out;
     assign pass_out.is_mul = is_mul;
     assign pass_out.is_div = is_div;
     assign pass_out.is_bru = is_br;

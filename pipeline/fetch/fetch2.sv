@@ -12,8 +12,8 @@ module Fetch2 (
     output logic icache_stall,
 
     /* pipeline */
-    input logic is_stall,
-    input logic is_flush,
+    input logic flush, next_rdy_in,
+    output logic rdy_in,
 
     input fetch1_fetch2_pass_t pass_in,
     input excp_pass_t excp_pass_in,
@@ -26,21 +26,23 @@ module Fetch2 (
 
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
-            pass_in_r.is_flush <= 1'b1;
-        end else if(~is_stall) begin
+            pass_in_r.valid <= 1'b0;
+        end else if(rdy_in) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;
         end
     end
 
-    logic if2_flush;
-    assign if2_flush = is_flush | pass_in_r.is_flush;
+    logic rdy_out;
+    logic if2_flush, if2_stall;
+    assign if2_flush = flush | ~pass_in_r.valid;
+    assign if2_stall = ~next_rdy_in | ~icache_data_valid;
 
-    /* out for ctrl */
-    assign icache_stall = ~icache_data_valid & ~if2_flush;
+    assign rdy_in = if2_flush | ~if2_stall;
+    assign rdy_out = ~if2_flush & ~if2_stall;        // only use this for pass_out.valid
 
     /* out to next stage */
-    assign pass_out.is_flush = if2_flush | icache_stall;
+    assign pass_out.valid = rdy_out;
     assign pass_out.inst = icache_data;
 
     `PASS(pc);

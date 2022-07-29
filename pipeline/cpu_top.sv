@@ -3,7 +3,7 @@
 module CPUTop (
     input logic clk, rst_n,
 
-    output logic is_icache_stall,           // TODO: impl this
+    output logic stall_icache,
     output logic [11:0] icache_idx,
     output logic [2:0] icache_op,
     output logic icache_is_cached,
@@ -12,7 +12,7 @@ module CPUTop (
     input logic [31:0] icache_data,
     input logic icache_busy, icache_data_valid,
 
-    output logic is_dcache_stall,           // TODO: impl this
+    output logic stall_dcache,
     output logic [11:0] dcache_idx,
     output logic [4:0] dcache_op,
     output logic [1:0] dcache_byte_type,
@@ -22,6 +22,7 @@ module CPUTop (
     input logic dcache_data_valid,
     output logic [31:0] wr_dcache_data,
     input logic [31:0] rd_dcache_data,
+    input logic dcache_busy, dcache_data_valid,
 
     // TODO: int
     input logic [7:0] intrpt,
@@ -44,8 +45,8 @@ module CPUTop (
     excp_pass_t excp_if1, excp_if2, excp_id, excp_ex, excp_mem1, excp_mem2;
 
     /* ctrl signals */
-    logic stall_if1, stall_if2, stall_id, stall_ex, stall_mem1, stall_mem2, stall_wb;
     logic flush_if1, flush_if2, flush_id, flush_ex, flush_mem1, flush_mem2, flush_wb;
+    logic if1_rdy_in, if2_rdy_in, id_rdy_in, ex_rdy_in, mem1_rdy_in, mem2_rdy_in, wb_rdy_in;
 
     /* mux csr_addr */
     csr_addr_t csr_addr_wb, csr_addr_id, csr_addr;
@@ -112,10 +113,10 @@ module CPUTop (
     u32_t pc_if1_to_btb;
     btb_predict_t btb_pre;
     btb_resolved_t ex_resolved_btb;     // TODO
-    logic btb_stall;
+    logic stall_btb;
     BTB U_BTB (
         .clk, .rst_n,
-        .is_stall(btb_stall),
+        .is_stall(stall_btb),
         .pc(pc_if1_to_btb), 
         .predict_out(btb_pre),
         .ex_resolved_in(ex_resolved_btb)
@@ -125,7 +126,7 @@ module CPUTop (
     Fetch1 U_Fetch1 (
         .clk, .rst_n,
 
-        .btb_is_stall(btb_stall),
+        .stall_btb,
         .btb_pc(pc_if1_to_btb),
         .btb_predict(btb_pre),
 
@@ -140,32 +141,33 @@ module CPUTop (
         .icache_op,
         .icache_pa,
         .icache_is_cached,
+        .icache_busy,
 
-        .is_stall(stall_if1),
-        .is_flush(flush_if1),
+        .flush(flush_if1),
+        .next_rdy_in(if2_rdy_in),
+        .rdy_in(if1_rdy_in),
+
         .pass_out(pass_if1),
         .excp_pass_out(excp_if1)
     );
 
-    logic icache_stall;
     Fetch2 U_Fetch2 (
         .clk, .rst_n,
 
         .icache_ready,
         .icache_data,
         .icache_data_valid,
-        /* ctrl */
-        .icache_stall,
 
-        .is_stall(stall_if2),
-        .is_flush(flush_if2), 
+        .flush(flush_if2),
+        .next_rdy_in(id_rdy_in),
+        .rdy_in(if2_rdy_in),
+
         .pass_in(pass_if1),
         .excp_pass_in(excp_if1),
         .pass_out(pass_if2),
         .excp_pass_out(excp_if2)
     );
 
-    logic load_use_stall;
     load_use_t ex_ld_use, mem1_ld_use;
     Decode U_Decode (
         .clk, .rst_n,
@@ -180,23 +182,23 @@ module CPUTop (
 
         .ex_ld_use,
         .mem1_ld_use,
-        /* ctrl */
-        .load_use_stall, 
-        .is_stall(stall_id),
-        .is_flush(flush_id),
+
+        .flush(flush_id),
+        .next_rdy_in(ex_rdy_in),
+        .rdy_in(id_rdy_in),
+
         .pass_in(pass_if2),
         .excp_pass_in(excp_if2),
         .pass_out(pass_id),
         .excp_pass_out(excp_id)
     );
 
-    logic eu_stall;
     logic bp_miss_flush;
     forward_req_t mem1_fwd_req, mem2_fwd_req;
     Execute U_Execute(
         .clk, .rst_n,
 
-        .eu_stall,
+        /* flush ctrl */
         .bp_miss_flush,
         .wr_pc_req(ex_wr_pc_req),
 
@@ -205,8 +207,10 @@ module CPUTop (
         .mem1_req(mem1_fwd_req),
         .mem2_req(mem2_fwd_req),
 
-        .is_stall(stall_ex),
-        .is_flush(flush_ex),
+        .flush(flush_ex),
+        .next_rdy_in(mem1_rdy_in),
+        .rdy_in(ex_rdy_in),
+
         .pass_in(pass_id),
         .excp_pass_in(excp_id),
         .pass_out(pass_ex),
@@ -230,9 +234,12 @@ module CPUTop (
         .dcache_is_cached,
         .dcache_byte_type,
         .wr_dcache_data,
+        .dcache_busy,
 
-        .is_stall(stall_mem1),
-        .is_flush(flush_mem1), 
+        .flush(flush_mem1),
+        .next_rdy_in(mem2_rdy_in),
+        .rdy_in(mem1_rdy_in),
+
         .pass_in(pass_ex),
         .excp_pass_in(excp_ex), 
         .pass_out(pass_mem1),
@@ -240,7 +247,6 @@ module CPUTop (
         .excp_req
     );
 
-    logic dcache_stall;
     Memory2 U_Memory2 (
         .clk, .rst_n,
 
@@ -248,11 +254,12 @@ module CPUTop (
 
         //.dcache_ready,        //TOBE FIXED
         .rd_dcache_data,
-        /* ctrl */
-        .dcache_stall,
+        .dcache_data_valid,
 
-        .is_stall(stall_mem2),
-        .is_flush(flush_mem2),
+        .flush(flush_mem2),
+        .next_rdy_in(wb_rdy_in),
+        .rdy_in(mem2_rdy_in),
+
         .pass_in(pass_mem1),
         .pass_out(pass_mem2)
     );
@@ -276,8 +283,10 @@ module CPUTop (
         .csr_we(csr_we),
         .csr_data(csr_wr_data),
 
-        .is_stall(stall_wb),
-        .is_flush(flush_wb),
+        .flush(flush_wb),
+        .next_rdy_in(1'b1),
+        .rdy_in(wb_rdy_in),
+
         .pass_in(pass_mem2)
 
 `ifdef DIFF_TEST
@@ -309,16 +318,8 @@ module CPUTop (
 `endif
     );
 
-    assign is_icache_stall = dcache_stall | eu_stall | load_use_stall;
-    assign is_dcache_stall = 1'b0;
-
-    assign stall_if1 =  dcache_stall | eu_stall | load_use_stall | icache_stall | icache_busy;
-    assign stall_if2 =  dcache_stall | eu_stall | load_use_stall | icache_stall;
-    assign stall_id  =  dcache_stall | eu_stall | load_use_stall;
-    assign stall_ex  =  dcache_stall | eu_stall;
-    assign stall_mem1 = dcache_stall;
-    assign stall_mem2 = 1'b0;
-    assign stall_wb = 1'b0;
+    assign stall_icache = ~ex_rdy_in;
+    assign stall_dcache = ~wb_rdy_in;
 
     assign flush_if1 = bp_miss_flush | excp_flush;
     assign flush_if2 = bp_miss_flush | excp_flush;

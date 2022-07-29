@@ -22,10 +22,11 @@ module Memory1 (
     output logic dcache_is_cached,
     output byte_type_t dcache_byte_type,
     output u32_t wr_dcache_data,
+    input logic dcache_busy,
 
     /* pipeline */
-    input logic is_stall,
-    input logic is_flush,
+    input logic flush, next_rdy_in,
+    output logic rdy_in,
     input execute_memory1_pass_t pass_in,
     input excp_pass_t excp_pass_in,
 
@@ -42,15 +43,23 @@ module Memory1 (
 
     always_ff @(posedge clk , negedge rst_n) begin
         if(~rst_n) begin
-            pass_in_r.is_flush <= 1'b1;
-        end else if(~is_stall) begin
+            pass_in_r.valid <= 1'b0;
+        end else if(rdy_in) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;
         end
     end
 
-    logic mem1_flush;
-    assign mem1_flush = is_flush | pass_in_r.is_flush;
+    logic dcache_busy_stall;
+    logic rdy_out;
+    logic mem1_flush, mem1_stall;
+    assign mem1_flush = flush | ~pass_in_r.valid;
+    assign mem1_stall = ~next_rdy_in | dcache_busy_stall;
+
+    assign rdy_in = mem1_flush | ~mem1_stall;
+    assign rdy_out = ~mem1_flush & ~mem1_stall;        // only use this for pass_out.valid
+
+    assign dcache_busy_stall = pass_in_r.is_mem & dcache_busy;      // flush has a higher priority, so do not need to AND flush here
 
     /* load use */
     assign ld_use.idx = pass_in_r.rd;
@@ -99,7 +108,7 @@ module Memory1 (
 
 
     /* out to next stage */
-    assign pass_out.is_flush = mem1_flush;
+    assign pass_out.valid = rdy_out;
     assign pass_out.byte_en = pass_in_r.ex_out[1:0];
 
     `PASS(pc);
@@ -116,7 +125,7 @@ module Memory1 (
     `PASS(csr_addr);
 
     /* exception */
-    assign excp_req.valid = ~mem1_flush;
+    assign excp_req.valid = pass_in_r.valid;
     assign excp_req.excp_pass = excp_pass_in_r.valid ? excp_pass_in_r : addr_excp;
     assign excp_req.epc = pass_in_r.pc;
     assign excp_req.inst_ertn = 1'b0;           // TODO: impl ertn
@@ -124,8 +133,8 @@ module Memory1 (
 `ifdef DIFF_TEST
     `PASS(inst);
 
-    assign pass_out.is_ld = ~mem1_flush & pass_in_r.is_mem & ~pass_in_r.is_store;
-    assign pass_out.is_st = ~mem1_flush & pass_in_r.is_mem & pass_in_r.is_store;
+    assign pass_out.is_ld = rdy_out & pass_in_r.is_mem & ~pass_in_r.is_store;
+    assign pass_out.is_st = rdy_out & pass_in_r.is_mem & pass_in_r.is_store;
     assign pass_out.pa = pa;
     assign pass_out.va = pass_in_r.ex_out;
     assign pass_out.st_data = pass_in_r.rkd_data;

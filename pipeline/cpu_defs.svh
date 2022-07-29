@@ -298,20 +298,20 @@ typedef struct packed {
 
 /* pipeline pass */
 typedef struct packed {
-    logic is_flush;
+    logic valid;
     virt_t pc;
     virt_t btb_pre;
 } fetch1_fetch2_pass_t;
 
 typedef struct packed {
-    logic is_flush;
+    logic valid;
     virt_t pc;
     virt_t btb_pre;
     u32_t inst;
 } fetch2_decode_pass_t;
 
 typedef struct packed {
-    logic is_flush;
+    logic valid;
     virt_t pc;
     virt_t btb_pre;
 
@@ -352,7 +352,7 @@ typedef struct packed {
 } decode_execute_pass_t;
 
 typedef struct packed {
-    logic is_flush;
+    logic valid;
     virt_t pc;
 
     u32_t ex_out;
@@ -385,7 +385,7 @@ typedef struct packed {
 } execute_memory1_pass_t;
 
 typedef struct packed {
-    logic is_flush;
+    logic valid;
     virt_t pc;
 
     u32_t ex_out;
@@ -414,7 +414,7 @@ typedef struct packed {
 } memory1_memory2_pass_t;
 
 typedef struct packed {
-    logic is_flush;
+    logic valid;
     virt_t pc;
 
     u32_t ex_mem_out;

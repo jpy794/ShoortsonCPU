@@ -9,13 +9,11 @@ module Memory2 (
     /* from dcache */
     input logic dcache_ready,
     input u32_t rd_dcache_data,
-
-    /* ctrl */
-    output logic dcache_stall,
+    input logic dcache_data_valid,
 
     /* pipeline */
-    input logic is_stall,
-    input logic is_flush,
+    input logic flush, next_rdy_in,
+    output logic rdy_in,
     input memory1_memory2_pass_t pass_in,
 
     output memory2_writeback_pass_t pass_out
@@ -25,13 +23,22 @@ module Memory2 (
 
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
-            pass_in_r.is_flush <= 1'b1;
-        end else if(~is_stall) begin
+            pass_in_r.valid <= 1'b0;
+        end else if(rdy_in) begin
             pass_in_r <= pass_in;
         end
     end
 
-    logic mem2_flush = is_flush | pass_in_r.is_flush;
+    logic dcache_data_stall;
+    logic rdy_out;
+    logic mem2_flush, mem2_stall;
+    assign mem2_flush = flush | ~pass_in_r.valid;
+    assign mem2_stall = ~next_rdy_in | dcache_data_stall;
+
+    assign rdy_in = mem2_flush | ~mem2_stall;
+    assign rdy_out = ~mem2_flush & ~mem2_stall;        // only use this for pass_out.valid
+
+    assign dcache_data_stall = pass_in_r.is_mem & ~dcache_data_valid;
 
     /* forward */
     // be careful of load-use stall
@@ -78,12 +85,8 @@ module Memory2 (
         else                 ex_mem_out = pass_in_r.ex_out;
     end
 
-    /* out for ctrl */
-    assign dcache_stall = ~dcache_ready & pass_in_r.is_mem & ~mem2_flush;
-
-
     /* out to next stage */
-    assign pass_out.is_flush = mem2_flush | dcache_stall;
+    assign pass_out.valid = rdy_out;
     assign pass_out.ex_mem_out = ex_mem_out;
     
     `PASS(pc);

@@ -14,8 +14,8 @@ module Writeback (
     output u32_t csr_data,
 
     /* pipeline */
-    input logic is_stall,
-    input logic is_flush,
+    input logic flush, next_rdy_in,
+    output logic rdy_in,
 
     input memory2_writeback_pass_t pass_in
 `ifdef DIFF_TEST
@@ -27,14 +27,19 @@ module Writeback (
 
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
-            pass_in_r.is_flush <= 1'b1;
-        end else if(~is_stall) begin
+            pass_in_r.valid <= 1'b0;
+        end else if(rdy_in) begin
             pass_in_r <= pass_in;
         end
     end
 
-    logic wb_flush;
-    assign wb_flush = is_flush | pass_in_r.is_flush;
+    logic rdy_out;
+    logic wb_flush, wb_stall;
+    assign wb_flush = flush | ~pass_in_r.valid;
+    assign wb_stall = ~next_rdy_in;
+
+    assign rdy_in = wb_flush | ~wb_stall;
+    assign rdy_out = ~wb_flush & ~wb_stall;        // only use this for pass_out.valid
 
     /* writeback stage */
     

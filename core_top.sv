@@ -54,7 +54,7 @@ module core_top(
     output [31:0] debug0_wb_inst
 );
 
-    logic is_icache_stall;
+    logic stall_icache;
     logic [11:0] icache_idx;
     logic [2:0] icache_op;
     logic icache_is_cached;
@@ -63,7 +63,7 @@ module core_top(
     logic icache_ready;
     logic icache_busy, icache_data_valid;
 
-    logic is_dcache_stall;
+    logic stall_dcache;
     logic [11:0] dcache_idx;
     logic [4:0] dcache_op;
     logic [1:0] dcache_byte_type;
@@ -97,7 +97,7 @@ module core_top(
         .icache_va(icache_idx),
         .icache_pa(icache_pa[31:12]),
         .icache_op(icache_op),
-        .icache_stall(is_icache_stall),
+        .icache_stall(stall_icache),
         .icache_cached(icache_is_cached),
         .ins(icache_data),
         .icache_ready(icache_ready),
@@ -106,7 +106,7 @@ module core_top(
         .dcache_va(dcache_idx),
         .dcache_pa(dcache_pa[31:12]),
         .dcache_op({dcache_op[4:2], dcache_byte_type}),
-        .dcache_stall(is_dcache_stall),
+        .dcache_stall(stall_dcache),
         .dcache_cached(dcache_is_cached),
         .store_data(wr_dcache_data),
         .load_data(rd_dcache_data),
