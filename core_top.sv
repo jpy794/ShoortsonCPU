@@ -69,7 +69,7 @@ module core_top(
     logic [1:0] dcache_byte_type;
     logic dcache_is_cached;
     logic [31:0] dcache_pa;
-    logic dcache_ready;
+    logic dcache_busy, dcache_data_valid;
     logic [31:0] rd_dcache_data, wr_dcache_data;
 
     CPUTop U_CPUTop (
@@ -103,14 +103,15 @@ module core_top(
         .icache_ready(icache_ready),
         .icache_busy,
         .icache_data_valid,
-        .data_va(dcache_idx),
-        .data_pa(dcache_pa[31:12]),
-        .data_op({dcache_op[4:2], dcache_byte_type}),
-        .data_stall(is_dcache_stall),
-        .data_cached(dcache_is_cached),
+        .dcache_va(dcache_idx),
+        .dcache_pa(dcache_pa[31:12]),
+        .dcache_op({dcache_op[4:2], dcache_byte_type}),
+        .dcache_stall(is_dcache_stall),
+        .dcache_cached(dcache_is_cached),
         .store_data(wr_dcache_data),
         .load_data(rd_dcache_data),
-        .dcache_ready(dcache_ready),
+        .dcache_busy(dcache_busy),
+        .dcache_data_valid(dcache_data_valid),
 
         .req_to_axi(req_to_axi),
         .wblock_to_axi(wblock_to_axi),

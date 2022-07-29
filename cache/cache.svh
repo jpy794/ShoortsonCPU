@@ -10,21 +10,21 @@
 //state 
 `define DATA_WRITE_ENABLE 4'b1111
 `define DATA_WRITE_UNABLE 4'b0000
-`define ENABLE 1'b1;
-`define UNABLE 1'b0;
-`define HIT 1'b1;
+`define ENABLE 1'b1
+`define UNABLE 1'b0
+`define HIT 1'b1
 `define MISS 1'b0
 `define CLEAR_TAG 20'b0000_0000_0000_0000_0000
-`define SET_V 1'b1;
-`define CLEAR_V 1'b0;
+`define SET_V 1'b1
+`define CLEAR_V 1'b0
 
-`define CLEAR_DIRTY 1'b0;
+`define CLEAR_DIRTY 1'b0
 `define SET_DIRTY 1'b1
 
 `define READY 1'b1
 `define UNREADY 1'b0
 
-`define UNCACHED 1'b0;
+`define UNCACHED 1'b0
 `define CACHED 1'b1
 //BUS
 `define DATA_WIDTH 31 : 0
@@ -45,7 +45,7 @@
 `define DCACHE_OP_WIDTH 4:0
 
 //finate machine
-`define ICACHE_STATE_WIDTH 4:0
+`define ICACHE_STATE_WIDTH 3:0
 `define I_LOAD 4'b0001
 `define I_WRITE_TAG 4'b0010
 `define I_WRITE_V 4'b0011
@@ -92,6 +92,7 @@
 `define D_WAIT_LOAD_BLOCK 5'b11001
 `define D_WRITE_STORE 5'b11010
 `define D_PRE_CLEAR_LLIT 5'b11011
+`define D_LOAD_WORD_DONE 5'b11100
 
 `define DCACHE_REQ_NONE 5'b00000
 `define DCACHE_REQ_LOAD_ATOM 5'b01100
@@ -233,7 +234,7 @@
 
 `define AXI_CACHE_CACHE 4'b0000    //TODO
 `define AXI_PORT_INS 3'b100
-`define AXI_PORT_DATA 3'b000;
+`define AXI_PORT_DATA 3'b000
 
 `define ICACHE_WAIT 4'b0000
 `define ICACHE_LOOKUP 4'b0001
@@ -245,5 +246,6 @@
 `define ICACHE_LOAD_BLOCK_WAIT 4'b0111
 `define ICACHE_WRITE 4'b1000
 `define ICACHE_HIT_WRITE_V 4'b1001
+`define ICACHE_LOAD_WORD_DONE 4'b1010
 
 

@@ -15,14 +15,15 @@ module Cache(
     output logic icache_data_valid,
 
     //dcache
-    input logic [`VA_WIDTH]data_va,
-    input logic [`PA_WIDTH]data_pa,
-    input logic [`DCACHE_OP_WIDTH]data_op,
-    input logic data_stall,
-    input logic data_cached,
+    input logic [`VA_WIDTH]dcache_va,
+    input logic [`PA_WIDTH]dcache_pa,
+    input logic [`DCACHE_OP_WIDTH]dcache_op,
+    input logic dcache_stall,
+    input logic dcache_cached,
     input logic [`DATA_WIDTH]store_data,
     output logic [`DATA_WIDTH]load_data,
-    output logic dcache_ready,
+    output logic dcache_busy,
+    output logic dcache_data_valid,
 
     output logic [`AXI_REQ_WIDTH]req_to_axi,
     output logic [`BLOCK_WIDTH]wblock_to_axi,
@@ -41,12 +42,10 @@ module Cache(
 //pipline
 logic [`RESPONSE_FROM_PIPLINE_WIDTH]response_from_pipline;
 logic icache_cached_to_pipline;
-logic [`DCACHE_REQ_TO_PIPLINE_WIDTH]dcache_req_to_pipline;
-logic [`ADDRESS_WIDTH]dcache_req_ad_to_pipline;
 logic [`DATA_WIDTH]wword_to_pipline;
 logic [`BLOCK_EN]dcache_wen_to_pipline;
 logic [`BLOCK_WIDTH]wblock_to_pipline;
-logic [1:0]dcache_ren_to_pipline;
+logic [`DCACHE_REQ_REN_WIDTH]dcache_ren_to_pipline;
 logic dcache_cached_to_pipline;
 logic [`BLOCK_WIDTH]rblock_from_pipline;
 logic [`DATA_WIDTH]rword_from_pipline;
@@ -72,9 +71,6 @@ logic rlru_from_icache;
 logic [`BLOCK_WIDTH]rdata_to_icache;
 logic hit_from_icache;
 
-
-assign rdata_to_icache = rblock_from_pipline;
-assign select_way_to_icache = reg_rlru_from_icache;
 
 always_ff @(posedge clk)begin
     if(~icache_stall)begin
@@ -104,15 +100,6 @@ always_ff @(posedge clk)begin
     end
     else begin
         icache_cs <= icache_ns;
-    end
-end
-
-always_comb begin
-    if(icache_cs == `ICACHE_LOOKUP && hit_from_icache)begin
-        wlru_en_to_icache = `ENABLE;
-    end
-    else begin
-        wlru_en_to_icache = `UNABLE;
     end
 end
 
@@ -258,6 +245,11 @@ always_comb begin
 end
 
 //contract with icache
+
+assign rdata_to_icache = rblock_from_pipline;
+assign select_way_to_icache = reg_rlru_from_icache;
+assign wlru_en_to_icache = (icache_cs == `ICACHE_LOOKUP && hit_from_icache)? `ENABLE : `UNABLE;
+
 always_comb begin
     unique case(icache_ns)
         `ICACHE_HIT_WRITE_V: begin
@@ -300,16 +292,33 @@ ICache icache(.clk(clk), .rstn(rstn), .pa(pa_to_icache), .ad(ad_to_icache),
 
 //dcache control
 logic [`DCACHE_STATE_WIDTH]dcache_cs, dcache_ns;
+logic [`DCACHE_REQ_TO_PIPLINE_WIDTH]dcache_req_to_pipline;
+logic [`ADDRESS_WIDTH]dcache_req_ad_to_pipline;
 
 logic [`DCACHE_STATE_WIDTH]dcache_pre_s;
 
 logic [`DCACHE_OP_WIDTH]reg_dcache_op;
 logic [`PA_WIDTH]reg_dcache_pa;
 logic [`VA_WIDTH]reg_dcache_va;
+logic reg_dcache_cached;
+logic reg_rlru_from_dcache;
 
 logic [`DCACHE_CNT_WIDTH]dcache_clear_llit_cnt;
 
-logic dcache_busy
+logic [`ADDRESS_WIDTH]pa_to_dcache;
+logic [`ADDRESS_WIDTH]ad_to_dcache;
+logic [`BLOCK_WIDTH]rdata_to_dcache;
+logic [`BLOCK_WIDTH]dirty_data_from_dcache;
+logic [`DATA_WIDTH]load_data_from_dcache;
+logic [`BLOCK_EN]wen_to_dcache;
+logic select_way_to_dcache;
+logic wlru_en_to_dcache;
+logic [`LLIT_WIDTH]rllit_from_dcache;
+logic rlru_from_dcache;
+logic rdirty_from_dcache;
+logic hit_from_dcache;
+
+
 always_ff @(posedge clk)begin
     if(~dcache_stall && ~dcache_busy)begin
         reg_dcache_op <= dcache_op;
@@ -325,6 +334,12 @@ end
 always_ff @(posedge clk)begin
     if(~dcache_stall && ~dcache_busy)begin
         reg_dcache_va <= dcache_va;
+    end
+end
+
+always_ff @(posedge clk)begin
+    if(~dcache_stall && ~dcache_busy)begin
+        reg_dcache_cached <= dcache_cached;
     end
 end
 
@@ -418,7 +433,7 @@ always_comb begin
             end
         end
         `DCACHE_REQ_CLEAR_LLIT: begin
-            dcache_pre_s = `D_PRE_CLEAR_LLIT;
+            dcache_pre_s = `D_CLEAR_LLIT;
         end
         default: begin
             dcache_pre_s = `D_WAIT;
@@ -427,8 +442,11 @@ always_comb begin
 end
 
 always_comb begin
+    dcache_busy = 1'b1;
+    dcache_data_valid = 1'b0;
     unique case(dcache_cs)
         `D_WAIT: begin
+            dcache_busy = 1'b0;
             dcache_ns = dcache_pre_s;
         end
         `D_LOAD: begin
@@ -491,7 +509,13 @@ always_comb begin
                         end
                     end
                     default: begin
-                        dcache_ns = dcache_pre_s;
+                        if(~dcache_stall)begin
+                            dcache_busy = 1'b0;
+                            dcache_ns = dcache_pre_s;
+                        end
+                        else begin
+                            dcache_ns = `D_LOAD;
+                        end
                     end
                 endcase
             end
@@ -521,22 +545,30 @@ always_comb begin
                         dcache_ns = `D_HIT_WRITE_V;
                     end
                     default: begin
-                        dcache_ns = dcache_pre_s;
+                        dcache_data_valid = 1'b1;
+                        if(~dcache_stall)begin
+                            dcache_busy = 1'b0;
+                            dcache_ns = dcache_pre_s;
+                        end
+                        else begin
+                            dcache_busy = 1'b1;
+                            dcache_ns = `D_LOAD;
+                        end
                     end
                 endcase
             end
         end
         `D_WRITE_TAG: begin
-           dcache_ns = dcache_pre_s;      
+            dcache_busy = 1'b0;
+            dcache_ns = dcache_pre_s;      
         end
         `D_INDEX_WRITE_V: begin
+            dcache_busy = 1'b0;
             dcache_ns = dcache_pre_s;    
-        end
-        `D_PRE_CLEAR_LLIT: begin
-            dcache_ns = `D_CLEAR_LLIT;
         end
         `D_CLEAR_LLIT: begin
             if(dcache_clear_llit_cnt == `DCACHE_CNT_FINISH)begin
+                dcache_busy = 1'b0;
                 dcache_ns = dcache_pre_s;    
             end
             else begin
@@ -544,9 +576,11 @@ always_comb begin
             end
         end
         `D_SET_LLIT: begin
+            dcache_busy = 1'b0;
             dcache_ns = dcache_pre_s;
         end
         `D_STORE: begin
+            dcache_busy = 1'b0;
             dcache_ns = dcache_pre_s;
         end
         `D_REQ_TO_PIPLINE_LOAD_WORD: begin
@@ -554,10 +588,21 @@ always_comb begin
         end
         `D_WAIT_LOAD_WORD: begin
             if(response_from_pipline == `FINISH_DCACHE_REQ)begin
-                dcache_ns = `D_WAIT;
+                dcache_ns = `D_LOAD_WORD_DONE;
             end
             else begin
                 dcache_ns = `D_WAIT_LOAD_WORD;
+            end
+        end
+        `D_LOAD_WORD_DONE: begin
+            dcache_data_valid = 1'b1;
+            if(~dcache_stall)begin
+                dcache_busy = 1'b0;
+                dcache_ns = dcache_pre_s;
+            end
+            else begin
+                dcache_busy = 1'b1;
+                dcache_ns = `D_LOAD_WORD_DONE;
             end
         end
         `D_LOAD_ATOM_REQ_TO_PIPLINE_LOAD_BLOCK: begin
@@ -579,7 +624,7 @@ always_comb begin
             dcache_ns = `D_WAIT_STORE_BLOCK;
         end
         `D_REQ_TO_PIPLINE_STORE_WORD: begin
-            dcache_ns = `D_WAIT_STORE_WORD
+            dcache_ns = `D_WAIT_STORE_WORD;
         end
         `D_WAIT_LOAD_ATOM: begin
             if(response_from_pipline == `FINISH_DCACHE_REQ)begin
@@ -623,6 +668,7 @@ always_comb begin
             dcache_ns = `D_LOAD;
         end
         `D_STORE: begin
+            dcache_busy = 1'b0;
             dcache_ns = dcache_pre_s;
         end
     endcase
@@ -637,21 +683,211 @@ always_ff @(posedge clk) begin
     end
 end
 
+//contract with cpu
 always_comb begin
-
+    if(dcache_ns == `D_LOAD_WORD_DONE)begin
+        load_data = rword_from_pipline;
+    end
+    else begin
+        load_data = load_data_from_dcache;
+    end
 end
 
-//logic [`DATA_WIDTH]rword_from_pipline;
+//contract with dcache
+assign rdata_to_dcache = rblock_from_pipline;
+assign pa_to_dcache = {reg_dcache_pa, reg_dcache_va};
+always_comb begin
+    ad_to_dcache = pa_to_dcache;
+    unique case(dcache_ns)
+        `D_CLEAR_LLIT: begin
+            ad_to_dcache = {{20{1'b0}}, dcache_clear_llit_cnt, {5{1'b0}}};
+        end
+        `D_LOAD: begin
+            if(~dcache_stall && ~dcache_busy)begin
+                ad_to_dcache = {{20{1'b0}}, dcache_va};
+            end
+        end
+    endcase
+end
+
+always_comb begin
+    wen_to_dcache = 4'b0000;
+    if(dcache_ns == `D_STORE)begin
+        unique case(reg_dcache_op)
+            `DCACHE_REQ_STORE_ATOM: begin
+                wen_to_dcache = 4'b1111;
+            end
+            `DCACHE_REQ_STORE_WORD: begin
+                wen_to_dcache = 4'b1111;
+            end
+            `DCACHE_REQ_STORE_HALF_WORD: begin
+                if(reg_dcache_va[1])begin
+                    wen_to_dcache = 4'b1100;
+                end
+                else begin
+                    wen_to_dcache = 4'b0011;
+                end
+            end
+            `DCACHE_REQ_STORE_BYTE: begin
+                unique case(reg_dcache_va[1:0])
+                    2'b00: dcache_wen_to_pipline = 4'b0001;
+                    2'b01: dcache_wen_to_pipline = 4'b0010;
+                    2'b10: dcache_wen_to_pipline = 4'b0100;
+                    2'b11: dcache_wen_to_pipline = 4'b1000;
+                endcase
+            end
+            default: $stop;
+        endcase
+    end
+end
+
+always_ff @(posedge clk)begin
+    reg_rlru_from_dcache <= rlru_from_dcache;
+end
+
+assign select_way_to_dcache = reg_rlru_from_dcache;
+
+assign wlru_en_to_dcache = (dcache_cs == `D_LOAD && hit_from_dcache)? `ENABLE : `UNABLE;
+
+
+//contract with pipline
+always_comb begin
+    unique case(dcache_ns)
+        `D_REQ_TO_PIPLINE_LOAD_WORD: begin
+            dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_WORD;
+        end
+        `D_LOAD_ATOM_REQ_TO_PIPLINE_LOAD_BLOCK: begin
+            dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_BLOCK;
+        end
+        `D_LOAD_ATOM_REQ_TO_PIPLINE_STORE_LOAD_BLOCK: begin
+            dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_STORE_BLOCK;
+        end
+        `D_LOAD_REQ_TO_PIPLINE_LOAD_BLOCK: begin
+            dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_BLOCK;
+        end
+        `D_LOAD_REQ_TO_PIPLINE_STORE_LOAD_BLOCK: begin
+            dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_STORE_BLOCK;
+        end
+        `D_STORE_REQ_TO_PIPLINE_STORE_LOAD_BLOCK: begin
+            dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_STORE_BLOCK;
+        end
+        `D_STORE_REQ_TO_PIPLINE_LOAD_BLOCK: begin
+            dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_WORD;
+        end
+        `D_REQ_TO_PIPLINE_STORE_WORD: begin
+            dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_STORE_WORD;
+        end
+        default: begin
+            dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_NONE;
+        end
+    endcase
+end
+
+assign dcache_req_ad_to_pipline = ((dcache_ns == `DCACHE_REQ_TO_PIPLINE_LOAD_WORD) ||(dcache_ns == `DCACHE_REQ_TO_PIPLINE_STORE_WORD))? {icache_pa, icache_va} : pa_to_icache;
+
+assign wword_to_pipline = store_data;
+
+assign wblock_to_pipline = dirty_data_from_dcache;
+
+assign dcache_cached_to_pipline = ((dcache_ns == `DCACHE_REQ_TO_PIPLINE_LOAD_WORD) || (dcache_ns == `DCACHE_REQ_TO_PIPLINE_STORE_WORD))? dcache_cached : reg_dcache_cached; 
+
+always_comb begin
+    if(dcache_ns == `D_REQ_TO_PIPLINE_STORE_WORD)begin
+        unique case(dcache_op)
+            `DCACHE_REQ_STORE_WORD: begin
+                dcache_wen_to_pipline = 4'b1111;
+            end
+            `DCACHE_REQ_STORE_HALF_WORD: begin
+                if(dcache_va[1])begin
+                    dcache_wen_to_pipline = 4'b1100;
+                end
+                else begin
+                    dcache_wen_to_pipline = 4'b0011;
+                end
+            end
+            `DCACHE_REQ_STORE_BYTE: begin  
+                unique case(dcache_va[1:0])
+                    2'b00: dcache_wen_to_pipline = 4'b0001;
+                    2'b01: dcache_wen_to_pipline = 4'b0010;
+                    2'b10: dcache_wen_to_pipline = 4'b0100;
+                    2'b11: dcache_wen_to_pipline = 4'b1000;
+                endcase
+            end
+            default: $stop;
+        endcase
+    end
+    else begin
+        dcache_wen_to_pipline = 4'b1000;
+    end
+end
+
+always_comb begin
+    if(dcache_ns == `D_REQ_TO_PIPLINE_LOAD_WORD)begin
+        unique case(dcache_op)
+            `DCACHE_REQ_LOAD_WORD: begin
+                dcache_ren_to_pipline = `DCACHE_REQ_REN_WORD;
+            end
+            `DCACHE_REQ_LOAD_HALF_WORD: begin
+                dcache_ren_to_pipline = `DCACHE_REQ_REN_HALF_WORD;
+            end
+            `DCACHE_REQ_LOAD_BYTE: begin
+                dcache_ren_to_pipline = `DCACHE_REQ_REN_BYTE;
+            end
+            default: $stop;
+        endcase
+    end
+    else begin
+        dcache_ren_to_pipline = `DCACHE_REQ_REN_WORD;
+    end
+end
+
+DCache dcache(.clk(clk), 
+                .rstn(rstn), 
+                .ad(ad_to_dcache), 
+                .pa(pa_to_dcache),
+                .control_en(dcache_ns),
+                .store_data(store_data),
+                
+                .r_data(rdata_to_dcache),
+                .dirty_data(dirty_data_from_dcache),
+                .load_data(load_data_from_dcache),
+                
+                .wen(wen_to_dcache),
+                .select_way(select_way_to_dcache),
+                .wlru_en_from_cache(wlru_en_to_dcache),
+                .rllit_to_cache(rllit_from_dcache),
+                .rlru_to_cache(rlru_from_dcache),
+                .rdirty_to_cache(rdirty_from_dcache),
+                .hit(hit_from_dcache)
+);
 
 Cache_pipline U_Cache_pipline (.clk(clk), .rstn(rstn), 
-                .req_from_icache(icache_req_to_pipline), .req_ad_from_icache(icache_req_ad_to_pipline), .cached_from_icache(icache_cached_to_pipline),
-                .req_from_dcache(dcache_req_to_pipline), .req_ad_from_dcache(dcache_req_ad_to_pipline),
-                .wword_from_dcache(wword_to_pipline), .wword_en_from_dcache(dcache_wen_to_pipline), .wblock_from_dcache(wblock_to_pipline),
-                .rword_en_from_dcache(dcache_ren_to_pipline), .cached_from_dcache(dcache_cached_to_pipline), 
-                .rblock_to_cache(rblock_from_pipline), .rword_to_cache(rword_from_pipline), .response(response_from_pipline),
-                .req_to_axi(req_to_axi), .wblock_to_axi(wblock_to_axi), .wword_to_axi(wword_to_axi), .wword_en_to_axi(wword_en_to_axi),
-                .rword_en_to_axi(rword_en_to_axi), .ad_to_axi(ad_to_axi), .cached_to_axi(cached_to_axi), 
-                .rblock_from_axi(rblock_from_axi), .rword_from_axi(rword_from_axi), .ready_from_axi(ready_from_axi), .task_finish_from_axi(task_finish_from_axi));
+                .req_from_icache(icache_req_to_pipline), 
+                .req_ad_from_icache(icache_req_ad_to_pipline), 
+                .cached_from_icache(icache_cached_to_pipline),
+                .req_from_dcache(dcache_req_to_pipline), 
+                .req_ad_from_dcache(dcache_req_ad_to_pipline),
+                .wword_from_dcache(wword_to_pipline), 
+                .wword_en_from_dcache(dcache_wen_to_pipline), 
+                .wblock_from_dcache(wblock_to_pipline),
+                .rword_en_from_dcache(dcache_ren_to_pipline), 
+                .cached_from_dcache(dcache_cached_to_pipline), 
+
+                .rblock_to_cache(rblock_from_pipline), 
+                .rword_to_cache(rword_from_pipline), 
+
+                .response(response_from_pipline),
+                .req_to_axi(req_to_axi), 
+                .wblock_to_axi(wblock_to_axi), 
+                .wword_to_axi(wword_to_axi), 
+                .wword_en_to_axi(wword_en_to_axi),
+                .rword_en_to_axi(rword_en_to_axi), 
+                .ad_to_axi(ad_to_axi), 
+                .cached_to_axi(cached_to_axi), 
+                .rblock_from_axi(rblock_from_axi), 
+                .rword_from_axi(rword_from_axi), 
+                .ready_from_axi(ready_from_axi), 
+                .task_finish_from_axi(task_finish_from_axi));
 
 
 endmodule

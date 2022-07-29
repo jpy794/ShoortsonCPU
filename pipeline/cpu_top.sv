@@ -18,7 +18,8 @@ module CPUTop (
     output logic [1:0] dcache_byte_type,
     output logic dcache_is_cached,
     output logic [31:0] dcache_pa,
-    input logic dcache_ready,
+    input logic dcache_busy,
+    input logic dcache_data_valid,
     output logic [31:0] wr_dcache_data,
     input logic [31:0] rd_dcache_data,
 
@@ -245,7 +246,7 @@ module CPUTop (
 
         .fwd_req(mem2_fwd_req),
 
-        .dcache_ready,
+        //.dcache_ready,        //TOBE FIXED
         .rd_dcache_data,
         /* ctrl */
         .dcache_stall,

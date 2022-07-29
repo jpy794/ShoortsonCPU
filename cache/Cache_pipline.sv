@@ -54,12 +54,8 @@ logic [`ADDRESS_WIDTH]reg_req_ad_from_icache;
 logic [`DCACHE_REQ_TO_PIPLINE_WIDTH]reg_req_from_dcache;
 logic [`ADDRESS_WIDTH]reg_req_ad_from_dcache;
 
-assign wblock_to_axi = wblock_from_dcache;
-assign wword_to_axi = wword_from_dcache; 
 assign rblock_to_cache = rblock_from_axi;
 assign rword_to_cache = rword_from_axi;
-assign wword_en_to_axi = wword_en_from_dcache;
-assign rword_en_to_axi = rword_en_from_dcache;
 
 always_ff @(posedge clk)begin
     if(~rstn)begin
@@ -89,18 +85,41 @@ always_ff @(posedge clk)begin
         reg_req_from_dcache <= `DCACHE_REQ_TO_PIPLINE_NONE;
     end
     else begin
-        if(req_from_icache != `DCACHE_REQ_TO_PIPLINE_NONE)begin
+        if(req_from_dcache != `DCACHE_REQ_TO_PIPLINE_NONE)begin
             reg_req_from_dcache <= req_from_dcache;
         end
     end
 end
 
 always_ff @(posedge clk)begin
-    if(req_from_icache != `DCACHE_REQ_TO_PIPLINE_NONE)begin
+    if(req_from_dcache != `DCACHE_REQ_TO_PIPLINE_NONE)begin
         reg_req_ad_from_dcache <= req_ad_from_dcache;
     end
 end
 
+always_ff @(posedge clk)begin
+    if(req_from_dcache == `DCACHE_REQ_TO_PIPLINE_LOAD_WORD)begin
+        rword_en_to_axi <= rword_en_from_dcache;
+    end
+end
+
+always_ff @(posedge clk)begin
+    if(req_from_dcache == `DCACHE_REQ_TO_PIPLINE_STORE_WORD)begin
+        wword_en_to_axi <= wword_en_from_dcache;
+    end
+end
+
+always_ff @(posedge clk)begin
+    if(req_from_dcache == `DCACHE_REQ_TO_PIPLINE_STORE_WORD)begin
+        wword_to_axi <= wword_from_dcache;
+    end
+end
+
+always_ff @(posedge clk)begin
+    if(req_from_dcache == `DCACHE_REQ_TO_PIPLINE_LOAD_STORE_BLOCK)begin
+        wword_to_axi <= wblock_from_dcache;
+    end 
+end
 always_ff @(posedge clk)begin
     if(!rstn)begin
         cs <= `PIPLINE_WAIT;
