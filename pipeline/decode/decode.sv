@@ -142,6 +142,7 @@ module Decode (
     assign is_store = inst_st_b |
                       inst_st_h |
                       inst_st_w ;
+    assign is_load = is_mem & ~is_store;
 
     logic is_mem_signed;
     assign is_mem_signed = inst_ld_b |
@@ -249,7 +250,7 @@ module Decode (
                       inst_xori   ;
 
     logic is_wr_rd;
-    assign is_wr_rd = is_store |
+    assign is_wr_rd = is_load  |
                       is_mul   |
                       is_div   |
                       is_csr   |
