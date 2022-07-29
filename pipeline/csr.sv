@@ -72,9 +72,9 @@ module CSR (
             'h88: rd_data = csr.tlbrentry;
             /* TODO
             'h98: rd_data = csr.ctag;
+            */
             'h180: rd_data = csr.dmw[0];
             'h181: rd_data = csr.dmw[1];
-            */
             default: rd_data = '0;
         endcase
     end
@@ -100,9 +100,11 @@ module CSR (
             /* TODO
             csr.tcfg.en = 1'b0;
             csr.llbcrl.klo = '0;
-            csr.dmw.plv0 = 1'b0;
-            csr.dmw.plv3 = 1'b0;
             */
+            csr.dmw[0].plv0 <= 1'b0;
+            csr.dmw[0].plv3 <= 1'b0;
+            csr.dmw[1].plv0 <= 1'b0;
+            csr.dmw[1].plv3 <= 1'b0;
         end else begin
             if(excp_wr_req.we) begin
                 /* wr from exception */
@@ -161,9 +163,9 @@ module CSR (
                     'h88: csr.tlbrentry[31:6] <= wr_data[31:6];
                     /* TODO 
                     'h98: csr.ctag <= wr_data;
-                    'h180: csr.{dmw[0][31:29], dmw[0][27:25], dmw[0][5:3], dmw[0][0]} <= {wr_data[31:29], wr_data[27:25], wr_data[5:3], wr_data[0]};
-                    'h181: csr.{dmw[1][31:29], dmw[1][27:25], dmw[1][5:3], dmw[1][0]} <= {wr_data[31:29], wr_data[27:25], wr_data[5:3], wr_data[0]};
-                    */ 
+                    */
+                    'h180: {csr.dmw[0][31:29], csr.dmw[0][27:25], csr.dmw[0][5:3], csr.dmw[0][0]} <= {wr_data[31:29], wr_data[27:25], wr_data[5:3], wr_data[0]};
+                    'h181: {csr.dmw[1][31:29], csr.dmw[1][27:25], csr.dmw[1][5:3], csr.dmw[1][0]} <= {wr_data[31:29], wr_data[27:25], wr_data[5:3], wr_data[0]};
                 endcase
             end
         end
@@ -209,6 +211,14 @@ module CSR (
     assign csr.pgd.base = csr.badv[31] ? csr.pgdh.base : csr.pgdl.base;
     /* pgd end */
     assign csr.tlbrentry.r0_1 = '0; 
+    /* dmw */
+    assign csr.dmw[0].r0_1 = '0;
+    assign csr.dmw[0].r0_2 = '0;
+    assign csr.dmw[0].r0_3 = '0;
+    assign csr.dmw[1].r0_1 = '0;
+    assign csr.dmw[1].r0_2 = '0;
+    assign csr.dmw[1].r0_3 = '0;
+    /* dmw end */
 
 `ifdef DIFF_TEST
     DifftestCSRRegState DifftestCSRRegState(

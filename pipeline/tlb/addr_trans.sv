@@ -14,7 +14,6 @@ module AddrTrans (
 );
 
     /* tlb_lookup */
-    /* TODO: mux dmw mat/pa and tlb mat/pa */
     mat_t tlb_mat;
     esubcode_ecode_t tlb_ecode;
     logic tlb_is_exc;
@@ -34,17 +33,33 @@ module AddrTrans (
         .is_exc(tlb_is_exc)
     );
 
+    /* dmw lookup */
+    integer i;
+    mat_t dmw_mat;
+    phy_t dmw_pa;
+    always_comb begin
+        is_dmw_found = 1'b0;
+        dmw_mat = rd_csr.dmw[0].mat;
+        dmw_pa = {rd_csr.dmw[0].pseg, va[28:0]};
+        for(i=0; i<2; i=i+1) begin
+            if(rd_csr.dmw[i].vseg == va[31:29]) begin
+                is_dmw_found = 1'b1;
+                dmw_mat = rd_csr.dmw[i].mat;
+                dmw_pa = {rd_csr.dmw[i].pseg, va[28:0]};
+            end
+        end
+    end
+
     /* addr translate */
     logic is_direct;
     assign is_direct = rd_csr.crmd.da; // maybe consider crmd.pg ?
 
     logic is_dmw_found;
-    assign is_dmw_found = 1'b0; // TODO: dmw
+    assign is_dmw_found = 1'b0;
 
     logic is_tlb;
     assign is_tlb = ~is_direct & ~is_dmw_found;
 
-    // TODO: dmw
     always_comb begin
         mat = tlb_mat;
         pa = tlb_pa;
@@ -57,7 +72,8 @@ module AddrTrans (
             pa = va;
         end else if(is_dmw_found) begin
             /* dmw */
-
+            mat = dmw_mat;
+            pa = dmw_pa;
         end else begin
             /* tlb */
             mat = tlb_mat;

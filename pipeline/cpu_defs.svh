@@ -202,7 +202,18 @@ typedef struct packed {
 
 typedef u32_t csr_save_t;
 
-// TODO: llbctl, dmw, tim
+typedef struct packed {
+    logic [2:0] vseg;
+    logic r0_1;
+    logic [2:0] pseg;
+    logic [18:0] r0_2;
+    mat_t mat;
+    logic plv3;
+    logic [1:0] r0_3;
+    logic plv0;
+} csr_dmw_t;
+
+// TODO: llbctl, tim
 
 typedef struct packed {
     csr_crmd_t crmd;
@@ -214,15 +225,15 @@ typedef struct packed {
     csr_badv_t badv;
     csr_eentry_t eentry;
     csr_cpuid_t cpuid;
-    csr_save_t [1:0] save;
+    csr_save_t [3:0] save;
     // TODO: llbctl
     csr_tlbidx_t tlbidx;
     csr_tlbehi_t tlbehi;
-    csr_tlbelo_t [0:0] tlbelo;
+    csr_tlbelo_t [1:0] tlbelo;
     csr_asid_t asid;
     csr_pgd_t pgdl, pgdh, pgd;
     csr_tlbrentry_t tlbrentry;
-    // TODO: dmw
+    csr_dmw_t [1:0] dmw;
     // TODO: tim
 } csr_t;
 
