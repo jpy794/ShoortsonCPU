@@ -98,8 +98,8 @@ module Memory1 (
     always_comb begin
         dcache_op = DC_NOP;
         if(~mem1_flush & pass_in_r.is_mem) begin
-            if(pass_in_r.is_store) dcache_op = {DC_W[2:0], pass_in_r.byte_type};
-            else                   dcache_op = {DC_R[2:0], pass_in_r.byte_type};
+            if(pass_in_r.is_store) dcache_op = {DC_W[4:2], pass_in_r.byte_type};
+            else                   dcache_op = {DC_R[4:2], pass_in_r.byte_type};
         end
     end
     assign wr_dcache_data = pass_in_r.rkd_data;
