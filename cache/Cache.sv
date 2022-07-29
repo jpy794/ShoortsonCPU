@@ -447,7 +447,13 @@ always_comb begin
     unique case(dcache_cs)
         `D_WAIT: begin
             dcache_busy = 1'b0;
-            dcache_ns = dcache_pre_s;
+            if(~dcache_stall)begin
+                dcache_busy = 1'b0;
+                dcache_ns = dcache_pre_s;
+            end
+            else begin
+                dcache_ns = `D_WAIT;
+            end
         end
         `D_LOAD: begin
             if(~hit_from_dcache)begin
