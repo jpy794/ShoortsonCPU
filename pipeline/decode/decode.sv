@@ -265,9 +265,8 @@ module Decode (
 
     reg_idx_t rj, rkd, rd;
     assign rj = inst[9:5];
-    assign rd = inst[4:0];
-    assign rkd = inst_bl ? 5'b1 : 
-                           is_rd_as_rk ? rd : inst[14:10];
+    assign rd = inst_bl ? 5'b1 : inst[4:0];
+    assign rkd = is_rd_as_rk ? rd : inst[14:10];
 
     logic alu_a_rj, alu_a_pc, alu_a_zero;
     assign alu_a_pc = is_br_off     |
@@ -447,7 +446,7 @@ module Decode (
             {17'b0000_0000_0001_0010_0, {15{1'b?}}}: inst_slt = 1'b1;
             {17'b0000_0000_0001_0010_1, {15{1'b?}}}: inst_sltu = 1'b1;
             {17'b0000_0000_0001_0100_0, {15{1'b?}}}: inst_nor = 1'b1;
-            {17'b0000_0000_0001_0101_1, {15{1'b?}}}: inst_and = 1'b1;
+            {17'b0000_0000_0001_0100_1, {15{1'b?}}}: inst_and = 1'b1;
             {17'b0000_0000_0001_0101_0, {15{1'b?}}}: inst_or = 1'b1;
             {17'b0000_0000_0001_0101_1, {15{1'b?}}}: inst_xor = 1'b1;
             {17'b0000_0000_0001_0111_0, {15{1'b?}}}: inst_sll_w = 1'b1;
