@@ -487,11 +487,15 @@ always_ff @(posedge clk)begin
             `AXI_STATE_REQ_STORE_WORD: begin
                 awvalid <= `READY;
             end
-            `AXI_STATE_STORE_BLOCK_WAIT_WREADY: begin
-                awvalid <= `UNREADY;
+            `AXI_STATE_STORE_BLOCK_WAIT_AWREADY: begin
+                if(awready)begin
+                    awvalid <= `UNREADY;
+                end
             end
-            `AXI_STATE_STORE_WORD_WAIT_WREADY: begin
-                awvalid <= `UNREADY;
+            `AXI_STATE_STORE_WORD_WAIT_AWREADY: begin
+                if(awready)begin
+                    awvalid <= `UNREADY;
+                end
             end
             `AXI_STATE_WAIT: begin
                 awvalid <= `UNREADY;
@@ -568,19 +572,22 @@ always_ff @(posedge clk)begin
     endcase
 end
 
-always_ff @(posedge clk)begin
-    unique case(ns)
-        `AXI_STATE_STORE_BLOCK_DATA7: begin
-            wlast <= 1'b1;
-        end
-        `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
-            wlast <= 1'b1;
-        end
-        default: begin
-            wlast <= 1'b0;
-        end
-    endcase
-end
+// always_ff @(posedge clk)begin
+//     unique case(ns)
+//         `AXI_STATE_STORE_BLOCK_DATA7: begin
+//             wlast <= 1'b1;
+//         end
+//         `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
+//             wlast <= 1'b1;
+//         end
+//         default: begin
+//             wlast <= 1'b0;
+//         end
+//     endcase
+// end
+
+//TODO
+assign wlast = wvalid;
 
 always_ff @(posedge clk)begin
     if(~rstn)begin
@@ -660,6 +667,17 @@ always_ff @(posedge clk)begin
         end
     endcase
 end
+
+// always_ff @(posedge clk)begin
+//     wlast <= 1'b0;
+//     unique case(ns)
+//         `AXI_STATE_STORE_WORD_WAIT_WREADY: begin
+//             if(wready)begin
+//                 wlast <= 1'b1;
+//             end
+//         end
+//     endcase
+// end
 
 always_ff @(posedge clk)begin
     unique case(ns)

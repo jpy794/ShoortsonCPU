@@ -62,8 +62,7 @@ always_ff @(posedge clk)begin
         reg_req_from_icache <= `ICACHE_REQ_TO_PIPLINE_NONE;
     end
     else begin
-        if(ns == `PIPLINE_WAIT && 
-            cs != `PIPLINE_WAIT)begin
+        if((cs == `I_PIPLINE_LOAD_WORD_FINISH) || (cs == `I_PIPLINE_LOAD_BLOCK_FINISH))begin
                 reg_req_from_icache <= `ICACHE_REQ_TO_PIPLINE_NONE;
         end
         else begin
@@ -81,7 +80,7 @@ always_ff @(posedge clk)begin
 end
 
 always_ff @(posedge clk)begin
-    if(ns == `PIPLINE_WAIT && cs != `PIPLINE_WAIT)begin
+    if((cs == `PIPLINE_STORE_WORD_FINISH) || (cs == `D_PIPLINE_LOAD_WORD_FINISH) || (cs == `D_PIPLINE_LOAD_BLOCK_FINISH))begin
         reg_req_from_dcache <= `DCACHE_REQ_TO_PIPLINE_NONE;
     end
     else begin
@@ -418,7 +417,7 @@ end
 always_ff @(posedge clk)begin
     unique case(ns)
         `PIPLINE_STORE_WORD_FINISH: begin
-            response <= `FINISH_ICACHE_REQ;
+            response <= `FINISH_DCACHE_REQ;
         end
         `D_PIPLINE_LOAD_BLOCK_FINISH: begin
             response <= `FINISH_DCACHE_REQ;
