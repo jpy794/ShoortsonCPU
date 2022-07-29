@@ -104,7 +104,7 @@ module Execute (
              need totally re-implement here */
     u32_t npc;
     assign npc = br_taken ? alu_out : pass_in_r.pc + 4;
-    assign wr_pc_req.valid = pass_in_r.is_bru && (npc != pass_in_r.btb_pre);
+    assign wr_pc_req.valid = ~ex_flush & pass_in_r.is_bru && (npc != pass_in_r.btb_pre);
     assign wr_pc_req.pc = npc;
 
     /* mul */
