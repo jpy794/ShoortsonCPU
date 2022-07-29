@@ -60,7 +60,6 @@ module core_top(
     logic icache_is_cached;
     logic [31:0] icache_pa;
     logic [31:0] icache_data;
-    logic icache_ready;
     logic icache_busy, icache_data_valid;
 
     logic stall_dcache;
@@ -98,7 +97,7 @@ module core_top(
         .icache_stall(stall_icache),
         .icache_cached(icache_is_cached),
         .ins(icache_data),
-        .icache_ready(icache_ready),
+        .icache_ready(),
         .icache_busy,
         .icache_data_valid,
         .dcache_va(dcache_idx),
@@ -115,7 +114,7 @@ module core_top(
         .wblock_to_axi(wblock_to_axi),
         .wword_to_axi(wword_to_axi),
         .wword_en_to_axi(wword_en_to_axi),
-        .rword_en_to_axi(rword_en_to_axi),
+        .rword_en_to_axi(rword_en_to_axi),          // TO BE FIXED
         .ad_to_axi(ad_to_axi),
         .cached_to_axi(cached_to_axi),
         .rblock_from_axi(rblock_from_axi),
@@ -137,7 +136,7 @@ module core_top(
         .task_finish(task_finish_from_axi),
         .rblock(rblock_from_axi),
         .rword(rword_from_axi),
-        .rword_en(rword_en_to_axi),
+        .rword_en(rword_en_to_axi),             // TO BE FIXED
         .arid(arid),
         .araddr(araddr),
         .arlen(arlen),

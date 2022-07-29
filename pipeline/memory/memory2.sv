@@ -7,7 +7,6 @@ module Memory2 (
     output forward_req_t fwd_req,
 
     /* from dcache */
-    input logic dcache_ready,
     input u32_t rd_dcache_data,
     input logic dcache_data_valid,
 

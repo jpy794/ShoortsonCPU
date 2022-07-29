@@ -8,9 +8,6 @@ module Fetch2 (
     input u32_t icache_data,
     input logic icache_data_valid,
 
-    /* ctrl */
-    output logic icache_stall,
-
     /* pipeline */
     input logic flush, next_rdy_in,
     output logic rdy_in,

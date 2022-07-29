@@ -8,7 +8,6 @@ module CPUTop (
     output logic [2:0] icache_op,
     output logic icache_is_cached,
     output logic [31:0] icache_pa,
-    input logic icache_ready,
     input logic [31:0] icache_data,
     input logic icache_busy, icache_data_valid,
 
@@ -151,7 +150,6 @@ module CPUTop (
     Fetch2 U_Fetch2 (
         .clk, .rst_n,
 
-        .icache_ready,
         .icache_data,
         .icache_data_valid,
 
@@ -248,7 +246,6 @@ module CPUTop (
 
         .fwd_req(mem2_fwd_req),
 
-        //.dcache_ready,        //TOBE FIXED
         .rd_dcache_data,
         .dcache_data_valid,
 
