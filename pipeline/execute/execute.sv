@@ -8,6 +8,7 @@ module Execute (
 
     /* TODO: branch resolved */
     output wr_pc_req_t wr_pc_req,
+    output br_resolved_t br_resolved,
 
     /* load use */
     output load_use_t ld_use,
@@ -100,12 +101,15 @@ module Execute (
         .taken(br_taken)
     );
     
-    /* TODO: currently btb will never be valid as branch's never resolved
-             need totally re-implement here */
+    /* branch and btb fill */
     u32_t npc;
     assign npc = br_taken ? alu_out : pass_in_r.pc + 4;
-    assign wr_pc_req.valid = ~ex_flush & pass_in_r.is_bru && (npc != pass_in_r.btb_pre);
+    assign wr_pc_req.valid = ~ex_flush & pass_in_r.is_bru & pass_in_r.is_pred & (npc != pass_in_r.btb_pre);
     assign wr_pc_req.pc = npc;
+
+    assign br_resolved.valid = ~ex_flush & pass_in_r.is_bru;
+    assign br_resolved.taken = br_taken;
+    assign br_resolved.target_pc = alu_out;
 
     /* mul */
     logic mul_en, mul_signed;

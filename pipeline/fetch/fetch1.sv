@@ -10,6 +10,9 @@ module Fetch1 (
 
     /* TODO: decode set pc */
 
+    /* if2 stage set pc */
+    input wr_pc_req_t if2_wr_pc_req,
+
     /* execute stage set pc */
     input wr_pc_req_t ex_wr_pc_req,
 
@@ -83,10 +86,26 @@ module Fetch1 (
 
     /* fetch1 stage */
     always_comb begin
-        if(excp_wr_pc_req.valid)    npc = excp_wr_pc_req.pc;
-        else if(ex_wr_pc_req.valid) npc = ex_wr_pc_req.pc;
-        else if(btb_predict.valid)  npc = btb_predict.npc;      // predict is based on pc(or the pc wr req) in last clk
-        else                        npc = pc_r + 4;
+        if(excp_wr_pc_req.valid) begin
+            npc = excp_wr_pc_req.pc;
+            pass_out.is_pred = 0;
+        end
+        else if(ex_wr_pc_req.valid) begin
+            npc = ex_wr_pc_req.pc;
+            pass_out.is_pred = 0;
+        end
+        else if(if2_wr_pc_req.valid) begin
+            npc = if2_wr_pc_req.pc;
+            pass_out.is_pred = 0;
+        end
+        else if(btb_predict.valid) begin
+            npc = btb_predict.npc;      // predict is based on pc(or the pc wr req) in last clk
+            pass_out.is_pred = 1;
+        end
+        else begin
+            npc = pc_r + 4;
+            pass_out.is_pred = 1;
+        end
     end
 
     always_ff @(posedge clk, negedge rst_n) begin

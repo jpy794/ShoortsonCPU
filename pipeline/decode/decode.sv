@@ -609,6 +609,7 @@ module Decode (
 
     `PASS(pc);
     `PASS(btb_pre);
+    `PASS(is_pred);
 
     assign excp_pass_out = excp_pass_in_r;
 

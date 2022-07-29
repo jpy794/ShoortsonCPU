@@ -277,6 +277,7 @@ typedef struct packed {
 /* btb */
 localparam INST_ALIGN_WID = 2;
 
+localparam BRHISTORY_LENGTH = 4;
 localparam BTB_SIZE = 128;
 localparam BTB_IDX_WID = $clog2(BTB_SIZE);
 localparam BTB_TARGET_WID = 32 - INST_ALIGN_WID;
@@ -296,11 +297,18 @@ typedef struct packed {
     u32_t npc;
 } btb_predict_t;
 
+/* from if2 */
+typedef struct packed {
+    logic valid;
+    u32_t pc;
+} btb_invalid_t;
+
 /* from ex */
 typedef struct packed {
     logic valid;            // valid for j / b inst
-    u32_t pc, npc;
-} btb_resolved_t;
+    logic taken;
+    u32_t pc, target_pc;
+} br_resolved_t;
 
 typedef struct packed {
     logic valid;
@@ -312,12 +320,14 @@ typedef struct packed {
     logic valid;
     virt_t pc;
     virt_t btb_pre;
+    logic is_pred;
 } fetch1_fetch2_pass_t;
 
 typedef struct packed {
     logic valid;
     virt_t pc;
     virt_t btb_pre;
+    logic is_pred;
     u32_t inst;
 } fetch2_decode_pass_t;
 
@@ -325,6 +335,7 @@ typedef struct packed {
     logic valid;
     virt_t pc;
     virt_t btb_pre;
+    logic is_pred;
 
     logic is_mul, is_div, is_bru;
     ex_out_sel_t ex_out_sel;

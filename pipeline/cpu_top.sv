@@ -108,17 +108,19 @@ module CPUTop (
 
     u32_t pc_if1_to_btb;
     btb_predict_t btb_pre;
-    btb_resolved_t ex_resolved_btb;     // TODO
+    btb_invalid_t if2_btb_invalid;
+    br_resolved_t ex_resolved_br;
     logic stall_btb;
-    BTB U_BTB (
+    BPU U_BPU (
         .clk, .rst_n,
         .is_stall(stall_btb),
         .pc(pc_if1_to_btb), 
         .predict_out(btb_pre),
-        .ex_resolved_in(ex_resolved_btb)
+        .btb_invalid_in(if2_btb_invalid),
+        .ex_resolved_in(ex_resolved_br)
     );
 
-    wr_pc_req_t ex_wr_pc_req, excp_wr_pc_req;
+    wr_pc_req_t if2_wr_pc_req, ex_wr_pc_req, excp_wr_pc_req;
     Fetch1 U_Fetch1 (
         .clk, .rst_n,
 
@@ -126,6 +128,7 @@ module CPUTop (
         .btb_pc(pc_if1_to_btb),
         .btb_predict(btb_pre),
 
+        .if2_wr_pc_req(if2_wr_pc_req),
         .ex_wr_pc_req(ex_wr_pc_req),
         .excp_wr_pc_req(excp_wr_pc_req),
 
@@ -147,6 +150,7 @@ module CPUTop (
         .excp_pass_out(excp_if1)
     );
 
+    logic bp_error_flush;
     Fetch2 U_Fetch2 (
         .clk, .rst_n,
 
@@ -156,6 +160,11 @@ module CPUTop (
         .flush(flush_if2),
         .next_rdy_in(id_rdy_in),
         .rdy_in(if2_rdy_in),
+
+        .bp_error_flush(bp_error_flush),
+
+        .wr_pc_req(if2_wr_pc_req),
+        .btb_invalid(if2_btb_invalid),
 
         .pass_in(pass_if1),
         .excp_pass_in(excp_if1),
@@ -196,6 +205,7 @@ module CPUTop (
         /* flush ctrl */
         .bp_miss_flush,
         .wr_pc_req(ex_wr_pc_req),
+        .br_resolved(ex_resolved_br),
 
         .ld_use(ex_ld_use),
         /* forwarding */
@@ -314,7 +324,7 @@ module CPUTop (
     assign stall_icache = ~ex_rdy_in;
     assign stall_dcache = ~wb_rdy_in;
 
-    assign flush_if1 = bp_miss_flush | excp_flush;
+    assign flush_if1 = bp_error_flush | bp_miss_flush | excp_flush;
     assign flush_if2 = bp_miss_flush | excp_flush;
     assign flush_id = bp_miss_flush | excp_flush;
     assign flush_ex = excp_flush;
