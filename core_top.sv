@@ -123,7 +123,7 @@ module core_top(
         .task_finish_from_axi(task_finish_from_axi)
     );
 
-    To_AXI to_axi (
+    AXI_bridge axi_bridge (
         .clk(aclk),
         .rstn(aresetn),
         .req(req_to_axi),
@@ -172,7 +172,7 @@ module core_top(
         .bid(bid),
         .bresp(bresp),
         .bready(bready),
-        .bvaild(bvalid)
+        .bvalid(bvalid)
     );
 
 endmodule
