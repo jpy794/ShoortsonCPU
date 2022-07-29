@@ -667,10 +667,6 @@ always_comb begin
         `D_WRITE_LOAD_ATOM: begin
             dcache_ns = `D_LOAD;
         end
-        `D_STORE: begin
-            dcache_busy = 1'b0;
-            dcache_ns = dcache_pre_s;
-        end
     endcase
 end
 
@@ -711,7 +707,7 @@ always_comb begin
 end
 
 always_comb begin
-    wen_to_dcache = 4'b0000;
+    dcache_wen_to_pipline = 4'b0000;
     if(dcache_ns == `D_STORE)begin
         unique case(reg_dcache_op)
             `DCACHE_REQ_STORE_ATOM: begin
@@ -783,13 +779,13 @@ always_comb begin
     endcase
 end
 
-assign dcache_req_ad_to_pipline = ((dcache_ns == `DCACHE_REQ_TO_PIPLINE_LOAD_WORD) ||(dcache_ns == `DCACHE_REQ_TO_PIPLINE_STORE_WORD))? {icache_pa, icache_va} : pa_to_icache;
+assign dcache_req_ad_to_pipline = ((dcache_ns == `D_REQ_TO_PIPLINE_LOAD_WORD) ||(dcache_ns == `D_REQ_TO_PIPLINE_STORE_WORD))? {dcache_pa, dcache_va} : pa_to_dcache;
 
 assign wword_to_pipline = store_data;
 
 assign wblock_to_pipline = dirty_data_from_dcache;
 
-assign dcache_cached_to_pipline = ((dcache_ns == `DCACHE_REQ_TO_PIPLINE_LOAD_WORD) || (dcache_ns == `DCACHE_REQ_TO_PIPLINE_STORE_WORD))? dcache_cached : reg_dcache_cached; 
+assign dcache_cached_to_pipline = ((dcache_ns == `D_REQ_TO_PIPLINE_LOAD_WORD) || (dcache_ns == `D_REQ_TO_PIPLINE_STORE_WORD))? dcache_cached : reg_dcache_cached; 
 
 always_comb begin
     if(dcache_ns == `D_REQ_TO_PIPLINE_STORE_WORD)begin
