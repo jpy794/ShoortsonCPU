@@ -130,7 +130,7 @@ module Decode (
     logic bad_inst;
 
     logic is_mem;
-    logic is_store;
+    logic is_store, is_load;
     assign is_mem = inst_ld_b  |
                     inst_ld_bu |
                     inst_ld_h  |
@@ -168,12 +168,7 @@ module Decode (
 
     logic is_br_wb;
     assign is_br_wb = inst_jirl |
-                      inst_beq  |
-                      inst_bne  |
-                      inst_blt  |
-                      inst_bge  |
-                      inst_bltu |
-                      inst_bgeu ;
+                      inst_bl   ;
 
     logic is_mul;
     assign is_mul = inst_mul_w   |
@@ -271,7 +266,8 @@ module Decode (
     reg_idx_t rj, rkd, rd;
     assign rj = inst[9:5];
     assign rd = inst[4:0];
-    assign rkd = is_rd_as_rk ? rd : inst[14:10];
+    assign rkd = inst_bl ? 5'b1 : 
+                           is_rd_as_rk ? rd : inst[14:10];
 
     logic alu_a_rj, alu_a_pc, alu_a_zero;
     assign alu_a_pc = is_br_off     |
