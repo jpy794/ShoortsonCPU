@@ -38,7 +38,7 @@ module Memory2 (
     assign rdy_in = mem2_flush | ~mem2_stall;
     assign rdy_out = ~mem2_flush & ~mem2_stall;        // only use this for pass_out.valid
 
-    assign dcache_data_stall = pass_in_r.is_mem & ~dcache_data_valid;
+    assign dcache_data_stall = pass_in_r.is_mem & ~pass_in_r.is_store & ~dcache_data_valid;
 
     /* forward */
     // be careful of load-use stall
