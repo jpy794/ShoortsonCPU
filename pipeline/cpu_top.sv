@@ -15,7 +15,6 @@ module CPUTop (
     output logic stall_dcache,
     output logic [11:0] dcache_idx,
     output logic [4:0] dcache_op,
-    output logic [1:0] dcache_byte_type,
     output logic dcache_is_cached,
     output logic [31:0] dcache_pa,
     output logic [31:0] wr_dcache_data,
@@ -230,7 +229,6 @@ module CPUTop (
         .dcache_op,
         .dcache_pa,
         .dcache_is_cached,
-        .dcache_byte_type,
         .wr_dcache_data,
         .dcache_busy,
 

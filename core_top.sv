@@ -66,7 +66,6 @@ module core_top(
     logic stall_dcache;
     logic [11:0] dcache_idx;
     logic [4:0] dcache_op;
-    logic [1:0] dcache_byte_type;
     logic dcache_is_cached;
     logic [31:0] dcache_pa;
     logic [31:0] rd_dcache_data, wr_dcache_data;
@@ -104,7 +103,7 @@ module core_top(
         .icache_data_valid,
         .dcache_va(dcache_idx),
         .dcache_pa(dcache_pa[31:12]),
-        .dcache_op({dcache_op[4:2], dcache_byte_type}),
+        .dcache_op(dcache_op),
         .dcache_stall(stall_dcache),
         .dcache_cached(dcache_is_cached),
         .store_data(wr_dcache_data),

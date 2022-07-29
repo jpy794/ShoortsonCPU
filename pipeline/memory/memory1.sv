@@ -20,7 +20,6 @@ module Memory1 (
     output logic [4:0] dcache_op,
     output u32_t dcache_pa,
     output logic dcache_is_cached,
-    output byte_type_t dcache_byte_type,
     output u32_t wr_dcache_data,
     input logic dcache_busy,
 
@@ -96,12 +95,11 @@ module Memory1 (
     assign dcache_idx = pass_in_r.ex_out[11:0];
     assign dcache_pa = pa;
     assign dcache_is_cached = mat[0];
-    assign dcache_byte_type = pass_in_r.byte_type;
     always_comb begin
         dcache_op = DC_NOP;
         if(~mem1_flush & pass_in_r.is_mem) begin
-            if(pass_in_r.is_store) dcache_op = DC_W;
-            else                   dcache_op = DC_R;
+            if(pass_in_r.is_store) dcache_op = {DC_W[2:0], pass_in_r.byte_type};
+            else                   dcache_op = {DC_R[2:0], pass_in_r.byte_type};
         end
     end
     assign wr_dcache_data = pass_in_r.rkd_data;
