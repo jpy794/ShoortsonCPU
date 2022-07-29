@@ -18,8 +18,6 @@ module CPUTop (
     output logic [1:0] dcache_byte_type,
     output logic dcache_is_cached,
     output logic [31:0] dcache_pa,
-    input logic dcache_busy,
-    input logic dcache_data_valid,
     output logic [31:0] wr_dcache_data,
     input logic [31:0] rd_dcache_data,
     input logic dcache_busy, dcache_data_valid,

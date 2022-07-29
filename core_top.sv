@@ -69,9 +69,8 @@ module core_top(
     logic [1:0] dcache_byte_type;
     logic dcache_is_cached;
     logic [31:0] dcache_pa;
-    logic dcache_busy, dcache_data_valid;
     logic [31:0] rd_dcache_data, wr_dcache_data;
-
+    logic dcache_busy, dcache_data_valid;
     CPUTop U_CPUTop (
         .clk(aclk),
         .rst_n(aresetn),
