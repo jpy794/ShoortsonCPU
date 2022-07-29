@@ -17,7 +17,7 @@ always_comb begin
         XOR:    out = a ^ b;
         SLL:    out = a << b[4:0];
         SRL:    out = a >> b[4:0];
-        SRA:    out = a >>> b[4:0];
+        SRA:    out = $signed(a) >>> b[4:0];
         SLT:    out = {31'b0, $signed(a) < $signed(b)};
         SLTU:   out = {31'b0, a < b};
         default: out = '0;
