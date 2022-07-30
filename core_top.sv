@@ -1,4 +1,5 @@
 `include "cache/cache.svh"
+`include "common_defs.svh"
 
 module core_top(
     input           aclk,
@@ -74,6 +75,18 @@ module core_top(
         .rst_n(aresetn),
         .*
     );
+
+`ifdef FAKE_CACHE
+    FakeCache U_FackCache (
+        .clk(aclk),
+        .rst_n(aresetn),
+        .icache_req_valid(icache_op[0]),
+        .dcache_req_valid(dcache_op[4] | dcache_op[3]),
+        .dcache_store(dcache_op[4]),
+        .dcache_byte_type(dcache_op[1:0]),
+        .*
+    );
+`else
 
     logic [`AXI_REQ_WIDTH]req_to_axi;
     logic [`BLOCK_WIDTH]wblock_to_axi;
@@ -177,5 +190,7 @@ module core_top(
         .bvalid(bvalid),
         .req_from(req_from_to_axi)
     );
+
+`endif
 
 endmodule

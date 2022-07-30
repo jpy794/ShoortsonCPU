@@ -1,6 +1,8 @@
 `ifndef COMMON_DEFS_SVH
 `define COMMON_DEFS_SVH
 
+`define FAKE_CACHE
+
 localparam PALEN = 32;
 localparam VALEN = 32;
 
