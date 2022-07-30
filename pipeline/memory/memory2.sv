@@ -3,6 +3,9 @@
 module Memory2 (
     input clk, rst_n,
 
+    /* load use */
+    output load_use_t ld_use,
+
     /* forward */
     output forward_req_t fwd_req,
 
@@ -43,6 +46,10 @@ module Memory2 (
     assign rdy_out = ~mem2_flush & ~mem2_stall;        // only use this for pass_out.valid
 
     assign dcache_data_stall = pass_in_r.is_mem & ~pass_in_r.is_store & ~dcache_data_valid;
+
+    /* load use */
+    assign ld_use.idx = pass_in_r.rd;
+    assign ld_use.valid = pass_in_r.is_mem & ~pass_in_r.is_store & ~mem2_flush;
 
     /* forward */
     // be careful of load-use stall

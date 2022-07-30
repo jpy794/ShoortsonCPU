@@ -16,6 +16,7 @@ module Decode (
     /* load use */
     input load_use_t ex_ld_use,
     input load_use_t mem1_ld_use,
+    input load_use_t mem2_ld_use,
 
     /* pipeline */
     input logic flush, next_rdy_in,
@@ -560,6 +561,12 @@ module Decode (
         if(mem1_ld_use.valid) begin
             if(rj == mem1_ld_use.idx && is_use_rj
             || rkd == mem1_ld_use.idx && is_use_rkd) begin
+                load_use_stall = 1'b1;
+            end
+        end
+        if(mem2_ld_use.valid) begin
+            if(rj == mem2_ld_use.idx && is_use_rj
+            || rkd == mem2_ld_use.idx && is_use_rkd) begin
                 load_use_stall = 1'b1;
             end
         end

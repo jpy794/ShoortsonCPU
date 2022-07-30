@@ -172,7 +172,7 @@ module CPUTop (
         .excp_pass_out(excp_if2)
     );
 
-    load_use_t ex_ld_use, mem1_ld_use;
+    load_use_t ex_ld_use, mem1_ld_use, mem2_ld_use;
     Decode U_Decode (
         .clk, .rst_n,
 
@@ -186,6 +186,7 @@ module CPUTop (
 
         .ex_ld_use,
         .mem1_ld_use,
+        .mem2_ld_use,
 
         .flush(flush_id),
         .next_rdy_in(ex_rdy_in),
@@ -253,6 +254,7 @@ module CPUTop (
     Memory2 U_Memory2 (
         .clk, .rst_n,
 
+        .ld_use(mem2_ld_use),
         .fwd_req(mem2_fwd_req),
 
         .rd_dcache_data,
