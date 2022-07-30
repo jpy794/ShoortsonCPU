@@ -118,6 +118,7 @@ module Execute (
     Mul U_Mul (
         .clk, .rst_n,
         .is_flush(ex_flush),
+        .is_stall(~next_rdy_in),
         .a(rj_forwarded),
         .b(rkd_forwarded),
         .en(mul_en),
@@ -130,15 +131,42 @@ module Execute (
     always_comb begin
         mul_signed = 1'b0;
         case(pass_in_r.mul_op)
-            LO: mul_signed = 1'b0;
-            HI: mul_signed = 1'b0;
-            HIU: mul_signed = 1'b1;
+            LO: mul_signed = 1'b1;
+            HI: mul_signed = 1'b1;
+            HIU: mul_signed = 1'b0;
             default: //$stop;
                 mul_signed = 1'b0;
         endcase
     end
 
-    // TODO: div
+    // div
+    logic div_en, div_signed;
+    u32_t div_quotient, div_remainder;
+    logic div_done;
+    Div U_Div (
+        .clk, .rst_n,
+        .is_flush(ex_flush),
+        .is_stall(~next_rdy_in),
+        .dividend(rj_forwarded),
+        .divisor(rkd_forwarded),
+        .en(div_en),
+        .is_signed(div_signed),
+        .quotient(div_quotient),
+        .remainder(div_remainder),
+        .done(div_done)
+    );
+
+    assign div_en = pass_in_r.is_div && !div_done;
+    always_comb begin
+        div_signed = 1'b0;
+        case(pass_in_r.div_op)
+            QU: div_signed = 1'b0;
+            RU: div_signed = 1'b0;
+            Q: div_signed = 1'b1;
+            R: div_signed = 1'b1;
+            // full case
+        endcase
+    end
 
     /* csr */
     u32_t csr_masked;
@@ -159,7 +187,15 @@ module Execute (
                         ex_out = alu_out;
                 endcase
             end
-            //TODO: DIV: ex_out = div_out;
+            DIV:   begin
+                unique case(pass_in_r.div_op)
+                    Q: ex_out = div_quotient;
+                    QU: ex_out = div_quotient;
+                    R: ex_out = div_remainder;
+                    RU: ex_out = div_remainder;
+                    // full case
+                endcase
+            end
             CSR: begin
                 if(pass_in_r.is_mask_csr) ex_out = csr_masked;
                 else            ex_out = pass_in_r.rkd_data;
@@ -173,7 +209,7 @@ module Execute (
     assign ld_use.valid = pass_in_r.is_mem & ~pass_in_r.is_store & ~ex_flush;
 
     /* to ctrl */
-    assign eu_stall = ((pass_in_r.is_mul) && !mul_done);
+    assign eu_stall = ((pass_in_r.is_mul) && !mul_done) || ((pass_in_r.is_div) && !div_done);
     // TODO: div   || ((pass_in_r.is_div) && !div_done);
     assign bp_miss_flush = wr_pc_req.valid;
 

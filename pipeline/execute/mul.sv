@@ -3,6 +3,7 @@
 module Mul (
     input logic clk, rst_n,
     input logic is_flush,
+    input logic is_stall,
     input logic [31:0] a, b,
     input logic en, is_signed,
     output logic [63:0] out,
@@ -80,11 +81,12 @@ module Mul (
                     next = S_DONE;
                 end
                 S_DONE: begin
-                    if(en) next = S_MUL;
-                    else   next = S_IDLE;
+                    if(~is_stall) begin
+                        if(en) next = S_MUL;
+                        else   next = S_IDLE;
+                    end
                 end
-                default:// $stop;
-                next = state;
+                default: ;
             endcase
         end
     end
