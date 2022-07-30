@@ -69,7 +69,12 @@ BTB U_BTB (
     .ex_resolved_in(ex_resolved_in)
 );
 
-assign predict_out.valid = target_valid & (pht_lookup_data >= 2);
+logic pht_lookup_data_hold;
+always_ff @(posedge clk) begin
+    pht_lookup_data_hold <= pht_lookup_data;
+end
+
+assign predict_out.valid = target_valid & (pht_lookup_data_hold >= 2);
 assign predict_out.npc = target_pc;
 
 endmodule

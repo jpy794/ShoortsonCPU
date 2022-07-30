@@ -228,7 +228,7 @@ module DCache (
                 if(way_hit[1])begin
                     way_wdirty_en[0] = `UNABLE;
                     way_wdirty_en[1] = `ENABLE;
-                    for(k = 0; i < `BLOCK_NUM; k = k + 1)begin
+                    for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
                         way_wen[k][0] = `DATA_WRITE_UNABLE;
                     end
                     unique case(ad[4:2])
