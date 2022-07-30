@@ -54,7 +54,7 @@ module CPUTop (
     excp_wr_csr_req_t excp_wr_csr_req;
     tlb_wr_csr_req_t tlb_wr_csr_req;
 
-    CSR U_CSR (
+    RegCSR U_CSR (
         .clk, .rst_n,
         /* csr inst */
         .addr(csr_addr),

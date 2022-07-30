@@ -241,7 +241,7 @@ typedef struct packed {
     logic we;
     csr_asid_t asid;
     csr_tlbehi_t tlbehi;
-    csr_tlbelo_t [0:0] tlbelo;
+    csr_tlbelo_t [1:0] tlbelo;
     csr_tlbidx_t tlbidx;
 } tlb_wr_csr_req_t;
 

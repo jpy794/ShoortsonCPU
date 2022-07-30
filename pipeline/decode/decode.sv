@@ -149,7 +149,7 @@ module Decode (
                            inst_ld_h ;
 
     byte_type_t mem_byte_type;
-    assign mem_byte_type = inst[23:22];
+    assign mem_byte_type = byte_type_t'(inst[23:22]);
 
     logic is_br_off;
     assign is_br_off =  inst_b    |
@@ -358,7 +358,7 @@ module Decode (
     assign csr_addr = inst[18:10];
 
     bru_op_t bru_op;
-    assign bru_op = inst[29:26];
+    assign bru_op = bru_op_t'(inst[29:26]);
 
     always_comb begin
         inst_add_w = 1'b0;
@@ -582,8 +582,8 @@ module Decode (
                       : alu_a_zero ? ZERO
                       : RJ;
     assign pass_out.alu_b_sel = alu_b_imm ? IMM : RKD;
-    assign pass_out.mul_op = inst[16:15];
-    assign pass_out.div_op = inst[16:15];
+    assign pass_out.mul_op = mul_op_t'(inst[16:15]);
+    assign pass_out.div_op = div_op_t'(inst[16:15]);
     assign pass_out.alu_op = alu_op;
     assign pass_out.bru_op = bru_op;
 
@@ -605,7 +605,7 @@ module Decode (
     assign pass_out.byte_type = mem_byte_type;
     assign pass_out.is_cac = inst_cacop;
     assign pass_out.is_tlb = is_tlb;
-    assign pass_out.tlb_op = '0;            // TODO: impl tlbop
+    assign pass_out.tlb_op = tlb_op_t'('0);            // TODO: impl tlbop
 
     `PASS(pc);
     `PASS(btb_pre);

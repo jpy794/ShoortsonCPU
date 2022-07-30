@@ -1,6 +1,6 @@
 `include "cpu_defs.svh"
 
-module CSR (
+module RegCSR (
     input logic clk, rst_n,
 
     /* rw inst */
