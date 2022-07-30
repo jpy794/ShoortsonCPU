@@ -94,10 +94,10 @@ module Writeback (
             cmt_valid       <= ~wb_flush;
             cmt_cnt_inst    <= '0;                  // TODO
             cmt_timer_64    <= '0;                  // TODO
-            cmt_inst_ld_en  <= pass_in_r.is_ld;
+            cmt_inst_ld_en  <= pass_in_r.is_ld ? pass_in_r.byte_valid : 8'b0;
             cmt_ld_paddr    <= pass_in_r.pa;
             cmt_ld_vaddr    <= pass_in_r.va;
-            cmt_inst_st_en  <= pass_in_r.is_st;
+            cmt_inst_st_en  <= pass_in_r.is_st ? pass_in_r.byte_valid : 8'b0;
             cmt_st_paddr    <= pass_in_r.pa;
             cmt_st_vaddr    <= pass_in_r.va;
             cmt_st_data     <= pass_in_r.st_data;

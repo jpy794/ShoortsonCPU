@@ -136,6 +136,18 @@ module Memory1 (
     assign pass_out.pa = pa;
     assign pass_out.va = pass_in_r.ex_out;
     assign pass_out.st_data = pass_in_r.rkd_data;
+
+    /* generate valid for difftest */
+    always_comb begin
+        pass_out.byte_valid = 8'b0;
+        unique case(pass_in_r.byte_type)
+            BYTE:       pass_out.byte_valid[0] = 1'b1;
+            HALF_WORD:  pass_out.byte_valid[1] = 1'b1;
+            WORD:       pass_out.byte_valid[2] = 1'b1;
+            default: ;
+        endcase
+    end
+
 `endif
 
 endmodule

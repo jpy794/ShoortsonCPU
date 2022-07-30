@@ -70,10 +70,12 @@ module Memory2 (
 
     u32_t mem_out;
     always_comb begin
+        mem_out = rd_dcache_data;
         unique case(pass_in_r.byte_type)
             BYTE:       mem_out = pass_in_r.is_signed ? {{24{mem_byte[7]}}, mem_byte} : {{24{1'b0}}, mem_byte};
             HALF_WORD:  mem_out = pass_in_r.is_signed ? {{16{mem_half_word[15]}}, mem_half_word} : {{16{1'b0}}, mem_half_word};
             WORD:       mem_out = rd_dcache_data;
+            default: ;
         endcase
     end
 

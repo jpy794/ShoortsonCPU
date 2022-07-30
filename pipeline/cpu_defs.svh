@@ -432,6 +432,7 @@ typedef struct packed {
     logic is_ld, is_st;
     virt_t va, pa;
     u32_t st_data;
+    logic [7:0] byte_valid;
 `endif
 } memory1_memory2_pass_t;
 
@@ -456,6 +457,7 @@ typedef struct packed {
     logic is_ld, is_st;
     virt_t va, pa;
     u32_t st_data;
+    logic [7:0] byte_valid;
 `endif
 } memory2_writeback_pass_t;
 /* pipeline pass end */
