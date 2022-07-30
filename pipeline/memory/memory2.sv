@@ -14,17 +14,22 @@ module Memory2 (
     input logic flush, next_rdy_in,
     output logic rdy_in,
     input memory1_memory2_pass_t pass_in,
+    input excp_pass_t excp_pass_in,
 
-    output memory2_writeback_pass_t pass_out
+    output memory2_writeback_pass_t pass_out,
+
+    output excp_req_t excp_req
 );
 
     memory1_memory2_pass_t pass_in_r;
+    excp_pass_t excp_pass_in_r;
 
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
             pass_in_r.valid <= 1'b0;
         end else if(rdy_in) begin
             pass_in_r <= pass_in;
+            excp_pass_in_r <= excp_pass_in;
         end
     end
 
@@ -47,6 +52,12 @@ module Memory2 (
         if(pass_in_r.is_wr_rd_pc_plus4) fwd_req.data = pass_in_r.pc_plus4;
         else                            fwd_req.data = pass_in_r.ex_out;
     end
+
+    /* exception */
+    assign excp_req.valid = pass_in_r.valid;
+    assign excp_req.excp_pass = excp_pass_in_r;
+    assign excp_req.epc = pass_in_r.pc;
+    assign excp_req.inst_ertn = 1'b0;           // TODO: impl ertn
 
     /* memory2 stage */
 

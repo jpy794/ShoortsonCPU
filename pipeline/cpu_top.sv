@@ -38,7 +38,7 @@ module CPUTop (
     execute_memory1_pass_t pass_ex;
     memory1_memory2_pass_t pass_mem1;
     memory2_writeback_pass_t pass_mem2;
-    excp_pass_t excp_if1, excp_if2, excp_id, excp_ex, excp_mem1, excp_mem2;
+    excp_pass_t excp_if1, excp_if2, excp_id, excp_ex, excp_mem1;
 
     /* ctrl signals */
     logic flush_if1, flush_if2, flush_id, flush_ex, flush_mem1, flush_mem2, flush_wb;
@@ -247,8 +247,7 @@ module CPUTop (
         .pass_in(pass_ex),
         .excp_pass_in(excp_ex), 
         .pass_out(pass_mem1),
-        
-        .excp_req
+        .excp_pass_out(excp_mem1)
     );
 
     Memory2 U_Memory2 (
@@ -264,7 +263,10 @@ module CPUTop (
         .rdy_in(mem2_rdy_in),
 
         .pass_in(pass_mem1),
-        .pass_out(pass_mem2)
+        .excp_pass_in(excp_mem1), 
+        .pass_out(pass_mem2),
+
+        .excp_req
     );
 
 `ifdef DIFF_TEST

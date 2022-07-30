@@ -48,8 +48,6 @@ module Execute (
     assign rdy_in = ex_flush | ~ex_stall;
     assign rdy_out = ~ex_flush & ~ex_stall;        // only use this for pass_out.valid
 
-    excp_pass_t ex_excp;
-
     /* execute stage */
     u32_t rj_forwarded, rkd_forwarded;
     always_comb begin

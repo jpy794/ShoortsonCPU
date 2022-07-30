@@ -30,8 +30,7 @@ module Memory1 (
     input excp_pass_t excp_pass_in,
 
     output memory1_memory2_pass_t pass_out,
-    
-    output excp_req_t excp_req
+    output excp_pass_t excp_pass_out
 );
     initial begin
         pass_in_r.is_store = 1'b0;
@@ -147,12 +146,6 @@ module Memory1 (
     `PASS(is_wr_csr);
     `PASS(csr_addr);
 
-    /* exception */
-    assign excp_req.valid = pass_in_r.valid;
-    assign excp_req.excp_pass = excp_pass_in_r.valid ? excp_pass_in_r : addr_excp;
-    assign excp_req.epc = pass_in_r.pc;
-    assign excp_req.inst_ertn = 1'b0;           // TODO: impl ertn
-
 `ifdef DIFF_TEST
     `PASS(inst);
 
@@ -174,5 +167,7 @@ module Memory1 (
     end
 
 `endif
+
+    assign excp_pass_out = excp_pass_in_r.valid ? excp_pass_in_r : addr_excp;
 
 endmodule
