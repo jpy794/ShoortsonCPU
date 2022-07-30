@@ -688,7 +688,7 @@ end
 
 //contract with cpu
 always_comb begin
-    if(dcache_ns == `D_LOAD_WORD_DONE)begin
+    if(dcache_cs == `D_LOAD_WORD_DONE)begin
         load_data = rword_from_pipline;
     end
     else begin

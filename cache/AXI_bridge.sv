@@ -106,273 +106,351 @@ always_ff @(posedge clk)begin
     end
 end
 
+// always_ff @(posedge clk or negedge rstn)begin
+//     if(~rstn)begin
+//         axi_cs <= `AXI_STATE_WAIT;
+//     end
+//     else begin
+//         axi_cs <= axi_ns;
+//     end
+// end
+
+// always_comb begin
+//     unique case(axi_cs)
+//         `AXI_STATE_WAIT: begin
+//             unique case(reg_req_from_pipline)
+//                 `REQ_TO_AXI_LOAD_WORD: begin
+//                     axi_ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY;
+//                 end
+//                 `REQ_TO_AXI_WRITE_WORD: begin
+//                     axi_ns = `AXI_STATE_STORE_WORD_WAIT_AWREADY;
+//                 end
+//                 `REQ_TO_AXI_WRITE_BLOCK: begin
+//                     axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_AWREADY;
+//                 end
+//                 `REQ_TO_AXI_LOAD_BLOCK: begin
+//                     axi_ns = `AXI_STATE_LOAD_BLOCK_WAIT_ARREADY;
+//                 end
+//                 default: begin
+//                     axi_ns =  `AXI_STATE_WAIT;
+//                 end
+//             endcase
+//         end
+//         // `AXI_STATE_LOAD_WORD_WAIT_ARREADY: begin
+//         //     if(arready)begin
+//         //         axi_ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
+//         //     end
+//         //     else begin
+//         //         axi_ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY;
+//         //     end
+//         // end
+//         // `AXI_STATE_LOAD_WORD_WAIT_RVALID: begin
+//         //     if(rvalid)begin
+//         //         axi_ns = `AXI_STATE_LOAD_WORD_SUCCESS;
+//         //     end
+//         //     else begin
+//         //         axi_ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
+//         //     end
+//         // end
+//         // `AXI_STATE_LOAD_WORD_SUCCESS: begin
+//         //     axi_ns = `AXI_STATE_WAIT;
+//         `AXI_STATE_LOAD_WORD_WAIT_ARREADY: begin
+//             if(arready)begin
+//                 axi_ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY_SUCCESS;
+//             end
+//             else begin
+//                 axi_ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY;
+//             end
+//         end
+//         `AXI_STATE_LOAD_WORD_WAIT_ARREADY_SUCCESS: begin
+//             axi_ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
+//         end
+//         `AXI_STATE_LOAD_WORD_WAIT_RVALID: begin
+//             if(rvalid)begin
+//                 axi_ns = `AXI_STATE_LOAD_WORD_SUCCESS;
+//             end
+//             else begin
+//                 axi_ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
+//             end
+//         end
+//         `AXI_STATE_LOAD_WORD_SUCCESS: begin
+//             axi_ns = `AXI_STATE_WAIT;
+//         end
+//         `AXI_STATE_STORE_WORD_WAIT_AWREADY: begin
+//             if(awready)begin
+//                 axi_ns = `AXI_STATE_STORE_WORD_WAIT_AWREADY_SUCCESS;
+//             end
+//             else begin
+//                 axi_ns = `AXI_STATE_STORE_WORD_WAIT_AWREADY;
+//             end
+//         end
+//         `AXI_STATE_STORE_WORD_WAIT_AWREADY_SUCCESS: begin
+//             axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY;
+//         end
+//         // `AXI_STATE_STORE_WORD_WAIT_WREADY: begin
+//         //     if(wready)begin
+//         //         axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
+//         //     end
+//         //     else begin
+//         //         axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY;
+//         //     end
+//         // end
+//         // `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
+//         //     if(bvalid)begin
+//         //         axi_ns = `AXI_STATE_WAIT;
+//         //     end
+//         //     else begin
+//         //         axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
+//         //     end
+//         // end
+//         `AXI_STATE_STORE_WORD_WAIT_WREADY: begin
+//             if(wready)begin
+//                 axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY_SUCCESS;
+//             end
+//             else begin
+//                 axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY;
+//             end
+//         end
+//         `AXI_STATE_STORE_WORD_WAIT_WREADY_SUCCESS: begin
+//             axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
+//         end
+//         `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
+//             if(bvalid)begin
+//                 axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID_SUCCESS;
+//             end
+//             else begin
+//                 axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
+//             end
+//         end
+//         `AXI_STATE_STORE_WORD_WAIT_BVALID_SUCCESS: begin
+//             axi_ns = `AXI_STATE_WAIT;
+//         end
+//         // `AXI_STATE_STORE_BLOCK_WAIT_AWREADY: begin
+//         //     if(awready)begin
+//         //         axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_AWREADY_SUCCESS;
+//         //     end
+//         //     else begin  
+//         //         axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_AWREADY;
+//         //     end
+//         // end
+//         // `AXI_STATE_STORE_BLOCK_WAIT_AWREADY_SUCCESS: begin
+//         //     axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_WREADY;
+//         // end
+//         // `AXI_STATE_STORE_BLOCK_WAIT_WREADY: begin
+//         //     if(wready)begin
+//         //         axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_WREADY_SUCCESS;
+//         //     end
+//         //     else begin
+//         //         axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_WREADY;
+//         //     end
+//         // end
+//         // `AXI_STATE_STORE_BLOCK_WAIT_WREADY_SUCCESS: begin
+//         //     axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_BVALID;
+//         // end
+//         default: begin
+//             axi_ns = `AXI_STATE_WAIT;
+//         end
+//     endcase
+// end
+
+
 always_ff @(posedge clk or negedge rstn)begin
     if(~rstn)begin
         axi_cs <= `AXI_STATE_WAIT;
     end
     else begin
-        axi_cs <= axi_ns;
+        unique case(axi_cs)
+            `AXI_STATE_WAIT: begin
+                unique case(reg_req_from_pipline)
+                    `REQ_TO_AXI_LOAD_WORD: begin
+                        axi_cs <= `AXI_STATE_LOAD_WORD_WAIT_ARREADY;
+                        araddr <= reg_req_ad_from_pipline;
+                        arvalid <= 1'b1;
+                    end
+                    `REQ_TO_AXI_WRITE_WORD: begin
+                        awaddr <= reg_req_ad_from_pipline;
+                        axi_cs <= `AXI_STATE_STORE_WORD_WAIT_AWREADY;
+                        wdata <= wword;
+                        wstrb <= wword_en;
+                        awvalid <= 1'b1;
+                        wlast <= 1'b1;
+                    end
+                    default: axi_cs <= `AXI_STATE_WAIT;
+                endcase
+            end
+            `AXI_STATE_LOAD_WORD_WAIT_ARREADY: begin
+                if(arready)begin
+                    axi_cs <= `AXI_STATE_LOAD_WORD_WAIT_RVALID;
+                    arvalid <= 1'b0;
+                    rready <= 1'b1;
+                end
+            end
+            `AXI_STATE_LOAD_WORD_WAIT_RVALID: begin
+                if(rvalid)begin
+                    rready <= 1'b0;
+                    axi_cs <= `AXI_STATE_WAIT;
+                    rword <= rdata;
+                end
+            end
+            `AXI_STATE_STORE_WORD_WAIT_AWREADY: begin
+                if(awready)begin
+                    awvalid <= 1'b0;
+                    axi_cs <= `AXI_STATE_STORE_WORD_WAIT_WREADY;
+                    wvalid <= 1'b1;
+                end
+            end
+            `AXI_STATE_STORE_WORD_WAIT_WREADY: begin
+                if(wready)begin
+                    wvalid <= 1'b0;
+                    axi_cs <= `AXI_STATE_STORE_WORD_WAIT_BVALID;
+                end
+            end
+            `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
+                if(bvalid)begin
+                    wlast <= 1'b0;
+                    axi_cs <= `AXI_STATE_WAIT;
+                end
+            end
+        endcase 
     end
 end
+assign bready = 1'b1;
 
-always_comb begin
+// always_ff @(posedge clk)begin
+//     if(axi_ns == `AXI_STATE_LOAD_WORD_WAIT_ARREADY)begin
+//         araddr <= reg_req_ad_from_pipline;
+//     end
+// end
+
+// always_ff @(posedge clk or negedge rstn)begin
+//     if(~rstn)begin
+//         arvalid <= 1'b0;
+//     end
+//     else begin
+//         if(axi_ns == `AXI_STATE_LOAD_WORD_WAIT_ARREADY || axi_ns == `AXI_STATE_LOAD_WORD_WAIT_ARREADY_SUCCESS)begin
+//             arvalid <= 1'b1;
+//         end
+//         else begin
+//             arvalid <= 1'b0;
+//         end
+//     end
+// end
+
+// always_ff @(posedge clk or negedge rstn)begin
+//     if(~rstn)begin
+//         rready <= 1'b0;
+//     end
+//     else begin
+//         if(axi_ns == `AXI_STATE_LOAD_WORD_WAIT_RVALID || axi_ns == `AXI_STATE_LOAD_WORD_SUCCESS)begin
+//             rready <= 1'b1;
+//         end
+//         else begin
+//             rready <= 1'b0;
+//         end
+//     end
+// end
+
+// always_ff @(posedge clk)begin
+//     if(axi_ns == `AXI_STATE_LOAD_WORD_SUCCESS)begin
+//         if(rvalid)begin
+//             rword <= rdata;
+//         end
+//     end
+// end
+
+// always_ff @(posedge clk or negedge rstn)begin
+//      if(~rstn)begin
+//          awvalid <= 1'b0;
+//      end
+//      else begin  
+//          if((axi_ns == `AXI_STATE_STORE_WORD_WAIT_AWREADY) || (axi_ns == `AXI_STATE_STORE_WORD_WAIT_AWREADY_SUCCESS))begin
+//              awvalid <= 1'b1;
+//          end
+//          else begin
+//              awvalid <= 1'b0;
+//          end
+//      end
+// end
+
+// //assign awvalid = (axi_cs == `AXI_STATE_STORE_WORD_WAIT_AWREADY)? 1'b1: 1'b0;
+
+// always_ff @(posedge clk)begin
+//     if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_AWREADY)begin
+//         awaddr <= reg_req_ad_from_pipline;
+//     end
+// end
+
+// assign wdata = wword;
+// always_ff @(posedge clk or negedge rstn)begin
+//     if(~rstn)begin
+//         wvalid <= 1'b0;
+//     end
+//     else begin
+//         if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_WREADY || axi_ns == `AXI_STATE_STORE_WORD_WAIT_WREADY_SUCCESS)begin
+//             wvalid <= 1'b1;
+//         end
+//         else begin
+//             wvalid <= 1'b0;
+//         end
+//     end
+// end
+
+// always_ff @(posedge clk or negedge rstn)begin
+//     if(~rstn)begin
+//         wlast <= 1'b0;
+//     end
+//     else begin
+//         if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_WREADY)begin
+//             wlast <= 1'b1;
+//         end
+//         else begin
+//             wlast <= 1'b0;
+//         end
+//     end
+// end
+
+// always_ff @(posedge clk or negedge rstn)begin
+//     if(~rstn)begin
+//         bready <= 1'b0;
+//     end
+//     else begin
+//         if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_BVALID || axi_ns == `AXI_STATE_STORE_WORD_WAIT_BVALID_SUCCESS)begin
+//             bready <= 1'b1;
+//         end
+//         else begin
+//             bready <= 1'b0;
+//         end
+//     end
+// end
+
+// always_ff @(posedge clk)begin
+//     unique case (axi_ns)
+//         `AXI_STATE_LOAD_WORD_WAIT_ARREADY: begin
+//             if(req_from == `REQ_FROM_DCACHE)begin
+//                 arid <= 1'b1;
+//             end
+//             else if(req_from == `REQ_FROM_ICACHE)begin
+//                 arid <= 1'b0;
+//             end
+//         end
+//     endcase
+// end
+
+
+always_ff @(posedge clk)begin
+    task_finish <= 1'b0;
     unique case(axi_cs)
-        `AXI_STATE_WAIT: begin
-            unique case(reg_req_from_pipline)
-                `REQ_TO_AXI_LOAD_WORD: begin
-                    axi_ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY;
-                end
-                `REQ_TO_AXI_WRITE_WORD: begin
-                    axi_ns = `AXI_STATE_STORE_WORD_WAIT_AWREADY;
-                end
-                `REQ_TO_AXI_WRITE_BLOCK: begin
-                    axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_AWREADY;
-                end
-                `REQ_TO_AXI_LOAD_BLOCK: begin
-                    axi_ns = `AXI_STATE_LOAD_BLOCK_WAIT_ARREADY;
-                end
-                default: begin
-                    axi_ns =  `AXI_STATE_WAIT;
-                end
-            endcase
-        end
-        // `AXI_STATE_LOAD_WORD_WAIT_ARREADY: begin
-        //     if(arready)begin
-        //         axi_ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
-        //     end
-        //     else begin
-        //         axi_ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY;
-        //     end
-        // end
-        // `AXI_STATE_LOAD_WORD_WAIT_RVALID: begin
-        //     if(rvalid)begin
-        //         axi_ns = `AXI_STATE_LOAD_WORD_SUCCESS;
-        //     end
-        //     else begin
-        //         axi_ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
-        //     end
-        // end
-        // `AXI_STATE_LOAD_WORD_SUCCESS: begin
-        //     axi_ns = `AXI_STATE_WAIT;
-        `AXI_STATE_LOAD_WORD_WAIT_ARREADY: begin
-            if(arready)begin
-                axi_ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY_SUCCESS;
-            end
-            else begin
-                axi_ns = `AXI_STATE_LOAD_WORD_WAIT_ARREADY;
-            end
-        end
-        `AXI_STATE_LOAD_WORD_WAIT_ARREADY_SUCCESS: begin
-            axi_ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
-        end
         `AXI_STATE_LOAD_WORD_WAIT_RVALID: begin
             if(rvalid)begin
-                axi_ns = `AXI_STATE_LOAD_WORD_SUCCESS;
+                task_finish <= 1'b1;
             end
-            else begin
-                axi_ns = `AXI_STATE_LOAD_WORD_WAIT_RVALID;
-            end
-        end
-        `AXI_STATE_LOAD_WORD_SUCCESS: begin
-            axi_ns = `AXI_STATE_WAIT;
-        end
-        `AXI_STATE_STORE_WORD_WAIT_AWREADY: begin
-            if(awready)begin
-                axi_ns = `AXI_STATE_STORE_WORD_WAIT_AWREADY_SUCCESS;
-            end
-            else begin
-                axi_ns = `AXI_STATE_STORE_WORD_WAIT_AWREADY;
-            end
-        end
-        `AXI_STATE_STORE_WORD_WAIT_AWREADY_SUCCESS: begin
-            axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY;
-        end
-        // `AXI_STATE_STORE_WORD_WAIT_WREADY: begin
-        //     if(wready)begin
-        //         axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
-        //     end
-        //     else begin
-        //         axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY;
-        //     end
-        // end
-        // `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
-        //     if(bvalid)begin
-        //         axi_ns = `AXI_STATE_WAIT;
-        //     end
-        //     else begin
-        //         axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
-        //     end
-        // end
-        `AXI_STATE_STORE_WORD_WAIT_WREADY: begin
-            if(wready)begin
-                axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY_SUCCESS;
-            end
-            else begin
-                axi_ns = `AXI_STATE_STORE_WORD_WAIT_WREADY;
-            end
-        end
-        `AXI_STATE_STORE_WORD_WAIT_WREADY_SUCCESS: begin
-            axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
         end
         `AXI_STATE_STORE_WORD_WAIT_BVALID: begin
             if(bvalid)begin
-                axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID_SUCCESS;
-            end
-            else begin
-                axi_ns = `AXI_STATE_STORE_WORD_WAIT_BVALID;
-            end
-        end
-        `AXI_STATE_STORE_WORD_WAIT_BVALID_SUCCESS: begin
-            axi_ns = `AXI_STATE_WAIT;
-        end
-        // `AXI_STATE_STORE_BLOCK_WAIT_AWREADY: begin
-        //     if(awready)begin
-        //         axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_AWREADY_SUCCESS;
-        //     end
-        //     else begin  
-        //         axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_AWREADY;
-        //     end
-        // end
-        // `AXI_STATE_STORE_BLOCK_WAIT_AWREADY_SUCCESS: begin
-        //     axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_WREADY;
-        // end
-        // `AXI_STATE_STORE_BLOCK_WAIT_WREADY: begin
-        //     if(wready)begin
-        //         axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_WREADY_SUCCESS;
-        //     end
-        //     else begin
-        //         axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_WREADY;
-        //     end
-        // end
-        // `AXI_STATE_STORE_BLOCK_WAIT_WREADY_SUCCESS: begin
-        //     axi_ns = `AXI_STATE_STORE_BLOCK_WAIT_BVALID;
-        // end
-        default: begin
-            axi_ns = `AXI_STATE_WAIT;
-        end
-    endcase
-end
-
-always_ff @(posedge clk)begin
-    if(axi_ns == `AXI_STATE_LOAD_WORD_WAIT_ARREADY)begin
-        araddr <= reg_req_ad_from_pipline;
-    end
-end
-
-always_ff @(posedge clk or negedge rstn)begin
-    if(~rstn)begin
-        arvalid <= 1'b0;
-    end
-    else begin
-        if(axi_ns == `AXI_STATE_LOAD_WORD_WAIT_ARREADY || axi_ns == `AXI_STATE_LOAD_WORD_WAIT_ARREADY_SUCCESS)begin
-            arvalid <= 1'b1;
-        end
-        else begin
-            arvalid <= 1'b0;
-        end
-    end
-end
-
-always_ff @(posedge clk or negedge rstn)begin
-    if(~rstn)begin
-        rready <= 1'b0;
-    end
-    else begin
-        if(axi_ns == `AXI_STATE_LOAD_WORD_WAIT_RVALID || axi_ns == `AXI_STATE_LOAD_WORD_SUCCESS)begin
-            rready <= 1'b1;
-        end
-        else begin
-            rready <= 1'b0;
-        end
-    end
-end
-
-always_ff @(posedge clk)begin
-    if(axi_ns == `AXI_STATE_LOAD_WORD_SUCCESS)begin
-        if(rvalid)begin
-            rword <= rdata;
-        end
-    end
-end
-
-always_ff @(posedge clk or negedge rstn)begin
-     if(~rstn)begin
-         awvalid <= 1'b0;
-     end
-     else begin  
-         if((axi_ns == `AXI_STATE_STORE_WORD_WAIT_AWREADY) || (axi_ns == `AXI_STATE_STORE_WORD_WAIT_AWREADY_SUCCESS))begin
-             awvalid <= 1'b1;
-         end
-         else begin
-             awvalid <= 1'b0;
-         end
-     end
-end
-
-//assign awvalid = (axi_cs == `AXI_STATE_STORE_WORD_WAIT_AWREADY)? 1'b1: 1'b0;
-
-always_ff @(posedge clk)begin
-    if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_AWREADY)begin
-        awaddr <= reg_req_ad_from_pipline;
-    end
-end
-
-assign wdata = wword;
-always_ff @(posedge clk or negedge rstn)begin
-    if(~rstn)begin
-        wvalid <= 1'b0;
-    end
-    else begin
-        if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_WREADY || axi_ns == `AXI_STATE_STORE_WORD_WAIT_WREADY_SUCCESS)begin
-            wvalid <= 1'b1;
-        end
-        else begin
-            wvalid <= 1'b0;
-        end
-    end
-end
-
-always_ff @(posedge clk or negedge rstn)begin
-    if(~rstn)begin
-        wlast <= 1'b0;
-    end
-    else begin
-        if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_WREADY)begin
-            wlast <= 1'b1;
-        end
-        else begin
-            wlast <= 1'b0;
-        end
-    end
-end
-
-always_ff @(posedge clk or negedge rstn)begin
-    if(~rstn)begin
-        bready <= 1'b0;
-    end
-    else begin
-        if(axi_ns == `AXI_STATE_STORE_WORD_WAIT_BVALID || axi_ns == `AXI_STATE_STORE_WORD_WAIT_BVALID_SUCCESS)begin
-            bready <= 1'b1;
-        end
-        else begin
-            bready <= 1'b0;
-        end
-    end
-end
-
-always_ff @(posedge clk)begin
-    unique case (axi_ns)
-        `AXI_STATE_LOAD_WORD_WAIT_ARREADY: begin
-            if(req_from == `REQ_FROM_DCACHE)begin
-                arid <= 1'b1;
-            end
-            else if(req_from == `REQ_FROM_ICACHE)begin
-                arid <= 1'b0;
+                task_finish <= 1'b1;
             end
         end
     endcase
 end
-
-assign task_finish = (axi_ns == `AXI_STATE_WAIT && axi_cs != `AXI_STATE_WAIT)? 1'b1:1'b0;
 assign ready_to_pipline = (axi_cs == `AXI_STATE_WAIT)? 1'b1 : 1'b0;
 endmodule
