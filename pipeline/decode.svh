@@ -47,14 +47,6 @@ typedef enum logic [2:0] {
     INVTLB
 } tlb_op_t;
 
-typedef enum logic [1:0] {
-    BYTE = 2'b00,
-    HALF_WORD = 2'b01,
-    WORD = 2'b10
-} byte_type_t;
-
-typedef logic [1:0] byte_en_t;
-
 /*
     CSR,        // ex_out = rj_data or (rj_data & rd_data) | (~rj_data & csr_data)     (TODO: rj != 0 / 1 what's the point???)
     TLB,

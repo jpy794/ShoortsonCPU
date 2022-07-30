@@ -10,7 +10,7 @@ module FakeCache (
 
     input logic dcache_req_valid, dcache_store, stall_dcache,
     input u32_t dcache_pa,
-    input logic [2:0] dcache_byte_type,
+    input byte_type_t dcache_byte_type,
     input u32_t wr_dcache_data,
     output u32_t rd_dcache_data,
     output logic dcache_busy, dcache_data_valid,
@@ -77,8 +77,17 @@ module FakeCache (
     assign awsize = 3'b010;   // 2^2 = 4bytes
     assign awburst = 2'b01;   // INC
 
-    assign wstrb = 4'b1111;  // all bytes enable
     assign wlast = wvalid;
+
+    always_comb begin
+        wstrb = 4'b1111;
+        case(dcache_byte_type)
+            BYTE:       wstrb[dcache_pa[1:0]] = 1'b1;
+            HALF_WORD:  wstrb[dcache_pa[1:0]+:2] = 2'b1;
+            WORD:       wstrb = 4'b1111;
+            default: ;
+        endcase
+    end
 
     //read
     assign arlen = 0;
