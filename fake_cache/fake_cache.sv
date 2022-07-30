@@ -79,11 +79,12 @@ module FakeCache (
 
     assign wlast = wvalid;
 
+    byte_type_t byte_type, byte_type_next;
     always_comb begin
-        wstrb = 4'b1111;
-        case(dcache_byte_type)
+        wstrb = 4'b0000;
+        unique case(byte_type)
             BYTE:       wstrb[dcache_pa[1:0]] = 1'b1;
-            HALF_WORD:  wstrb[dcache_pa[1:0]+:2] = 2'b1;
+            HALF_WORD:  wstrb[dcache_pa[1:0]+:2] = 2'b11;
             WORD:       wstrb = 4'b1111;
             default: ;
         endcase
@@ -138,6 +139,7 @@ module FakeCache (
             state <= next;
             busy <= next_busy;
             wr_data <= wr_data_next;
+            byte_type <= byte_type_next;
             addr <= addr_next;
         end
     end
@@ -147,6 +149,7 @@ module FakeCache (
         next_busy = busy;
 
         wr_data_next = wr_data;
+        byte_type_next = byte_type;
         addr_next = addr;
 
         arvalid = 1'b0;
@@ -159,6 +162,7 @@ module FakeCache (
         case(state)
             S_IDLE: begin
                 wr_data_next = wr_dcache_data;
+                byte_type_next = dcache_byte_type;
                 next_busy = NO_BUSY;
                 if(dcache_req_valid) begin
                     addr_next = dcache_pa;
