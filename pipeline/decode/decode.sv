@@ -186,11 +186,18 @@ module Decode (
     assign inst_csrwr = is_csr && (rj == 5'b1);
     assign inst_csrxchg = is_csr & ~inst_csrrd & ~inst_csrwr;
 
-    logic is_tlb;
-    assign is_tlb = inst_tlbsrch |
-                    inst_tlbrd   |
-                    inst_tlbwr   |
-                    inst_tlbfill ;
+    tlb_op_t tlb_op;
+    always_comb begin
+        tlb_op = TLBNOP;
+        unique case(1'b1)
+            inst_tlbsrch:   tlb_op = TLBSRCH;
+            inst_tlbrd:     tlb_op = TLBRD;
+            inst_tlbwr:     tlb_op = TLBWR;
+            inst_tlbfill:   tlb_op = TLBFILL;
+            inst_invtlb:    tlb_op = INVTLB;
+            default: ;
+        endcase
+    end
 
     logic is_eret;
     assign is_eret = inst_ertn;
@@ -608,8 +615,7 @@ module Decode (
     assign pass_out.is_signed = is_mem_signed;
     assign pass_out.byte_type = mem_byte_type;
     assign pass_out.is_cac = inst_cacop;
-    assign pass_out.is_tlb = is_tlb;
-    assign pass_out.tlb_op = tlb_op_t'('0);            // TODO: impl tlbop
+    assign pass_out.tlb_op = tlb_op;
 
     `PASS(pc);
     `PASS(btb_pre);

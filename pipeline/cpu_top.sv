@@ -87,20 +87,14 @@ module CPUTop (
         .rd_data
     );
 
-    tlb_op_t tlb_op;
-    logic [4:0] invtlb_op;
-    vppn_t invtlb_vppn;
-    asid_t invtlb_asid;
+    tlb_op_req_t tlb_req;
     tlb_entry_t itlb_lookup[TLB_ENTRY_NUM], dtlb_lookup[TLB_ENTRY_NUM];
     TLB U_TLB (
         .clk,
         .rd_csr(tlb_rd_csr),
         .wr_csr_req(tlb_wr_csr_req),
         /* tlb inst */
-        .tlb_op,
-        .invtlb_op,
-        .invtlb_vppn,
-        .invtlb_asid,
+        .tlb_req,
         /* lookup */
         .itlb_lookup,
         .dtlb_lookup
@@ -233,6 +227,7 @@ module CPUTop (
         .rd_csr(mem1_rd_csr),
 
         .tlb_entrys(dtlb_lookup), 
+        .tlb_req,
         
         .dcache_idx,
         .dcache_op,

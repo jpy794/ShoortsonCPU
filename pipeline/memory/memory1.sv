@@ -15,6 +15,8 @@ module Memory1 (
     /* tlb */
     input tlb_entry_t tlb_entrys[TLB_ENTRY_NUM],
 
+    output tlb_op_req_t tlb_req,
+
     /* to dcache */
     output logic [11:0] dcache_idx,          // for index
     output logic [4:0] dcache_op,
@@ -128,6 +130,11 @@ module Memory1 (
 
     assign wr_dcache_data = mem_in;
 
+    /* to tlb */
+    assign tlb_req.tlb_op = pass_in_r.tlb_op;           // TO BE FIXED: probably req multipile times if stall ?
+    assign tlb_req.invtlb_op = pass_in_r.rd;
+    assign tlb_req.invtlb_vppn = pass_in_r.invtlb_vppn;
+    assign tlb_req.invtlb_asid = pass_in_r.invtlb_asid;
 
     /* out to next stage */
     assign pass_out.valid = rdy_out;

@@ -366,7 +366,6 @@ typedef struct packed {
 
     logic is_cac;
     
-    logic is_tlb;
     tlb_op_t tlb_op;
 `ifdef DIFF_TEST
     u32_t inst;
@@ -397,9 +396,9 @@ typedef struct packed {
 
     logic is_cac;
 
-    logic is_tlb;
     tlb_op_t tlb_op;
     asid_t invtlb_asid;         // rj_data[9:0]
+    vppn_t invtlb_vppn;
 
 `ifdef DIFF_TEST
     u32_t inst;
@@ -495,4 +494,12 @@ typedef enum logic [4:0] {
     DC_R   =        5'b01000,
     DC_W   =        5'b10000    
 }dcache_op_t;
+
+typedef struct packed {
+    tlb_op_t tlb_op;
+    logic [4:0] invtlb_op;
+    vppn_t invtlb_vppn;
+    asid_t invtlb_asid;
+} tlb_op_req_t;
+
 `endif

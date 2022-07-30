@@ -10,10 +10,7 @@ module TLB (
     output tlb_wr_csr_req_t wr_csr_req,
 
     /* tlb instruction */
-    input tlb_op_t tlb_op,
-    input logic [4:0] invtlb_op,
-    input vppn_t invtlb_vppn,
-    input asid_t invtlb_asid,
+    input tlb_op_req_t tlb_req,
 
     /* lookup */
     output tlb_entry_t itlb_lookup[TLB_ENTRY_NUM],
@@ -39,7 +36,8 @@ module TLB (
     tlb_idx_t wr_idx;
     logic we_entrys;
     always_ff @(posedge clk) begin
-        unique case(tlb_op)
+        unique case(tlb_req.tlb_op)
+        TLBNOP: ;
         TLBWR, TLBFILL: begin
             if(rd_csr.estat.r_esubcode_ecode == TLBR) entrys[wr_idx].e <= ~rd_csr.tlbidx.ne;
             else                                      entrys[wr_idx].e <= '1;
@@ -58,7 +56,7 @@ module TLB (
             end
         end
         INVTLB: begin
-            case(invtlb_op)
+            unique case(tlb_req.invtlb_op)
             5'h0: begin
                 for(j=0; j<TLB_ENTRY_NUM; j++) begin
                     entrys[j].e <= '0;
@@ -81,17 +79,17 @@ module TLB (
             end
             5'h4: begin
                 for(j=0; j<TLB_ENTRY_NUM; j++) begin
-                    if(~entrys[j].g && invtlb_asid == entrys[j].asid) entrys[j].e <= '0;
+                    if(~entrys[j].g && tlb_req.invtlb_asid == entrys[j].asid) entrys[j].e <= '0;
                 end
             end
             5'h5: begin
                 for(j=0; j<TLB_ENTRY_NUM; j++) begin
-                    if(~entrys[j].g && invtlb_asid == entrys[j].asid && invtlb_vppn == entrys[j].vppn) entrys[j].e <= '0;
+                    if(~entrys[j].g && tlb_req.invtlb_asid == entrys[j].asid && tlb_req.invtlb_vppn == entrys[j].vppn) entrys[j].e <= '0;
                 end
             end
             5'h6: begin
                 for(j=0; j<TLB_ENTRY_NUM; j++) begin
-                    if((entrys[j].g || invtlb_asid == entrys[j].asid) && invtlb_vppn == entrys[j].vppn) entrys[j].e <= '0;
+                    if((entrys[j].g || tlb_req.invtlb_asid == entrys[j].asid) && tlb_req.invtlb_vppn == entrys[j].vppn) entrys[j].e <= '0;
                 end
             end
             default: ;
@@ -111,7 +109,8 @@ module TLB (
         we_entrys = '0;
         wr_idx = idx;
 
-        unique case(tlb_op)
+        unique case(tlb_req.tlb_op)
+        TLBNOP: ;
         TLBSRCH: begin
             wr_csr_req.we = '1;
             wr_csr_req.tlbidx.ne = ~tlbsrch_found;

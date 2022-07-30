@@ -217,6 +217,9 @@ module Execute (
     assign pass_out.invtlb_asid = pass_in_r.rj_data[9:0];
     assign pass_out.pc_plus4 = pass_in_r.pc + 4;
 
+    assign pass_out.invtlb_asid = rj_forwarded[9:0];
+    assign pass_out.invtlb_vppn = rkd_forwarded[31:13];
+
     `PASS(pc);
     `PASS(is_wr_rd);
     `PASS(is_wr_rd_pc_plus4);
@@ -229,7 +232,6 @@ module Execute (
     `PASS(byte_type);
     `PASS(rkd_data);
     `PASS(is_cac);
-    `PASS(is_tlb);
     `PASS(tlb_op);
 
     /* no exception in ex */

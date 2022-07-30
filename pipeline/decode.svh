@@ -40,6 +40,7 @@ typedef enum logic [1:0] {
 } ex_out_sel_t;
 
 typedef enum logic [2:0] {
+    TLBNOP,
     TLBSRCH,
     TLBRD,
     TLBWR,
