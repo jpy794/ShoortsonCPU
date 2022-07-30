@@ -37,6 +37,7 @@ module AddrTrans (
     integer i;
     mat_t dmw_mat;
     phy_t dmw_pa;
+    logic is_dmw_found;
     always_comb begin
         is_dmw_found = 1'b0;
         dmw_mat = rd_csr.dmw[0].mat;
@@ -53,9 +54,6 @@ module AddrTrans (
     /* addr translate */
     logic is_direct;
     assign is_direct = rd_csr.crmd.da; // maybe consider crmd.pg ?
-
-    logic is_dmw_found;
-    assign is_dmw_found = 1'b0;
 
     logic is_tlb;
     assign is_tlb = ~is_direct & ~is_dmw_found;

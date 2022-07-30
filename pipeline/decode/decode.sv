@@ -415,9 +415,6 @@ module Decode (
 
         inst_syscall = 1'b0;
         inst_break = 1'b0;
-        inst_csrrd = 1'b0;
-        inst_csrwr = 1'b0;
-        inst_csrxchg = 1'b0;
         inst_ertn = 1'b0;
 
         inst_rdcntid_w = 1'b0;
