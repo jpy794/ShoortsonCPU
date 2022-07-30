@@ -54,6 +54,9 @@ module Div(
         a_next = a;
         q_next = q;
         m_neg_next = m_neg;
+
+        remainder = remainder_abs;
+        quotient = quotient_abs;
         unique case(state)
             S_IDLE: begin
                 if(en) begin

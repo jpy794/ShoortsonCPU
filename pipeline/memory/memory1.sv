@@ -102,7 +102,32 @@ module Memory1 (
             else                   dcache_op = {DC_R[4:2], pass_in_r.byte_type};
         end
     end
-    assign wr_dcache_data = pass_in_r.rkd_data;
+
+    u32_t mem_in;
+    always_comb begin
+        mem_in = pass_in_r.rkd_data;
+        unique case(pass_in_r.byte_type)
+            BYTE: begin
+                unique case(pa[1:0])
+                    2'b00:  mem_in[0+:8] = pass_in_r.rkd_data[7:0];
+                    2'b01:  mem_in[8+:8] = pass_in_r.rkd_data[7:0];
+                    2'b10:  mem_in[16+:8] = pass_in_r.rkd_data[7:0];
+                    2'b11:  mem_in[24+:8] = pass_in_r.rkd_data[7:0];
+                    // full case
+                endcase
+            end
+            HALF_WORD: begin
+                unique case(pa[1])
+                    1'b0: mem_in[0+:16] = pass_in_r.rkd_data[15:0];
+                    1'b1: mem_in[16+:16] = pass_in_r.rkd_data[15:0];
+                endcase
+            end
+            WORD:         mem_in = pass_in_r.rkd_data;
+            default: ;
+        endcase
+    end
+
+    assign wr_dcache_data = mem_in;
 
 
     /* out to next stage */
