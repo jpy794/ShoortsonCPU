@@ -66,20 +66,19 @@ module Execute (
     always_comb begin
         alu_a = '0;
         unique case(pass_in_r.alu_a_sel)
-            RJ: alu_a = pass_in_r.rj_data;
+            RJ: alu_a = rj_forwarded;
             PC: alu_a = pass_in_r.pc;
             ZERO: alu_a = 32'b0;
-            default: $stop;
+            default: ;
         endcase
     end
 
     always_comb begin
         alu_b = '0;
         unique case(pass_in_r.alu_b_sel)
-            RKD: alu_b = pass_in_r.rkd_data;
+            RKD: alu_b = rkd_forwarded;
             IMM: alu_b = pass_in_r.imm;
-            default: //$stop;
-                alu_b = '0;
+            default: ;
         endcase
     end
 
