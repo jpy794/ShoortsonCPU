@@ -62,11 +62,11 @@ module Memory1 (
 
     /* load use */
     assign ld_use.idx = pass_in_r.rd;
-    assign ld_use.valid = pass_in_r.is_mem & ~pass_in_r.is_store;
+    assign ld_use.valid = pass_in_r.is_mem & ~pass_in_r.is_store & ~mem1_flush;
 
     /* forward */
     // be careful of load-use stall
-    assign fwd_req.valid = pass_in_r.is_wr_rd;
+    assign fwd_req.valid = pass_in_r.is_wr_rd & ~mem1_flush;
     assign fwd_req.idx = pass_in_r.rd;
     always_comb begin
         if(pass_in_r.is_wr_rd_pc_plus4) fwd_req.data = pass_in_r.pc_plus4;
