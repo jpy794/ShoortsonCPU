@@ -5,7 +5,7 @@ module DCache (
     input logic rstn,
     input logic [`ADDRESS_WIDTH]ad,
     input logic [`ADDRESS_WIDTH]pa,
-    input logic [`DCACHE_STATE_WIDTH]control_en,
+    dcache_state_t control_en,
     input logic [`DATA_WIDTH]store_data,
 
     input logic [`BLOCK_WIDTH]r_data,
@@ -19,7 +19,9 @@ module DCache (
     output logic [`LLIT_WIDTH]rllit_to_cache,
     output logic rlru_to_cache,
     output logic rdirty_to_cache,
-    output logic hit
+    output logic hit,
+    output logic [`TAG_WIDTH]rtag_to_cache,
+    dcache_state_t dcache_cs
 );
     logic [`INDEX_WIDTH]way_rad;
     logic [`INDEX_WIDTH]way_wad;
@@ -48,16 +50,22 @@ module DCache (
 
     logic [`WAY]way_hit;
 
+    logic [`ADDRESS_WIDTH]reg_ad;
     integer i ;
     integer k ;
     genvar j ;
 
+    always_ff @(posedge clk)begin
+        reg_ad <= ad;
+    end
     assign hit = |way_hit;
     assign dirty_data = (way_hit[1])? {{way_rdata[7][1]}, {way_rdata[6][1]}, {way_rdata[5][1]},
         {way_rdata[4][1]}, {way_rdata[3][1]}, {way_rdata[2][1]}, {way_rdata[1][1]}, {way_rdata[1][0]}} :
         {{way_rdata[7][0]}, {way_rdata[6][0]}, {way_rdata[5][0]}, {way_rdata[4][0]},
             {way_rdata[3][0]}, {way_rdata[2][0]}, {way_rdata[1][0]}, {way_rdata[0][0]}};
     
+    assign rtag_to_cache = (dcache_cs == D_HIT_WRITE_V_DIRTY)? way_rtag[way_hit[1]] :  way_rtag[reg_ad[0]]; 
+
     assign way_rad = ad[`INDEX_PART];
     assign way_wad = ad[`INDEX_PART];
     assign lru_rad = ad[`INDEX_PART];
@@ -69,41 +77,25 @@ module DCache (
     generate
         for(j = 0; j < `WAY_NUM; j = j + 1)begin
             assign {{way_wdata[7][j]}, {way_wdata[6][j]}, {way_wdata[5][j]}, {way_wdata[4][j]}, 
-                    {way_wdata[3][j]}, {way_wdata[2][j]}, {way_wdata[1][j]}, {way_wdata[0][j]}} = ((control_en == `D_WRITE_LOAD) || (control_en == `D_WRITE_STORE) || (control_en == `D_WRITE_LOAD_ATOM))? r_data : {{8{store_data}}};
+                    {way_wdata[3][j]}, {way_wdata[2][j]}, {way_wdata[1][j]}, {way_wdata[0][j]}} = (control_en == D_WRITE)? r_data : {{8{store_data}}};
         end
     endgenerate
 
     generate
         for(j = 0; j < `WAY_NUM; j = j + 1)begin
-            assign way_wtag[j] = ((control_en == `D_WRITE_STORE) || (control_en == `D_WRITE_LOAD) || (control_en == `D_WRITE_LOAD_ATOM))? ad[`TAG_PART] : `CLEAR_TAG;
+            assign way_wtag[j] = (control_en == D_WRITE)? ad[`TAG_PART] : `CLEAR_TAG;
         end
     endgenerate
 
     generate
         for(j = 0; j < `WAY_NUM; j = j + 1)begin
-           // assign way_wv[j] = (control_en == `D_WRITE)? `SET_V : `CLEAR_V;
-            always_comb begin
-                if((control_en == `D_WRITE_STORE) || (control_en == `D_WRITE_LOAD) || (control_en == `D_WRITE_LOAD_ATOM))begin
-                    way_wv[j] = `SET_V;
-                end
-                else begin
-                    way_wv[j] = `CLEAR_V;
-                end
-            end
+           assign way_wv[j] = (control_en == D_WRITE)? `SET_V : `CLEAR_V;
         end
     endgenerate
 
     generate 
         for(j = 0; j < `WAY_NUM; j = j + 1)begin
-          //  assign way_wdirty[j] = (control_en == `D_WRITE)? `CLEAR_DIRTY : `SET_DIRTY;
-            always_comb begin
-                if((control_en == `D_WRITE_STORE) || (control_en == `D_WRITE_LOAD) || (control_en == `D_WRITE_LOAD_ATOM))begin
-                    way_wdirty[j] = `CLEAR_DIRTY;
-                end
-                else begin
-                    way_wdirty[j] = `SET_DIRTY;
-                end
-            end
+           assign way_wdirty[j] = (control_en == D_WRITE)? `CLEAR_DIRTY : `SET_DIRTY;
         end
     endgenerate
 
@@ -126,7 +118,7 @@ module DCache (
 
     always_comb begin
         unique case(control_en)
-            `D_LOAD: begin
+            D_LOAD: begin
                 for(i = 0; i < `WAY_NUM; i = i + 1)begin
                     for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
                         way_wen[k][i] = `DATA_WRITE_UNABLE;
@@ -137,7 +129,7 @@ module DCache (
                     way_wdirty_en[i] = `UNABLE;
                 end
             end
-            `D_WRITE_TAG: begin
+            D_WRITE_TAG: begin
                 for(i = 0; i < `WAY_NUM; i = i + 1)begin
                     for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
                         way_wen[k][i] = `DATA_WRITE_UNABLE;
@@ -155,7 +147,7 @@ module DCache (
                     way_wtag_en[1] = `UNABLE;
                 end
             end
-            `D_INDEX_WRITE_V: begin
+            D_INDEX_WRITE_V: begin
                 for(i = 0; i < `WAY_NUM; i = i + 1)begin
                     for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
                         way_wen[k][i] = `DATA_WRITE_UNABLE;
@@ -173,7 +165,7 @@ module DCache (
                     way_wv_en[1] = `UNABLE;
                 end
             end
-            `D_HIT_WRITE_V: begin
+            D_HIT_WRITE_V: begin
                 for(i = 0; i < `WAY_NUM; i = i + 1)begin
                     for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
                         way_wen[k][i] = `DATA_WRITE_UNABLE;
@@ -191,7 +183,25 @@ module DCache (
                     way_wv_en[1] = `UNABLE;
                 end
             end
-            `D_CLEAR_LLIT: begin
+            D_HIT_WRITE_V_DIRTY: begin
+                for(i = 0; i < `WAY_NUM; i = i + 1)begin
+                    for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
+                        way_wen[k][i] = `DATA_WRITE_UNABLE;
+                    end
+                    way_wtag_en[i] = `UNABLE;
+                    way_wdirty_en[i] = `UNABLE;
+                    way_wllit_en[i] = `UNABLE;
+                end
+                if(ad[0])begin
+                    way_wv_en[0] = `UNABLE;
+                    way_wv_en[1] = `ENABLE;
+                end
+                else begin
+                    way_wv_en[0] = `ENABLE;
+                    way_wv_en[1] = `UNABLE;
+                end
+            end
+            D_CLEAR_LLIT: begin
                 for(i = 0; i < `WAY_NUM; i = i + 1)begin
                     for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
                         way_wen[k][i] = `DATA_WRITE_UNABLE;
@@ -202,7 +212,7 @@ module DCache (
                     way_wllit_en[i] = `ENABLE;
                 end
             end
-            `D_SET_LLIT: begin
+            D_SET_LLIT: begin
                 for(i = 0; i < `WAY_NUM; i = i + 1)begin
                     for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
                         way_wen[k][i] = `DATA_WRITE_UNABLE;
@@ -220,7 +230,7 @@ module DCache (
                     way_wllit_en[1] = `UNABLE;
                 end
             end
-            `D_STORE: begin
+            D_STORE: begin
                 for(i = 0; i < `WAY_NUM; i = i + 1)begin
                     way_wtag_en[i] = `UNABLE;
                     way_wv_en[i] = `UNABLE;
@@ -379,75 +389,7 @@ module DCache (
                     way_wllit_en[1] = `UNABLE; 
                 end
             end
-            `D_WRITE_LOAD: begin
-                if(select_way)begin
-                    for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
-                        way_wen[k][0] = `DATA_WRITE_UNABLE;
-                    end
-                    for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
-                        way_wen[k][1] = `DATA_WRITE_ENABLE;
-                    end
-                    way_wtag_en[0] = `UNABLE;
-                    way_wtag_en[1] = `ENABLE;
-                    way_wv_en[0] = `UNABLE;
-                    way_wv_en[1] = `ENABLE;
-                    way_wdirty_en[0] = `UNABLE;
-                    way_wdirty_en[1] = `ENABLE;
-                    way_wllit_en[0] = `UNABLE;
-                    way_wllit_en[1] = `ENABLE;
-                end
-                else begin
-                    for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
-                        way_wen[k][0] = `DATA_WRITE_ENABLE;
-                    end
-                    for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
-                        way_wen[k][1] = `DATA_WRITE_UNABLE;
-                    end
-                    way_wtag_en[0] = `ENABLE;
-                    way_wtag_en[1] = `UNABLE;
-                    way_wv_en[0] = `ENABLE;
-                    way_wv_en[1] = `UNABLE;
-                    way_wdirty_en[0] = `ENABLE;
-                    way_wdirty_en[1] = `UNABLE;
-                    way_wllit_en[0] = `ENABLE;
-                    way_wllit_en[1] = `UNABLE;
-                end
-            end
-            `D_WRITE_LOAD_ATOM:begin
-                if(select_way)begin
-                    for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
-                        way_wen[k][0] = `DATA_WRITE_UNABLE;
-                    end
-                    for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
-                        way_wen[k][1] = `DATA_WRITE_ENABLE;
-                    end
-                    way_wtag_en[0] = `UNABLE;
-                    way_wtag_en[1] = `ENABLE;
-                    way_wv_en[0] = `UNABLE;
-                    way_wv_en[1] = `ENABLE;
-                    way_wdirty_en[0] = `UNABLE;
-                    way_wdirty_en[1] = `ENABLE;
-                    way_wllit_en[0] = `UNABLE;
-                    way_wllit_en[1] = `ENABLE;
-                end
-                else begin
-                    for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
-                        way_wen[k][0] = `DATA_WRITE_ENABLE;
-                    end
-                    for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
-                        way_wen[k][1] = `DATA_WRITE_UNABLE;
-                    end
-                    way_wtag_en[0] = `ENABLE;
-                    way_wtag_en[1] = `UNABLE;
-                    way_wv_en[0] = `ENABLE;
-                    way_wv_en[1] = `UNABLE;
-                    way_wdirty_en[0] = `ENABLE;
-                    way_wdirty_en[1] = `UNABLE;
-                    way_wllit_en[0] = `ENABLE;
-                    way_wllit_en[1] = `UNABLE;
-                end
-            end
-            `D_WRITE_STORE: begin
+            D_WRITE: begin
                 if(select_way)begin
                     for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
                         way_wen[k][0] = `DATA_WRITE_UNABLE;

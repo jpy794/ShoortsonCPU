@@ -94,13 +94,11 @@ module core_top(
     logic [`AXI_STRB_WIDTH]wword_en_to_axi;
     logic [`AXI_STRB_WIDTH]rword_en_to_axi;
     logic [`ADDRESS_WIDTH]ad_to_axi;
-    logic cached_to_axi;
 
     logic [`BLOCK_WIDTH]rblock_from_axi;
     logic [`DATA_WIDTH]rword_from_axi;
     logic ready_from_axi;
     logic task_finish_from_axi;
-    logic [`REQ_FROM_WIDTH]req_from_to_axi;
 
     Cache cache (
         .clk(aclk),
@@ -146,7 +144,6 @@ module core_top(
         .wword(wword_to_axi),
         .wword_en(wword_en_to_axi),
         .ad(ad_to_axi),
-        .cached(cached_to_axi),
         .ready_to_pipline(ready_from_axi),
         .task_finish(task_finish_from_axi),
         .rblock(rblock_from_axi),
@@ -187,8 +184,7 @@ module core_top(
         .bid(bid),
         .bresp(bresp),
         .bready(bready),
-        .bvalid(bvalid),
-        .req_from(req_from_to_axi)
+        .bvalid(bvalid)
     );
 
 `endif
