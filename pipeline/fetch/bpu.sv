@@ -23,7 +23,7 @@ localparam  STRONGLY_NOTTAKEN = 2'b00,
 logic [BRHISTORY_LENGTH-1 : 0] br_history;
 always_ff @(posedge clk) begin
     if (ex_resolved_in.valid)
-        br_history <= (br_history << 1) + ex_resolved_in.taken;
+        br_history <= (br_history << 1) + { {BRHISTORY_LENGTH-1 {0}}, ex_resolved_in.taken};
 end
 
 // PHT
@@ -43,7 +43,7 @@ end
 
 DualPortDmem #(
     .WID(2),
-    .SIZE(BTB_SIZE * BRHISTORY_LENGTH),
+    .SIZE(BTB_SIZE * (2 ** BRHISTORY_LENGTH)),
     .INIT(WEAKLY_NOTTAKEN)
 ) U_PHT (
     .clk(clk),
@@ -69,7 +69,7 @@ BTB U_BTB (
     .ex_resolved_in(ex_resolved_in)
 );
 
-logic pht_lookup_data_hold;
+logic [1:0] pht_lookup_data_hold;
 always_ff @(posedge clk) begin
     pht_lookup_data_hold <= pht_lookup_data;
 end

@@ -212,9 +212,7 @@ module Execute (
     /* out to next stage */
     assign pass_out.valid = rdy_out;
     assign pass_out.ex_out = ex_out;
-    assign pass_out.invtlb_asid = pass_in_r.rj_data[9:0];
     assign pass_out.pc_plus4 = pass_in_r.pc + 4;
-
     assign pass_out.invtlb_asid = rj_forwarded[9:0];
 
     assign pass_out.csr_data = pass_in_r.is_mask_csr ? csr_masked : pass_in_r.rkd_data;

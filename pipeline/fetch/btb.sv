@@ -21,9 +21,10 @@ module BTB(
 btb_idx_t rd_idx;
 btb_entry_t rd_entry;
 virt_t pc_hold;
+logic valid_hold;
 assign rd_idx = pc[INST_ALIGN_WID+:BTB_IDX_WID];
 assign target_pc = {rd_entry.target, {INST_ALIGN_WID{1'b0}}};
-assign target_valid = (rd_entry.tag == pc_hold[INST_ALIGN_WID+BTB_IDX_WID+:BTB_TAG_WID]) & valid[rd_idx];
+assign target_valid = (rd_entry.tag == pc_hold[INST_ALIGN_WID+BTB_IDX_WID+:BTB_TAG_WID]) & valid_hold;
 
 logic wea;
 btb_idx_t wr_idx;
@@ -50,6 +51,7 @@ DualPortBram #(
 
 always_ff @(posedge clk) begin
     pc_hold <= pc;
+    valid_hold <= valid[rd_idx];
 end
 
 /* impl valid separately with lut so that we can reset btb in one clk */
