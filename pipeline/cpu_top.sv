@@ -195,7 +195,7 @@ module CPUTop (
     );
 
     logic bp_miss_flush;
-    forward_req_t mem1_fwd_req, mem2_fwd_req;
+    forward_req_t mem1_fwd_req, mem2_fwd_req, wb_fwd_req;
     Execute U_Execute(
         .clk, .rst_n,
 
@@ -208,6 +208,7 @@ module CPUTop (
         /* forwarding */
         .mem1_req(mem1_fwd_req),
         .mem2_req(mem2_fwd_req),
+        .wb_req(wb_fwd_req),
 
         .flush(flush_ex),
         .next_rdy_in(mem1_rdy_in),
@@ -278,6 +279,8 @@ module CPUTop (
 
     Writeback U_Writeback (
         .clk, .rst_n,
+
+        .fwd_req(wb_fwd_req),
 
         .reg_idx(rd),
         .reg_we(reg_we),
