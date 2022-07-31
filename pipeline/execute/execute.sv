@@ -216,9 +216,9 @@ module Execute (
     assign pass_out.pc_plus4 = pass_in_r.pc + 4;
 
     assign pass_out.invtlb_asid = rj_forwarded[9:0];
-    assign pass_out.invtlb_vppn = rkd_forwarded[31:13];
 
     assign pass_out.csr_data = pass_in_r.is_mask_csr ? csr_masked : pass_in_r.rkd_data;
+    assign pass_out.rkd_data = rkd_forwarded;
 
     `PASS(pc);
     `PASS(is_wr_rd);
@@ -230,7 +230,6 @@ module Execute (
     `PASS(is_store);
     `PASS(is_signed);
     `PASS(byte_type);
-    `PASS(rkd_data);
     `PASS(is_cac);
     `PASS(is_ertn);
     `PASS(tlb_op);
