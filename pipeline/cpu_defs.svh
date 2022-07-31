@@ -5,7 +5,6 @@
 `include "decode.svh"
 `include "pipeline.svh"
 
-`define DIFF_TEST
 
 localparam GRLEN = 32;
 
