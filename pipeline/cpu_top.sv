@@ -317,7 +317,7 @@ module CPUTop (
 `endif
     );
 
-    assign stall_icache = ~ex_rdy_in;
+    assign stall_icache = ~id_rdy_in;
     assign stall_dcache = ~wb_rdy_in;
 
     assign flush_if1 = bp_error_flush | bp_miss_flush | excp_flush;
