@@ -67,7 +67,7 @@ module Fetch1 (
     );
 
     /* to cache */
-    assign icache_op = if1_flush ? IC_NOP : IC_R;
+    assign icache_op = if1_flush | addr_excp.valid ? IC_NOP : IC_R;       // TODO: do not send req to cache if there's exception
     assign icache_idx = pc_r[11:0];
     assign icache_pa = pa;
     assign icache_is_cached = mat[0];
@@ -122,8 +122,13 @@ module Fetch1 (
     assign pass_out.btb_pre = npc;
 
     /* exeption */
-    assign excp_pass_out.valid = addr_excp.valid;               // when pass excp, do not consider flush, handle it at mem1
-    assign excp_pass_out.esubcode_ecode = addr_excp.esubcode_ecode;
-    assign excp_pass_out.badv = addr_excp.badv;
+    always_comb begin
+        excp_pass_out.valid = 1'b0;
+        excp_pass_out.esubcode_ecode = addr_excp.esubcode_ecode;
+        excp_pass_out.badv = addr_excp.badv;
+        if(rdy_out) begin
+            excp_pass_out = addr_excp;
+        end
+    end
 
 endmodule

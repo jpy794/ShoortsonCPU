@@ -98,7 +98,7 @@ module Memory1 (
     assign dcache_is_cached = mat[0];
     always_comb begin
         dcache_op = DC_NOP;
-        if(~mem1_flush & pass_in_r.is_mem) begin
+        if(~mem1_flush & pass_in_r.is_mem &  ~addr_excp.valid) begin
             if(pass_in_r.is_store) dcache_op = {DC_W[4:2], pass_in_r.byte_type};
             else                   dcache_op = {DC_R[4:2], pass_in_r.byte_type};
         end
@@ -153,6 +153,7 @@ module Memory1 (
     `PASS(is_wr_csr);
     `PASS(csr_addr);
     `PASS(csr_data);
+    `PASS(is_ertn);
 
 `ifdef DIFF_TEST
     `PASS(inst);
@@ -161,7 +162,31 @@ module Memory1 (
     assign pass_out.is_st = rdy_out & pass_in_r.is_mem & pass_in_r.is_store;
     assign pass_out.pa = pa;
     assign pass_out.va = pass_in_r.ex_out;
-    assign pass_out.st_data = pass_in_r.rkd_data;
+
+    u32_t mem_in_diff;
+    assign pass_out.st_data = mem_in_diff;
+    always_comb begin
+        mem_in_diff = '0;
+        unique case(pass_in_r.byte_type)
+            BYTE: begin
+                unique case(pa[1:0])
+                    2'b00:  mem_in_diff[0+:8] = pass_in_r.rkd_data[7:0];
+                    2'b01:  mem_in_diff[8+:8] = pass_in_r.rkd_data[7:0];
+                    2'b10:  mem_in_diff[16+:8] = pass_in_r.rkd_data[7:0];
+                    2'b11:  mem_in_diff[24+:8] = pass_in_r.rkd_data[7:0];
+                    // full case
+                endcase
+            end
+            HALF_WORD: begin
+                unique case(pa[1])
+                    1'b0: mem_in_diff[0+:16] = pass_in_r.rkd_data[15:0];
+                    1'b1: mem_in_diff[16+:16] = pass_in_r.rkd_data[15:0];
+                endcase
+            end
+            WORD:         mem_in_diff = pass_in_r.rkd_data;
+            default: ;
+        endcase
+    end
 
     /* generate valid for difftest */
     always_comb begin
@@ -176,6 +201,17 @@ module Memory1 (
 
 `endif
 
-    assign excp_pass_out = excp_pass_in_r.valid ? excp_pass_in_r : addr_excp;
+    always_comb begin
+        excp_pass_out.valid = 1'b0;
+        excp_pass_out.esubcode_ecode = excp_pass_in_r.esubcode_ecode;
+        excp_pass_out.badv = excp_pass_in_r.badv;
+        if(rdy_out) begin
+            if(excp_pass_in_r.valid) begin
+                excp_pass_out = excp_pass_in_r;
+            end else begin
+                excp_pass_out = addr_excp;
+            end
+        end
+    end
 
 endmodule

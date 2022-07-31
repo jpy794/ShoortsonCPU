@@ -42,7 +42,7 @@ module Execute (
     logic eu_stall;
     logic rdy_out;
     logic ex_flush, ex_stall;
-    assign ex_flush = flush | ~pass_in_r.valid;
+    assign ex_flush = flush | ~pass_in_r.valid | excp_pass_in_r.valid;
     assign ex_stall = ~next_rdy_in | eu_stall;
 
     assign rdy_in = ex_flush | ~ex_stall;

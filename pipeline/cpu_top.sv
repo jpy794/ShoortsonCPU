@@ -173,6 +173,8 @@ module CPUTop (
         .csr_addr_out(csr_addr_id),
         .csr_data(csr_rd_data),
 
+        .rd_csr(id_rd_csr),
+
         .rj_out(rj),
         .rkd_out(rkd),
         .rj_data,
@@ -328,7 +330,7 @@ module CPUTop (
     assign flush_id = bp_miss_flush | excp_flush;
     assign flush_ex = excp_flush;
     assign flush_mem1 = excp_flush;
-    assign flush_mem2 = 1'b0;
+    assign flush_mem2 = excp_flush;
     assign flush_wb = 1'b0;
 
 endmodule

@@ -9,6 +9,8 @@ module Decode (
     output csr_addr_t csr_addr_out,
     input u32_t csr_data,
 
+    input csr_t rd_csr,
+
     /* from regfile */
     output reg_idx_t rj_out, rkd_out,
     input u32_t rj_data, rkd_data,
@@ -198,9 +200,6 @@ module Decode (
             default: ;
         endcase
     end
-
-    logic is_eret;
-    assign is_eret = inst_ertn;
 
     logic is_alu_add;
     assign is_alu_add = inst_add_w |
@@ -620,14 +619,71 @@ module Decode (
     assign pass_out.is_signed = is_mem_signed;
     assign pass_out.byte_type = mem_byte_type;
     assign pass_out.is_cac = inst_cacop;
+    assign pass_out.is_ertn = inst_ertn;
     assign pass_out.tlb_op = tlb_op;
 
     `PASS(pc);
     `PASS(btb_pre);
     `PASS(is_pred);
 
-    assign excp_pass_out = excp_pass_in_r;
+    /* exception */
+    logic is_tlb;
+    assign is_tlb = inst_tlbrd      |
+                    inst_tlbwr      |
+                    inst_tlbfill    |
+                    inst_tlbsrch    |
+                    inst_invtlb     ;
+    logic is_plv;
+    assign is_plv = is_csr      |   // TODO: allow cacop use in user mode
+                    is_tlb      |
+                    inst_ertn   |
+                    inst_idle   ;
+    
+    excp_pass_t id_excp;
+    always_comb begin
+        id_excp.valid = 1'b0;
+        id_excp.esubcode_ecode = IPE;
+        id_excp.badv = '0;
+        if(is_plv && rd_csr.crmd.plv != KERNEL) begin
+            id_excp.valid = 1'b1;
+            id_excp.esubcode_ecode = IPE;
+        end else begin
+            unique case(1'b1)
+                inst_syscall: begin
+                    id_excp.valid = 1'b1;
+                    id_excp.esubcode_ecode = SYS;
+                end
+                inst_break: begin
+                    id_excp.valid = 1'b1;
+                    id_excp.esubcode_ecode = BRK;
+                end
+                bad_inst: begin
+                    id_excp.valid = 1'b1;
+                    id_excp.esubcode_ecode = INE;
+                end
+                default: ;
+            endcase
+        end
+    end
 
+    /*  pass_in_r.valid     excp_pass_in_r.valid
+        y                   y                       this inst exception
+        y                   n                       this inst no exception
+        n                   y                       not happended
+        n                   n                       bubble              */
+    /* if exception (pass in or this stage), flush this stage, and pass exception */
+    always_comb begin
+        excp_pass_out.valid = 1'b0;
+        excp_pass_out.esubcode_ecode = id_excp.esubcode_ecode;
+        excp_pass_out.badv = id_excp.badv;
+        if(rdy_out) begin
+            if(excp_pass_in_r.valid) begin
+                excp_pass_out = excp_pass_in_r;
+            end else begin
+                excp_pass_out = id_excp;
+            end
+        end
+    end
 `ifdef DIFF_TEST
     `PASS(inst);
 `endif

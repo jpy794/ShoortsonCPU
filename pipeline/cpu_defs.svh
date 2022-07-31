@@ -30,9 +30,18 @@ typedef logic [VALEN-13-1:0] vppn_t;
 typedef logic [PALEN-12-1:0] ppn_t;
 typedef logic [ASID_WID-1:0] asid_t;
 typedef logic [5:0] ps_t;
-typedef logic [2-1:0] plv_t;
-typedef logic [2-1:0] mat_t;
-typedef logic [2-1:0] dat_t;
+
+typedef enum logic [2-1:0] {
+    USER = 2'd3,
+    KERNEL = 2'd0
+} plv_t;
+
+typedef enum logic [2-1:0] {
+    MAT_NOCACHE = 2'b0,
+    MAT_CACHE = 2'b1
+} mat_t;
+typedef mat_t dat_t;
+
 typedef logic [GRLEN-1:12] pgd_base_t;
 
 typedef struct packed {
@@ -252,7 +261,6 @@ typedef struct packed {
 } excp_pass_t;
 
 typedef struct packed {
-    logic valid;
     logic inst_ertn;
     virt_t epc;
     excp_pass_t excp_pass;
@@ -365,6 +373,7 @@ typedef struct packed {
     byte_type_t byte_type;
 
     logic is_cac;
+    logic is_ertn;
     
     tlb_op_t tlb_op;
 `ifdef DIFF_TEST
@@ -396,6 +405,7 @@ typedef struct packed {
     u32_t rkd_data;           // also store_data / invtlb_vppn([31:13])
 
     logic is_cac;
+    logic is_ertn;
 
     tlb_op_t tlb_op;
     asid_t invtlb_asid;         // rj_data[9:0]
@@ -427,6 +437,9 @@ typedef struct packed {
     logic is_wr_csr;
     csr_addr_t csr_addr;
     u32_t csr_data;
+
+    logic is_ertn;
+    
 `ifdef DIFF_TEST
     u32_t inst;
 

@@ -113,6 +113,15 @@ module Fetch2 (
     `PASS(btb_pre);
     `PASS(is_pred);
 
-    assign excp_pass_out = excp_pass_in_r;
+    /* exception */
+    // no exception in if2
+    always_comb begin
+        excp_pass_out.valid = 1'b0;
+        excp_pass_out.esubcode_ecode = excp_pass_in_r.esubcode_ecode;
+        excp_pass_out.badv = excp_pass_in_r.badv;
+        if(rdy_out) begin
+            excp_pass_out = excp_pass_in_r;
+        end
+    end
 
 endmodule

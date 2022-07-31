@@ -22,10 +22,10 @@ module Exception(
 );
 
     logic is_excp;
-    assign is_excp = req.valid & req.excp_pass.valid;
+    assign is_excp = req.excp_pass.valid;
 
     logic is_ertn;
-    assign is_ertn = req.valid & req.inst_ertn;
+    assign is_ertn = req.inst_ertn;
 
     /* to ctrl */
     assign excp_flush = is_excp | is_int | is_ertn;

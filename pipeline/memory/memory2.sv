@@ -61,10 +61,9 @@ module Memory2 (
     end
 
     /* exception */
-    assign excp_req.valid = pass_in_r.valid;
     assign excp_req.excp_pass = excp_pass_in_r;
     assign excp_req.epc = pass_in_r.pc;
-    assign excp_req.inst_ertn = 1'b0;           // TODO: impl ertn
+    assign excp_req.inst_ertn = pass_in_r.is_ertn;
 
     /* memory2 stage */
 
@@ -125,6 +124,7 @@ module Memory2 (
     `PASS(va);
     `PASS(pa);
     `PASS(st_data);
+    `PASS(byte_valid);
 `endif
 
 endmodule
