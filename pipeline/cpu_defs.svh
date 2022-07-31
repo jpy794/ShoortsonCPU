@@ -408,7 +408,6 @@ typedef struct packed {
 
     tlb_op_t tlb_op;
     asid_t invtlb_asid;         // rj_data[9:0]
-    vppn_t invtlb_vppn;
 
 `ifdef DIFF_TEST
     u32_t inst;
