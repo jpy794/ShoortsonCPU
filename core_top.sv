@@ -130,7 +130,7 @@ module core_top(
         .rblock_from_axi(rblock_from_axi),
         .rword_from_axi(rword_from_axi),
         .ready_from_axi(ready_from_axi),
-        .task_finish_from_axi(task_finish_from_axi),
+        .task_finish_from_axi(task_finish_from_axi)
     );
 
     AXI_bridge axi_bridge (

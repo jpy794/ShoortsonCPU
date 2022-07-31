@@ -186,12 +186,14 @@ always_ff @(posedge clk or negedge rstn)begin
                 if(wready)begin
                     wvalid <= 1'b0;
                     axi_cs <= AXI_STATE_STORE_WORD_WAIT_BVALID;
+                    bready <= 1'b1;
                 end
             end
             AXI_STATE_STORE_WORD_WAIT_BVALID: begin
                 if(bvalid)begin
                     wlast <= 1'b0;
                     axi_cs <= AXI_STATE_WAIT;
+                    bready <= 1'b0;
                 end
             end
             AXI_STATE_LOAD_BLOCK_WAIT_ARREADY: begin
