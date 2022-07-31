@@ -78,6 +78,7 @@ module Execute (
         unique case(pass_in_r.alu_b_sel)
             RKD: alu_b = rkd_forwarded;
             IMM: alu_b = pass_in_r.imm;
+            CSR: alu_b = pass_in_r.csr_data;
             default: ;
         endcase
     end
@@ -165,10 +166,6 @@ module Execute (
         endcase
     end
 
-    /* csr */
-    u32_t csr_masked;
-    assign csr_masked = (pass_in_r.rj_data & pass_in_r.rkd_data) | (~pass_in_r.rj_data & pass_in_r.csr_data);
-
     /* exe ctrl */
     u32_t ex_out;
     always_comb begin
@@ -193,11 +190,7 @@ module Execute (
                     // full case
                 endcase
             end
-            CSR: begin
-                if(pass_in_r.is_mask_csr) ex_out = csr_masked;
-                else            ex_out = pass_in_r.rkd_data;
-            end
-            default: ex_out = alu_out;
+            default: ;
         endcase
     end
 
@@ -210,6 +203,9 @@ module Execute (
     // TODO: div   || ((pass_in_r.is_div) && !div_done);
     assign bp_miss_flush = wr_pc_req.valid;
 
+    /* csr */
+    u32_t csr_masked;
+    assign csr_masked = (rj_forwarded & rkd_forwarded) | (~rj_forwarded & pass_in_r.csr_data);
 
     /* out to next stage */
     assign pass_out.valid = rdy_out;
@@ -219,6 +215,8 @@ module Execute (
 
     assign pass_out.invtlb_asid = rj_forwarded[9:0];
     assign pass_out.invtlb_vppn = rkd_forwarded[31:13];
+
+    assign pass_out.csr_data = pass_in_r.is_mask_csr ? csr_masked : pass_in_r.rkd_data;
 
     `PASS(pc);
     `PASS(is_wr_rd);

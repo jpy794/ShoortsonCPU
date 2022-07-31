@@ -209,7 +209,8 @@ module Decode (
                         is_br |
                         inst_pcaddu12i |
                         inst_lu12i_w |
-                        inst_cacop ;
+                        inst_cacop |
+                        is_csr ;
 
     alu_op_t alu_op;
     always_comb begin
@@ -269,7 +270,8 @@ module Decode (
                          inst_blt |
                          inst_bge |
                          inst_bltu |
-                         inst_bgeu ;
+                         inst_bgeu |
+                         is_csr ;
 
     reg_idx_t rj, rkd, rd;
     assign rj = inst[9:5];
@@ -279,10 +281,11 @@ module Decode (
     logic alu_a_rj, alu_a_pc, alu_a_zero;
     assign alu_a_pc = is_br_off     |
                       inst_pcaddu12i;
-    assign alu_a_zero = inst_lu12i_w;
+    assign alu_a_zero = inst_lu12i_w |
+                        is_csr       ;
 
 
-    logic alu_b_rkd, alu_b_imm;
+    logic alu_b_rkd, alu_b_imm, alu_b_csr;
     assign alu_b_imm = is_uimm5  |
                        is_simm12 |
                        is_uimm12 |
@@ -290,6 +293,7 @@ module Decode (
                        is_simm14 |
                        is_simm16 |
                        is_simm26 ;
+    assign alu_b_csr = is_csr;
     // TODO: impl this
     logic [14:0] syscall_break_code;
     assign syscall_break_code = inst[14:0];
@@ -585,14 +589,15 @@ module Decode (
     assign pass_out.is_mul = is_mul;
     assign pass_out.is_div = is_div;
     assign pass_out.is_bru = is_br;
-    assign pass_out.ex_out_sel = is_csr ? CSR
-                                : is_mul ? MUL
+    assign pass_out.ex_out_sel =  is_mul ? MUL
                                 : is_div ? DIV
                                 : ALU;
     assign pass_out.alu_a_sel = alu_a_pc ? PC
                       : alu_a_zero ? ZERO
                       : RJ;
-    assign pass_out.alu_b_sel = alu_b_imm ? IMM : RKD;
+    assign pass_out.alu_b_sel = alu_b_imm ? IMM
+                                : alu_b_csr ? CSR 
+                                : RKD;
     assign pass_out.mul_op = mul_op_t'(inst[16:15]);
     assign pass_out.div_op = div_op_t'(inst[16:15]);
     assign pass_out.alu_op = alu_op;

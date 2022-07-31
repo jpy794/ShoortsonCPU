@@ -27,16 +27,16 @@ typedef enum logic [1:0] {
 // for ALU
 typedef enum logic [3:0] { ADD, SUB, AND, OR, NOR, XOR, SLL, SRL, SRA, SLT, SLTU } alu_op_t;
 typedef enum logic [1:0] { RJ, PC, ZERO } alu_a_sel_t;
-typedef enum logic [0:0] {
+typedef enum logic [1:0] {
     RKD,        // store / br need to read rd
-    IMM
+    IMM,
+    CSR
 } alu_b_sel_t;
 
 typedef enum logic [1:0] {
     ALU,
     MUL,
-    DIV,
-    CSR
+    DIV
 } ex_out_sel_t;
 
 typedef enum logic [2:0] {

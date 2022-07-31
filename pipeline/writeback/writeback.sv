@@ -48,7 +48,7 @@ module Writeback (
     assign reg_we = ~wb_flush & pass_in_r.is_wr_rd;
 
     assign csr_addr = pass_in_r.csr_addr;
-    assign csr_data = pass_in_r.ex_mem_out;
+    assign csr_data = pass_in_r.csr_data;
     assign csr_we = ~wb_flush & pass_in_r.is_wr_csr;
     
 `ifdef DIFF_TEST

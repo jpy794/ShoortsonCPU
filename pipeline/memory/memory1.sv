@@ -152,6 +152,7 @@ module Memory1 (
     `PASS(rd);
     `PASS(is_wr_csr);
     `PASS(csr_addr);
+    `PASS(csr_data);
 
 `ifdef DIFF_TEST
     `PASS(inst);

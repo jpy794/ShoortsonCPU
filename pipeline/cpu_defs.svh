@@ -386,6 +386,7 @@ typedef struct packed {
 
     logic is_wr_csr;
     csr_addr_t csr_addr;
+    u32_t csr_data;
 
     /* for inst executed in mem */
     logic is_mem;
@@ -425,6 +426,7 @@ typedef struct packed {
 
     logic is_wr_csr;
     csr_addr_t csr_addr;
+    u32_t csr_data;
 `ifdef DIFF_TEST
     u32_t inst;
 
@@ -449,6 +451,7 @@ typedef struct packed {
 
     logic is_wr_csr;            // only need to check plv in ex
     csr_addr_t csr_addr;
+    u32_t csr_data;
 
 `ifdef DIFF_TEST
     u32_t inst;
