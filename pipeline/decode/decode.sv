@@ -15,10 +15,8 @@ module Decode (
     output reg_idx_t rj_out, rkd_out,
     input u32_t rj_data, rkd_data,
 
-    /* load use */
-    input load_use_t ex_ld_use,
-    input load_use_t mem1_ld_use,
-    input load_use_t mem2_ld_use,
+    /* forwarding & load use*/
+    input forward_req_t ex_req, mem1_req, mem2_req,
 
     /* pipeline */
     input logic flush, next_rdy_in,
@@ -53,6 +51,41 @@ module Decode (
 
     u32_t inst;
     assign inst = pass_in_r.inst;
+
+    /* forwarding */
+    u32_t rj_forwarded, rkd_forwarded;
+    logic rj_load_use, rkd_load_use;
+    assign load_use_stall = (rj_load_use & is_use_rj) | (rkd_load_use & is_use_rkd);
+    always_comb begin
+        rj_load_use = 1'b0;
+        if(ex_req.valid && rj == ex_req.idx) begin
+            /* seperately forward data from ex to reduce latency */
+            rj_load_use = ~ex_req.data_valid;
+        end else if(mem1_req.valid && rj == mem1_req.idx) begin
+            rj_forwarded = mem1_req.data;
+            rj_load_use = ~mem1_req.data_valid;
+        end
+        else if(mem2_req.valid && rj == mem2_req.idx) begin
+            rj_forwarded = mem2_req.data;
+            rj_load_use = ~mem2_req.data_valid;
+        end
+        else rj_forwarded = rj_data;
+    end
+    always_comb begin
+        rkd_load_use = 1'b0;
+        if(ex_req.valid && rkd == ex_req.idx) begin
+            /* seperately forward data from ex to reduce latency */
+            rkd_load_use = ~ex_req.data_valid;
+        end else if(mem1_req.valid && rkd == mem1_req.idx) begin
+            rkd_forwarded = mem1_req.data;
+            rkd_load_use = ~mem1_req.data_valid;
+        end
+        else if(mem2_req.valid && rkd == mem2_req.idx) begin
+            rkd_forwarded = mem2_req.data;
+            rkd_load_use = ~mem2_req.data_valid;
+        end
+        else rkd_forwarded = rkd_data;
+    end
 
     /* decode stage */
     logic inst_add_w;
@@ -560,29 +593,6 @@ module Decode (
                         is_mem      |
                         is_br_off   ;
 
-    always_comb begin
-        load_use_stall = 1'b0;
-        if(ex_ld_use.valid) begin
-            if(rj == ex_ld_use.idx && is_use_rj
-            || rkd == ex_ld_use.idx && is_use_rkd) begin
-                load_use_stall = 1'b1;
-            end
-        end
-        if(mem1_ld_use.valid) begin
-            if(rj == mem1_ld_use.idx && is_use_rj
-            || rkd == mem1_ld_use.idx && is_use_rkd) begin
-                load_use_stall = 1'b1;
-            end
-        end
-        if(mem2_ld_use.valid) begin
-            if(rj == mem2_ld_use.idx && is_use_rj
-            || rkd == mem2_ld_use.idx && is_use_rkd) begin
-                load_use_stall = 1'b1;
-            end
-        end
-    end
-
-
     /* out to next stage */
     assign pass_out.valid = rdy_out;
     assign pass_out.is_mul = is_mul;
@@ -605,8 +615,9 @@ module Decode (
     assign pass_out.rj = rj;
     assign pass_out.rkd = rkd;
     assign pass_out.rd = rd;
-    assign pass_out.rj_data = rj_data;
-    assign pass_out.rkd_data = rkd_data;
+    assign pass_out.ex_req = ex_req;
+    assign pass_out.rj_data = rj_forwarded;
+    assign pass_out.rkd_data = rkd_forwarded;
     assign pass_out.imm = imm;
     assign pass_out.is_wr_rd = is_wr_rd;
     assign pass_out.is_wr_rd_pc_plus4 = is_br_wb;

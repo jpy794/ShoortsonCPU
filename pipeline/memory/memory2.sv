@@ -3,9 +3,6 @@
 module Memory2 (
     input clk, rst_n,
 
-    /* load use */
-    output load_use_t ld_use,
-
     /* forward */
     output forward_req_t fwd_req,
 
@@ -47,14 +44,11 @@ module Memory2 (
 
     assign dcache_data_stall = pass_in_r.is_mem & ~pass_in_r.is_store & ~dcache_data_valid;
 
-    /* load use */
-    assign ld_use.idx = pass_in_r.rd;
-    assign ld_use.valid = pass_in_r.is_mem & ~pass_in_r.is_store & ~mem2_flush;
-
     /* forward */
     // be careful of load-use stall
     assign fwd_req.valid = pass_in_r.is_wr_rd & ~mem2_flush;
     assign fwd_req.idx = pass_in_r.rd;
+    assign fwd_req.data_valid = ~(pass_in_r.is_mem & ~pass_in_r.is_store);
     always_comb begin
         if(pass_in_r.is_wr_rd_pc_plus4) fwd_req.data = pass_in_r.pc_plus4;
         else                            fwd_req.data = pass_in_r.ex_out;

@@ -322,6 +322,20 @@ typedef struct packed {
     u32_t pc;
 } wr_pc_req_t;
 
+/* forwarding */
+typedef struct packed {
+    logic valid;
+    reg_idx_t idx;
+    u32_t data;
+    logic data_valid;
+} forward_req_t;
+
+/* load use */
+typedef struct packed {
+    logic valid;
+    reg_idx_t idx;
+} load_use_t;
+
 /* pipeline pass */
 typedef struct packed {
     logic valid;
@@ -353,6 +367,7 @@ typedef struct packed {
     div_op_t div_op;
     bru_op_t bru_op;
     reg_idx_t rj, rkd, rd;
+    forward_req_t ex_req;
     u32_t rj_data, rkd_data;
     u32_t imm;
 
@@ -474,19 +489,6 @@ typedef struct packed {
 `endif
 } memory2_writeback_pass_t;
 /* pipeline pass end */
-
-/* forwarding */
-typedef struct packed {
-    logic valid;
-    reg_idx_t idx;
-    u32_t data;
-} forward_req_t;
-
-/* load use */
-typedef struct packed {
-    logic valid;
-    reg_idx_t idx;
-} load_use_t;
 
 /* cacheop */
 typedef enum logic [1:0] {

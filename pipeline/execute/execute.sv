@@ -10,11 +10,8 @@ module Execute (
     output wr_pc_req_t wr_pc_req,
     output br_resolved_t br_resolved,
 
-    /* load use */
-    output load_use_t ld_use,
-
     /* forwarding */
-    input forward_req_t mem1_req, mem2_req, wb_req,
+    output forward_req_t fwd_req,
 
     /* pipeline */
     input logic flush, next_rdy_in,
@@ -48,19 +45,25 @@ module Execute (
     assign rdy_in = ex_flush | ~ex_stall;
     assign rdy_out = ~ex_flush & ~ex_stall;        // only use this for pass_out.valid
 
+    /* forward */
+    // be careful of load-use stall
+    assign fwd_req.valid = pass_in_r.is_wr_rd & ~ex_flush;
+    assign fwd_req.idx = pass_in_r.rd;
+    assign fwd_req.data_valid = ~(pass_in_r.is_mem & ~pass_in_r.is_store);
+    always_comb begin
+        if(pass_in_r.is_wr_rd_pc_plus4) fwd_req.data = pc_plus4;
+        else                            fwd_req.data = ex_out;
+    end
+
     /* execute stage */
     u32_t rj_forwarded, rkd_forwarded;
     always_comb begin
-        if(mem1_req.valid && pass_in_r.rj == mem1_req.idx)          rj_forwarded = mem1_req.data;
-        else if(mem2_req.valid && pass_in_r.rj == mem2_req.idx)     rj_forwarded = mem2_req.data;
-        else if(wb_req.valid && pass_in_r.rj == wb_req.idx)         rj_forwarded = wb_req.data;
-        else                                                        rj_forwarded = pass_in_r.rj_data;
+        if(pass_in_r.ex_req.valid && pass_in_r.rj == pass_in_r.ex_req.idx)  rj_forwarded = pass_in_r.ex_req.data;
+        else                                                                rj_forwarded = pass_in_r.rj_data;
     end
     always_comb begin
-        if(mem1_req.valid && pass_in_r.rkd == mem1_req.idx)         rkd_forwarded = mem1_req.data;
-        else if(mem2_req.valid && pass_in_r.rkd == mem2_req.idx)    rkd_forwarded = mem2_req.data;
-        else if(wb_req.valid && pass_in_r.rkd == wb_req.idx)        rkd_forwarded = wb_req.data;
-        else                                                        rkd_forwarded = pass_in_r.rkd_data;
+        if(pass_in_r.ex_req.valid && pass_in_r.rkd == pass_in_r.ex_req.idx) rkd_forwarded = pass_in_r.ex_req.data;
+        else                                                                rkd_forwarded = pass_in_r.rkd_data;
     end
 
     /* alu_out */
@@ -196,10 +199,6 @@ module Execute (
         endcase
     end
 
-    /* load use */
-    assign ld_use.idx = pass_in_r.rd;
-    assign ld_use.valid = pass_in_r.is_mem & ~pass_in_r.is_store & ~ex_flush;
-
     /* to ctrl */
     assign eu_stall = ((pass_in_r.is_mul) && !mul_done) || ((pass_in_r.is_div) && !div_done);
     // TODO: div   || ((pass_in_r.is_div) && !div_done);
@@ -209,10 +208,13 @@ module Execute (
     u32_t csr_masked;
     assign csr_masked = (rj_forwarded & rkd_forwarded) | (~rj_forwarded & pass_in_r.csr_data);
 
+    u32_t pc_plus4;
+    assign pc_plus4 = pass_in_r.pc + 4;
+
     /* out to next stage */
     assign pass_out.valid = rdy_out;
     assign pass_out.ex_out = ex_out;
-    assign pass_out.pc_plus4 = pass_in_r.pc + 4;
+    assign pass_out.pc_plus4 = pc_plus4;
     assign pass_out.invtlb_asid = rj_forwarded[9:0];
 
     assign pass_out.csr_data = pass_in_r.is_mask_csr ? csr_masked : pass_in_r.rkd_data;

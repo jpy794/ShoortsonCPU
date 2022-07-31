@@ -3,9 +3,6 @@
 module Memory1 (
     input clk, rst_n,
 
-    /* load use */
-    output load_use_t ld_use,
-
     /* forward */
     output forward_req_t fwd_req,
 
@@ -61,14 +58,11 @@ module Memory1 (
 
     assign dcache_busy_stall = pass_in_r.is_mem & dcache_busy;      // flush has a higher priority, so do not need to AND flush here
 
-    /* load use */
-    assign ld_use.idx = pass_in_r.rd;
-    assign ld_use.valid = pass_in_r.is_mem & ~pass_in_r.is_store & ~mem1_flush;
-
     /* forward */
     // be careful of load-use stall
     assign fwd_req.valid = pass_in_r.is_wr_rd & ~mem1_flush;
     assign fwd_req.idx = pass_in_r.rd;
+    assign fwd_req.data_valid = ~(pass_in_r.is_mem & ~pass_in_r.is_store);
     always_comb begin
         if(pass_in_r.is_wr_rd_pc_plus4) fwd_req.data = pass_in_r.pc_plus4;
         else                            fwd_req.data = pass_in_r.ex_out;
