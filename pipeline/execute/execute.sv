@@ -42,7 +42,7 @@ module Execute (
     logic eu_stall;
     logic rdy_out;
     logic ex_flush, ex_stall;
-    assign ex_flush = flush | ~pass_in_r.valid | excp_pass_in_r.valid;
+    assign ex_flush = flush | ~pass_in_r.valid;
     assign ex_stall = ~next_rdy_in | eu_stall;
 
     assign rdy_in = ex_flush | ~ex_stall;
@@ -230,10 +230,18 @@ module Execute (
     `PASS(byte_type);
     `PASS(rkd_data);
     `PASS(is_cac);
+    `PASS(is_ertn);
     `PASS(tlb_op);
 
     /* no exception in ex */
-    assign excp_pass_out = excp_pass_in_r;
+    always_comb begin
+        excp_pass_out.valid = 1'b0;
+        excp_pass_out.esubcode_ecode = excp_pass_in_r.esubcode_ecode;
+        excp_pass_out.badv = excp_pass_in_r.badv;
+        if(rdy_out) begin
+            excp_pass_out = excp_pass_in_r;
+        end
+    end
 
 `ifdef DIFF_TEST
     `PASS(inst);
