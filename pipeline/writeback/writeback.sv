@@ -13,6 +13,9 @@ module Writeback (
     output logic csr_we,
     output u32_t csr_data,
 
+    /* forward */
+    forward_req_t fwd_req,
+
     /* pipeline */
     input logic flush, next_rdy_in,
     output logic rdy_in,
@@ -40,6 +43,15 @@ module Writeback (
 
     assign rdy_in = wb_flush | ~wb_stall;
     assign rdy_out = ~wb_flush & ~wb_stall;        // only use this for pass_out.valid
+
+    /* forward */
+    // be careful of load-use stall
+    assign fwd_req.valid = pass_in_r.is_wr_rd & ~wb_flush;
+    assign fwd_req.idx = pass_in_r.rd;
+    always_comb begin
+        if(pass_in_r.is_wr_rd_pc_plus4) fwd_req.data = pass_in_r.pc_plus4;
+        else                            fwd_req.data = pass_in_r.ex_mem_out;
+    end
 
     /* writeback stage */
     

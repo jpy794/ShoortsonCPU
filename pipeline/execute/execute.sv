@@ -14,7 +14,7 @@ module Execute (
     output load_use_t ld_use,
 
     /* forwarding */
-    input forward_req_t mem1_req, mem2_req,
+    input forward_req_t mem1_req, mem2_req, wb_req,
 
     /* pipeline */
     input logic flush, next_rdy_in,
@@ -53,11 +53,13 @@ module Execute (
     always_comb begin
         if(mem1_req.valid && pass_in_r.rj == mem1_req.idx)          rj_forwarded = mem1_req.data;
         else if(mem2_req.valid && pass_in_r.rj == mem2_req.idx)     rj_forwarded = mem2_req.data;
+        else if(wb_req.valid && pass_in_r.rj == wb_req.idx)         rj_forwarded = wb_req.data;
         else                                                        rj_forwarded = pass_in_r.rj_data;
     end
     always_comb begin
         if(mem1_req.valid && pass_in_r.rkd == mem1_req.idx)         rkd_forwarded = mem1_req.data;
         else if(mem2_req.valid && pass_in_r.rkd == mem2_req.idx)    rkd_forwarded = mem2_req.data;
+        else if(wb_req.valid && pass_in_r.rkd == wb_req.idx)        rkd_forwarded = wb_req.data;
         else                                                        rkd_forwarded = pass_in_r.rkd_data;
     end
 
