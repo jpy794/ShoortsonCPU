@@ -60,6 +60,7 @@ module AXI_bridge (
     input logic bvalid
 );
     
+assign arid = `AXI_READ_ID;
 assign wid = `AXI_WRITE_ID;
 assign arlock = `AXI_LOCK_NORMAL;
 assign arcache = `AXI_CACHE_CACHE;
@@ -237,7 +238,6 @@ always_ff @(posedge clk or negedge rstn)begin
         endcase 
     end
 end
-assign bready = 1'b1;
 
 always_ff @(posedge clk)begin
     task_finish <= 1'b0;

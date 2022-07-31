@@ -92,7 +92,7 @@ module core_top(
     logic [`BLOCK_WIDTH]wblock_to_axi;
     logic [`DATA_WIDTH]wword_to_axi;
     logic [`AXI_STRB_WIDTH]wword_en_to_axi;
-    logic [`AXI_STRB_WIDTH]rword_en_to_axi;
+    logic [2:0]rword_en_to_axi;
     logic [`ADDRESS_WIDTH]ad_to_axi;
 
     logic [`BLOCK_WIDTH]rblock_from_axi;
@@ -109,9 +109,8 @@ module core_top(
         .icache_stall(stall_icache),
         .icache_cached(icache_is_cached),
         .ins(icache_data),
-        .icache_ready(),
-        .icache_busy,
-        .icache_data_valid,
+        .icache_busy(icache_busy),
+        .icache_data_valid(icache_data_valid),
         .dcache_va(dcache_idx),
         .dcache_pa(dcache_pa[31:12]),
         .dcache_op(dcache_op),
@@ -126,14 +125,12 @@ module core_top(
         .wblock_to_axi(wblock_to_axi),
         .wword_to_axi(wword_to_axi),
         .wword_en_to_axi(wword_en_to_axi),
-        .rword_en_to_axi(rword_en_to_axi),          // TO BE FIXED
+        .rword_en_to_axi(rword_en_to_axi),          
         .ad_to_axi(ad_to_axi),
-        .cached_to_axi(cached_to_axi),
         .rblock_from_axi(rblock_from_axi),
         .rword_from_axi(rword_from_axi),
         .ready_from_axi(ready_from_axi),
         .task_finish_from_axi(task_finish_from_axi),
-        .req_from_to_axi(req_from_to_axi)
     );
 
     AXI_bridge axi_bridge (
@@ -148,7 +145,7 @@ module core_top(
         .task_finish(task_finish_from_axi),
         .rblock(rblock_from_axi),
         .rword(rword_from_axi),
-        .rword_en(rword_en_to_axi),             // TO BE FIXED
+        .rword_en(rword_en_to_axi),             
         .arid(arid),
         .araddr(araddr),
         .arlen(arlen),

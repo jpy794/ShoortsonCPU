@@ -5,7 +5,7 @@ module DCache (
     input logic rstn,
     input logic [`ADDRESS_WIDTH]ad,
     input logic [`ADDRESS_WIDTH]pa,
-    dcache_state_t control_en,
+    input dcache_state_t control_en,
     input logic [`DATA_WIDTH]store_data,
 
     input logic [`BLOCK_WIDTH]r_data,
@@ -21,7 +21,7 @@ module DCache (
     output logic rdirty_to_cache,
     output logic hit,
     output logic [`TAG_WIDTH]rtag_to_cache,
-    dcache_state_t dcache_cs
+    input dcache_state_t dcache_cs
 );
     logic [`INDEX_WIDTH]way_rad;
     logic [`INDEX_WIDTH]way_wad;
