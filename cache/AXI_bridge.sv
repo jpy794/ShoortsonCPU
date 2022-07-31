@@ -209,7 +209,7 @@ always_ff @(posedge clk or negedge rstn)begin
                         rready <= 1'b0;
                         axi_cs <= AXI_STATE_WAIT;
                     end
-                    rblock <= {rblock[223:0], rdata};
+                    rblock <= {rdata, rblock[255:32]};
                 end
             end
             AXI_STATE_STORE_BLOCK_WAIT_AWREADY: begin
@@ -261,7 +261,7 @@ always_ff @(posedge clk)begin
         end
         AXI_STATE_LOAD_BLOCK_TRANSFER: begin
             if(rlast && rvalid)begin
-                task_finish <= 1'b0;
+                task_finish <= 1'b1;
             end
         end
     endcase

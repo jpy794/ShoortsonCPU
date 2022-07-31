@@ -40,6 +40,7 @@ module Cache(
     output logic [`REQ_FROM_WIDTH]req_from_to_axi
 
 );
+//logic dcache_cached = 1'b1;
 //pipline
 logic [`RESPONSE_FROM_PIPLINE_WIDTH]response_from_pipline;
 logic [`DATA_WIDTH]wword_to_pipline;
@@ -70,7 +71,7 @@ logic rlru_from_icache;
 logic [`BLOCK_WIDTH]rdata_to_icache;
 logic hit_from_icache;
 
-
+//logic icache_cached = 1'b1;
 always_ff @(posedge clk)begin
     if(~icache_stall && ~icache_busy)begin
         reg_icache_va <= icache_va;
@@ -134,6 +135,8 @@ always_comb begin
     endcase
 end
 
+logic icache_test_signal;
+assign icache_test_signal = (~hit_from_dcache) && (reg_icache_op == `ICACHE_REQ_LOAD_INS);
 always_comb begin
     icache_busy = 1'b1;
     icache_data_valid = 1'b0;
@@ -143,10 +146,10 @@ always_comb begin
             icache_ns = icache_nobusy_ns;
         end
         `ICACHE_LOOKUP: begin
-            if(~hit_from_icache && (reg_icache_op == `ICACHE_REQ_LOAD_INS))begin
+            if((~hit_from_icache) && (reg_icache_op == `ICACHE_REQ_LOAD_INS))begin
                 icache_ns = `ICACHE_REQ_LOAD_BLOCK;
             end
-            if(hit_from_icache && (reg_icache_op == `ICACHE_REQ_HIT_INVALIDATA))begin
+            else if(hit_from_icache && (reg_icache_op == `ICACHE_REQ_HIT_INVALIDATA))begin
                 icache_ns = `ICACHE_HIT_WRITE_V;
             end
             else begin
@@ -258,7 +261,12 @@ always_comb begin
             ad_to_icache = {reg_icache_pa, reg_icache_va};
         end
         default: begin
-            ad_to_icache = {{20{1'b0}}, icache_va};
+            if(icache_busy)begin
+                ad_to_icache = {reg_icache_pa, reg_icache_va};
+            end
+            else begin
+                ad_to_icache = {{20{1'b0}}, icache_va};
+            end
         end
     endcase
 end
@@ -298,9 +306,9 @@ logic [`ADDRESS_WIDTH]dcache_req_ad_to_pipline;
 cache_dcache_op_t reg_dcache_op;
 logic [`PA_WIDTH]reg_dcache_pa;
 logic [`VA_WIDTH]reg_dcache_va;
-logic reg_dcache_cached;
 logic reg_rlru_from_dcache;
 logic [`TAG_WIDTH]reg_rtag_from_dcache;
+logic [`DATA_WIDTH]reg_store_data;
 
 logic [`DCACHE_CNT_WIDTH]dcache_clear_llit_cnt;
 
@@ -338,7 +346,7 @@ end
 
 always_ff @(posedge clk)begin
     if(~dcache_stall && ~dcache_busy)begin
-        reg_dcache_cached <= dcache_cached;
+        reg_store_data <= store_data;
     end
 end
 
@@ -1332,7 +1340,7 @@ DCache dcache(.clk(clk),
                 .ad(ad_to_dcache), 
                 .pa(pa_to_dcache),
                 .control_en(dcache_ns),
-                .store_data(store_data),
+                .store_data(reg_store_data),
                 
                 .r_data(rdata_to_dcache),
                 .dirty_data(dirty_data_from_dcache),

@@ -52,7 +52,7 @@ assign wlru = way_hit[1];       //lru部分不适用于拓展，目前的设计�
 
 generate
     for(j = 0; j < `WAY_NUM; j = j + 1)begin
-        assign way_wtag[j] = (control_en == `I_WRITE)? ad[`TAG_PART] : `CLEAR_TAG;
+        assign way_wtag[j] = (control_en == `ICACHE_WRITE)? ad[`TAG_PART] : `CLEAR_TAG;
     end
 endgenerate
 
@@ -60,7 +60,7 @@ generate
     for(j = 0; j < `WAY_NUM; j = j + 1)begin
      //  assign way_wv[j] = (control_en == `I_WRITE) ? `SET_V : `CLEAR_V;
         always_comb begin
-            if(control_en == `I_WRITE)begin
+            if(control_en == `ICACHE_WRITE)begin
                 way_wv[j] = `SET_V;
             end
             else begin
