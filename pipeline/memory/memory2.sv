@@ -112,6 +112,8 @@ module Memory2 (
 
 `ifdef DIFF_TEST
     `PASS(inst);
+    `PASS(is_modify_csr);
+    `PASS(csr);
     
     `PASS(is_ld);
     `PASS(is_st);

@@ -392,6 +392,9 @@ typedef struct packed {
     tlb_op_t tlb_op;
 `ifdef DIFF_TEST
     u32_t inst;
+
+    logic is_modify_csr;
+    csr_t csr;
 `endif
 } decode_execute_pass_t;
 
@@ -426,6 +429,9 @@ typedef struct packed {
 
 `ifdef DIFF_TEST
     u32_t inst;
+
+    logic is_modify_csr;
+    csr_t csr;
 `endif
 } execute_memory1_pass_t;
 
@@ -456,6 +462,9 @@ typedef struct packed {
 `ifdef DIFF_TEST
     u32_t inst;
 
+    logic is_modify_csr;
+    csr_t csr;
+
     logic is_ld, is_st;
     virt_t va, pa;
     u32_t st_data;
@@ -481,6 +490,9 @@ typedef struct packed {
 
 `ifdef DIFF_TEST
     u32_t inst;
+
+    logic is_modify_csr;
+    csr_t csr;
 
     logic is_ld, is_st;
     virt_t va, pa;

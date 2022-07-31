@@ -25,6 +25,10 @@ module RegCSR (
     /* excp */
     output csr_t excp_rd,
     input excp_wr_csr_req_t excp_wr_req
+
+`ifdef DIFF_TEST
+    ,output csr_t wb_rd
+`endif
 );
 
     /* verilator lint_off UNOPTFLAT  */
@@ -39,6 +43,9 @@ module RegCSR (
     assign mem1_rd = csr;
     assign tlb_rd = csr;
     assign excp_rd = csr;
+`ifdef DIFF_TEST
+    assign wb_rd = csr;
+`endif
     always_comb begin
         case(addr)
             'h0: rd_data = csr.crmd;
@@ -220,38 +227,5 @@ module RegCSR (
     assign csr.dmw[1].r0_3 = '0;
     /* dmw end */
 
-`ifdef DIFF_TEST
-    DifftestCSRRegState DifftestCSRRegState(
-        .clock              (clk                ),
-        .coreid             (0                  ),
-        .crmd               (csr.crmd           ),
-        .prmd               (csr.prmd           ),
-        .euen               (csr.euen           ),
-        .ecfg               (csr.ecfg           ),
-        .estat              (csr.estat          ),
-        .era                (csr.era            ),
-        .badv               (csr.badv           ),
-        .eentry             (csr.eentry         ),
-        .tlbidx             (csr.tlbidx         ),
-        .tlbehi             (csr.tlbehi         ),
-        .tlbelo0            (csr.tlbelo[0]      ),
-        .tlbelo1            (csr.tlbelo[1]      ),
-        .asid               (csr.asid           ),
-        .pgdl               (csr.pgdl           ),
-        .pgdh               (csr.pgdh           ),
-        .save0              (csr.save[0]        ),
-        .save1              (csr.save[1]        ),
-        .save2              (csr.save[2]        ),
-        .save3              (csr.save[3]        ),
-        .tid                (0                  ),
-        .tcfg               (0                  ),
-        .tval               (0                  ),
-        .ticlr              (0                  ),
-        .llbctl             (0                  ),
-        .tlbrentry          (csr.tlbrentry      ),
-        .dmw0               (0                  ),
-        .dmw1               (0                  )
-    );
-`endif
 
 endmodule

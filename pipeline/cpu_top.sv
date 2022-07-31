@@ -54,6 +54,10 @@ module CPUTop (
     excp_wr_csr_req_t excp_wr_csr_req;
     tlb_wr_csr_req_t tlb_wr_csr_req;
 
+`ifdef DIFF_TEST
+    csr_t wb_rd_csr;
+`endif
+
     RegCSR U_CSR (
         .clk, .rst_n,
         /* csr inst */
@@ -70,6 +74,9 @@ module CPUTop (
         /* wr_req */
         .tlb_wr_req(tlb_wr_csr_req), 
         .excp_wr_req(excp_wr_csr_req)
+`ifdef DIFF_TEST
+        ,.wb_rd(wb_rd_csr)
+`endif
     );
 
     reg_idx_t rj, rkd, rd;
@@ -289,7 +296,8 @@ module CPUTop (
         .pass_in(pass_mem2)
 
 `ifdef DIFF_TEST
-        ,.excp_event_in(excp_event[2])
+        ,.excp_event_in(excp_event[2]),
+        .rd_csr(wb_rd_csr)
 `endif
     );
 

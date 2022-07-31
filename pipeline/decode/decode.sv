@@ -637,6 +637,8 @@ module Decode (
     `PASS(btb_pre);
     `PASS(is_pred);
 
+    // only modify csr in mem1, mem2, and we should set flush after the inst reach mem2
+
     /* exception */
     logic is_tlb;
     assign is_tlb = inst_tlbrd      |
@@ -645,10 +647,14 @@ module Decode (
                     inst_tlbsrch    |
                     inst_invtlb     ;
     logic is_plv;
-    assign is_plv = is_csr      |   // TODO: allow cacop use in user mode
+    assign is_plv = is_csr      |
                     is_tlb      |
                     inst_ertn   |
-                    inst_idle   ;
+                    inst_idle   |
+                    inst_cacop && (simm12[3:0] != 4'd8 && simm12[3:0] != 4'd9);     // invalidate hit i$ and d$
+    
+    logic invtlb_badop;
+    assign invtlb_badop = inst_invtlb && (tlb_op == TLBNOP);
     
     excp_pass_t id_excp;
     always_comb begin
@@ -668,7 +674,7 @@ module Decode (
                     id_excp.valid = 1'b1;
                     id_excp.esubcode_ecode = BRK;
                 end
-                bad_inst: begin
+                bad_inst, invtlb_badop: begin
                     id_excp.valid = 1'b1;
                     id_excp.esubcode_ecode = INE;
                 end
@@ -697,6 +703,22 @@ module Decode (
     end
 `ifdef DIFF_TEST
     `PASS(inst);
+
+    /* to make difftest happy */
+    logic is_modify_csr;
+    assign is_modify_csr = inst_csrwr   |       // mem1
+                           inst_csrxchg |
+                           inst_tlbsrch |
+                           inst_tlbrd   |
+                           inst_ertn    ;       // maybe mem2 ?
+    logic is_modify_tlb;
+    assign is_modify_tlb = inst_tlbwr   |
+                           inst_tlbfill |
+                           inst_invtlb  ;
+    
+    assign pass_out.is_modify_csr = is_modify_csr;
+    assign pass_out.csr = rd_csr;
+                           
 `endif
 
 endmodule

@@ -246,6 +246,8 @@ module Execute (
 
 `ifdef DIFF_TEST
     `PASS(inst);
+    `PASS(is_modify_csr);
+    `PASS(csr);
 `endif
 
 endmodule
