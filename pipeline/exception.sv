@@ -51,7 +51,7 @@ module Exception(
         if(is_int) begin
             wr_csr_req.we = 1'b1;
 
-            wr_csr_req.crmd.plv = 2'b0;
+            wr_csr_req.crmd.plv = plv_t'(2'b0);
             wr_csr_req.crmd.ie = 1'b0;
 
             wr_csr_req.prmd.pplv = rd_csr.crmd.plv;
@@ -64,7 +64,7 @@ module Exception(
         end else if(is_excp) begin
             wr_csr_req.we = 1'b1;
 
-            wr_csr_req.crmd.plv = 2'b0;
+            wr_csr_req.crmd.plv = plv_t'(2'b0);
             wr_csr_req.crmd.ie = 1'b0;
 
             wr_csr_req.prmd.pplv = rd_csr.crmd.plv;

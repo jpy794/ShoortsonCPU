@@ -84,12 +84,12 @@ module RegCSR (
     /* write csr at wb stage */
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
-            csr.crmd.plv <= 2'b0;
+            csr.crmd.plv <= plv_t'(2'b0);
             csr.crmd.ie <= 1'b0;
             csr.crmd.da <= 1'b1;
             csr.crmd.pg <= 1'b0;
-            csr.crmd.datf <= SUC;
-            csr.crmd.datm <= SUC;
+            csr.crmd.datf <= dat_t'(SUC);
+            csr.crmd.datm <= dat_t'(SUC);
 
             csr.euen.fpe <= 1'b0;
 

@@ -25,7 +25,7 @@ always_comb begin
     tlb_found = '0;
     phy = '0;
     pa = '0;
-    mat = '0;
+    mat = mat_t'('0);
     for(i=0; i<$size(entrys); i=i+1) begin
         if(entrys[i].e && (entrys[i].g || entrys[i].asid == asid)) begin
             if(entrys[i].ps[0]) begin
