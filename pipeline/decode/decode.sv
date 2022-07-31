@@ -569,7 +569,7 @@ module Decode (
     logic is_use_rj;
     assign is_use_rj = is_alu       |
                        is_mem       |
-                       inst_jirl    |
+                       is_br        |
                        is_mul       |
                        is_div       |
                        inst_cacop   |
