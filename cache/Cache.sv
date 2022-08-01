@@ -470,7 +470,7 @@ always_comb begin
                         end
                     end
                     DCACHE_REQ_LOAD_HALF_WORD: begin
-                        if(re_edirty_from_dcache)begin
+                        if(re_rdirty_from_dcache)begin
                             dcache_ns = D_REQ_STORE_LOAD_BLOCK;
                         end
                         else begin
@@ -829,10 +829,10 @@ assign wword_to_pipline = store_data;
 
 //assign wblock_to_pipline = dirty_data_from_dcache;
 always_comb begin
-    wblock_to_pipline = re_dirty_data;
+    wblock_to_pipline = re_dirty_data_from_dcache;
     unique case(dcache_cs)
-        D_HIT_WRITE_V_DIRTY: wblock_to_pipline = hit_wb_dirty_data;
-        D_WRITE_V: wblock_to_pipline = wb_dirty_data;
+        D_HIT_WRITE_V_DIRTY: wblock_to_pipline = hit_wb_dirty_data_from_dcache;
+        D_INDEX_WRITE_V: wblock_to_pipline = wb_dirty_data_from_dcache;
     endcase
 end
 
