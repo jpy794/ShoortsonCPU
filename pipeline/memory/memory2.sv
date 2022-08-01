@@ -10,6 +10,9 @@ module Memory2 (
     input u32_t rd_dcache_data,
     input logic dcache_data_valid,
 
+    /* from excp */
+    input logic excp_flush,
+
     /* pipeline */
     input logic flush, next_rdy_in,
     output logic rdy_in,
@@ -19,6 +22,9 @@ module Memory2 (
     output memory2_writeback_pass_t pass_out,
 
     output excp_req_t excp_req
+`ifdef DIFF_TEST
+    ,input csr_t rd_csr
+`endif
 );
 
     memory1_memory2_pass_t pass_in_r;
@@ -36,8 +42,11 @@ module Memory2 (
     logic dcache_data_stall;
     logic rdy_out;
     logic mem2_flush, mem2_stall;
-    assign mem2_flush = flush | ~pass_in_r.valid;
+    assign mem2_flush = flush | ~pass_in_r.valid | excp_flush;
     assign mem2_stall = ~next_rdy_in | dcache_data_stall;
+
+    logic mem2_no_excp_flush;
+    assign mem2_no_excp_flush = flush | ~pass_in_r.valid;
 
     assign rdy_in = mem2_flush | ~mem2_stall;
     assign rdy_out = ~mem2_flush & ~mem2_stall;        // only use this for pass_out.valid
@@ -57,6 +66,7 @@ module Memory2 (
     /* exception */
     assign excp_req.excp_pass = excp_pass_in_r;
     assign excp_req.epc = pass_in_r.pc;
+    assign excp_req.valid = ~mem2_no_excp_flush;
 
     /* memory2 stage */
 
@@ -111,8 +121,9 @@ module Memory2 (
 
 `ifdef DIFF_TEST
     `PASS(inst);
+    `PASS(is_ertn);
     `PASS(is_modify_csr);
-    `PASS(csr);
+    assign pass_out.csr = rd_csr;
     
     `PASS(is_ld);
     `PASS(is_st);

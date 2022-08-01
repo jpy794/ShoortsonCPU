@@ -7,6 +7,7 @@
 
 
 localparam GRLEN = 32;
+localparam TIMLEN = 32;     // if change, also need to change tval...
 
 /* access type enum */
 localparam CC = 1;
@@ -77,9 +78,7 @@ typedef enum tlb_lookup_type_t {
 typedef logic [8:0] csr_addr_t;
 
 // we only need esubcode[0] and ecode[5:0]
-typedef logic [6:0] esubcode_ecode_t;
-
-typedef enum esubcode_ecode_t {
+typedef enum logic [6:0] {
     INT =   {1'h0, 6'h0},
     PIL =   {1'h0, 6'h1},       // page invalid load
     PIS =   {1'h0, 6'h2},       // page invalid store
@@ -96,7 +95,7 @@ typedef enum esubcode_ecode_t {
     FPD =   {1'h0, 6'hf},
     FPE =   {1'h0, 6'h12},
     TLBR =  {1'h0, 6'h3f}       // tlb refill
-} esubcode_ecode_enum_t;
+} esubcode_ecode_t;
 
 /* tlb inst */
 
@@ -221,7 +220,20 @@ typedef struct packed {
     logic plv0;
 } csr_dmw_t;
 
-// TODO: llbctl, tim
+// TODO: llbctl
+
+typedef u32_t csr_tid_t;
+typedef struct packed {
+    logic [TIMLEN-2-1:0] initval;       // [1:0] = 2'b0
+    logic periodic;
+    logic en;
+} csr_tcfg_t;
+typedef logic [TIMLEN-1:0] csr_tval_t;      // read only
+typedef struct packed {
+    logic [30:0] r0_1;
+    logic clr;              // w1 r0
+} csr_ticlr_t;
+
 
 typedef struct packed {
     csr_crmd_t crmd;
@@ -242,7 +254,10 @@ typedef struct packed {
     csr_pgd_t pgdl, pgdh, pgd;
     csr_tlbrentry_t tlbrentry;
     csr_dmw_t [1:0] dmw;
-    // TODO: tim
+    csr_tid_t tid;
+    csr_tcfg_t tcfg;
+    csr_tval_t tval;
+    csr_ticlr_t ticlr;
 } csr_t;
 
 typedef struct packed {
@@ -260,14 +275,13 @@ typedef struct packed {
 } excp_pass_t;
 
 typedef struct packed {
-    logic inst_ertn;
+    logic valid;            // not bubble
     virt_t epc;
     excp_pass_t excp_pass;
 } excp_req_t;
 
 typedef struct packed {
     logic valid;
-    logic is_eret;
     logic [10:0] int_no;
     logic [5:0] ecode;
 } excp_event_t;
@@ -463,6 +477,7 @@ typedef struct packed {
 `ifdef DIFF_TEST
     u32_t inst;
 
+    logic is_ertn;
     logic is_modify_csr;
     csr_t csr;
 
@@ -492,6 +507,7 @@ typedef struct packed {
 `ifdef DIFF_TEST
     u32_t inst;
 
+    logic is_ertn;
     logic is_modify_csr;
     csr_t csr;
 

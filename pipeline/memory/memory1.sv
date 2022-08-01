@@ -193,6 +193,8 @@ module Memory1 (
     `PASS(is_modify_csr);
     `PASS(csr);
 
+    assign pass_out.is_ertn = is_ertn;
+
     assign pass_out.is_ld = rdy_out & pass_in_r.is_mem & ~pass_in_r.is_store;
     assign pass_out.is_st = rdy_out & pass_in_r.is_mem & pass_in_r.is_store;
     assign pass_out.pa = pa;
