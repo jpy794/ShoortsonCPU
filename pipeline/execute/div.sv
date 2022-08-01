@@ -57,53 +57,57 @@ module Div(
 
         remainder = remainder_abs;
         quotient = quotient_abs;
-        unique case(state)
-            S_IDLE: begin
-                if(en) begin
-                    next = S_DIV;
-                    cnt_next = {1'b1, 31'b0};
-                    a_next = 33'b0;
-                    q_next = is_signed ? dividend_abs : {1'b0, dividend};
-                    m_next = is_signed ? divisor_abs : {1'b0, divisor};
-                    m_neg_next = -m_next;
+        if(is_flush) begin
+            next = S_IDLE;
+        end else begin
+            unique case(state)
+                S_IDLE: begin
+                    if(en) begin
+                        next = S_DIV;
+                        cnt_next = {1'b1, 31'b0};
+                        a_next = 33'b0;
+                        q_next = is_signed ? dividend_abs : {1'b0, dividend};
+                        m_next = is_signed ? divisor_abs : {1'b0, divisor};
+                        m_neg_next = -m_next;
+                    end
                 end
-            end
-            S_DIV: begin
-                a_next = {a[31:0], q[31]} + (a[32] ? m : m_neg);
-                q_next = {q[31:0], ~a_next[32]};
+                S_DIV: begin
+                    a_next = {a[31:0], q[31]} + (a[32] ? m : m_neg);
+                    q_next = {q[31:0], ~a_next[32]};
 
-                if(cnt[0]) next = S_DONE;
-            end
-            S_DONE: begin
-                done = 1'b1;
-                if(is_signed) begin
-                    unique case({dividend[31], divisor[31]})
-                        2'b00:  begin
-                            remainder = remainder_abs;
-                            quotient = quotient_abs;
-                        end
-                        2'b11: begin
-                            remainder = -remainder_abs;
-                            quotient = quotient_abs;
-                        end
-                        2'b10: begin
-                            remainder = -remainder_abs;
-                            quotient = -quotient_abs;
-                        end
-                        2'b01: begin
-                            remainder = remainder_abs;
-                            quotient = -quotient_abs;
-                        end
-                    endcase
-                end else begin
-                    remainder = remainder_abs;
-                    quotient = quotient_abs;
+                    if(cnt[0]) next = S_DONE;
                 end
-                
-                if(~is_stall) next = S_IDLE;
-            end
-            default: ;
-        endcase
+                S_DONE: begin
+                    done = 1'b1;
+                    if(is_signed) begin
+                        unique case({dividend[31], divisor[31]})
+                            2'b00:  begin
+                                remainder = remainder_abs;
+                                quotient = quotient_abs;
+                            end
+                            2'b11: begin
+                                remainder = -remainder_abs;
+                                quotient = quotient_abs;
+                            end
+                            2'b10: begin
+                                remainder = -remainder_abs;
+                                quotient = -quotient_abs;
+                            end
+                            2'b01: begin
+                                remainder = remainder_abs;
+                                quotient = -quotient_abs;
+                            end
+                        endcase
+                    end else begin
+                        remainder = remainder_abs;
+                        quotient = quotient_abs;
+                    end
+                    
+                    if(~is_stall) next = S_IDLE;
+                end
+                default: ;
+            endcase
+        end
     end
 
 endmodule

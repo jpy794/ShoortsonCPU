@@ -46,7 +46,7 @@ module Memory2 (
 
     /* forward */
     // be careful of load-use stall
-    assign fwd_req.valid = pass_in_r.is_wr_rd & ~mem2_flush;
+    assign fwd_req.valid = (pass_in_r.rd != 5'b0) && pass_in_r.is_wr_rd && ~mem2_flush;
     assign fwd_req.idx = pass_in_r.rd;
     assign fwd_req.data_valid = ~(pass_in_r.is_mem & ~pass_in_r.is_store);
     always_comb begin

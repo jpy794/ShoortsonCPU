@@ -2,7 +2,7 @@
 `define COMMON_DEFS_SVH
 
 //`define FAKE_CACHE
-
+`define CACHED_TO_TEST
 localparam PALEN = 32;
 localparam VALEN = 32;
 
