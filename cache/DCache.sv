@@ -448,14 +448,17 @@ module DCache (
         end
     end
 
-    always_comb begin
-        if(way_hit[0])begin
-            rdirty_to_cache = way_rdirty[0];
-        end
-        else begin
-            rdirty_to_cache = way_rdirty[1];
-        end
-    end
+    // always_comb begin
+    //     if(way_hit[0])begin
+    //         rdirty_to_cache = way_rdirty[0];
+    //     end
+    //     else begin
+    //         rdirty_to_cache = way_rdirty[1];
+    //     end
+    // end
+    assign rdirty_to_cache = way_rdirty[rlru];
+
+
 
     always_comb begin
         if(way_hit[0])begin
