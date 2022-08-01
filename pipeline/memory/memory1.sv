@@ -13,6 +13,15 @@ module Memory1 (
     /* from csr */
     input csr_t rd_csr,
 
+    /* to csr */
+    output csr_addr_t csr_addr,
+    output logic csr_we,
+    output u32_t csr_data,
+
+    /* modify state inst */    
+    output modify_state_flush,
+    output logic is_ertn,
+
     /* tlb */
     input tlb_entry_t tlb_entrys[TLB_ENTRY_NUM],
 
@@ -63,9 +72,31 @@ module Memory1 (
     assign dcache_busy_stall = pass_in_r.is_mem & dcache_busy;      // flush has a higher priority, so do not need to AND flush here
 
     /* branch taken write pc request */
-    assign wr_pc_req.valid = pass_in_r.br_wr_pc_req.valid;
-    assign wr_pc_req.pc = pass_in_r.br_wr_pc_req.pc;
-    assign bp_miss_flush = wr_pc_req.valid;
+    wr_pc_req_t bp_miss_req;
+    assign bp_miss_req.valid = pass_in_r.bp_miss_wr_pc_req.valid & ~mem1_flush;
+    assign bp_miss_req.pc = pass_in_r.bp_miss_wr_pc_req.pc;
+    assign bp_miss_flush = bp_miss_req.valid;
+
+    /* modify state inst write pc req */
+    wr_pc_req_t modify_state_req;
+    assign modify_state_req.valid = pass_in_r.is_modify_state & ~mem1_flush;
+    assign modify_state_req.pc = pass_in_r.is_ertn ? rd_csr.era : pass_in_r.pc_plus4;
+    assign modify_state_flush = modify_state_req.valid;
+
+    assign is_ertn = ~mem1_flush & pass_in_r.is_ertn;
+
+    always_comb begin
+        wr_pc_req = bp_miss_req;
+        unique case(1'b1)
+            bp_miss_req.valid:      wr_pc_req = bp_miss_req;
+            modify_state_req.valid: wr_pc_req = modify_state_req;
+            default: ;
+        endcase
+    end
+
+    assign csr_addr = pass_in_r.csr_addr;
+    assign csr_data = pass_in_r.csr_data;
+    assign csr_we = ~wb_flush & pass_in_r.is_wr_csr;
 
     /* forward */
     // be careful of load-use stall
@@ -156,7 +187,6 @@ module Memory1 (
     `PASS(is_wr_csr);
     `PASS(csr_addr);
     `PASS(csr_data);
-    `PASS(is_ertn);
 
 `ifdef DIFF_TEST
     `PASS(inst);

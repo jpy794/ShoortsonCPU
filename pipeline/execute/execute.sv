@@ -103,8 +103,8 @@ module Execute (
     /* branch and btb fill */
     u32_t npc;
     assign npc = br_taken ? alu_out : pass_in_r.pc + 4;
-    assign pass_out.br_wr_pc_req.valid = ~ex_flush & pass_in_r.is_bru & pass_in_r.is_pred & (npc != pass_in_r.btb_pre);
-    assign pass_out.br_wr_pc_req.pc = npc;
+    assign pass_out.bp_miss_wr_pc_req.valid = ~ex_flush & pass_in_r.is_bru & pass_in_r.is_pred & (npc != pass_in_r.btb_pre);
+    assign pass_out.bp_miss_wr_pc_req.pc = npc;
 
     assign br_resolved.valid = ~ex_flush & pass_in_r.is_bru;
     assign br_resolved.taken = br_taken;
@@ -228,6 +228,8 @@ module Execute (
     `PASS(is_cac);
     `PASS(is_ertn);
     `PASS(tlb_op);
+
+    `PASS(is_modify_state);
 
     /* no exception in ex */
     always_comb begin

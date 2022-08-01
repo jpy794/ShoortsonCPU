@@ -57,7 +57,6 @@ module Memory2 (
     /* exception */
     assign excp_req.excp_pass = excp_pass_in_r;
     assign excp_req.epc = pass_in_r.pc;
-    assign excp_req.inst_ertn = pass_in_r.is_ertn & pass_in_r.valid;
 
     /* memory2 stage */
 
