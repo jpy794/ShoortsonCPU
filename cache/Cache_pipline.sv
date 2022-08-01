@@ -323,6 +323,9 @@ always_ff @(posedge clk)begin
         PIPLINE_STORE_WORD_FINISH: begin
             response <= `FINISH_DCACHE_REQ;
         end
+        PIPLINE_STORE_BLOCK_FINISH: begin
+            response <= `FINISH_DCACHE_REQ;
+        end
         D_PIPLINE_LOAD_BLOCK_FINISH: begin
             response <= `FINISH_DCACHE_REQ;
         end

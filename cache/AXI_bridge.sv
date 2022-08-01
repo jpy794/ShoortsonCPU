@@ -213,7 +213,7 @@ always_ff @(posedge clk or negedge rstn)begin
                 end
             end
             AXI_STATE_STORE_BLOCK_WAIT_AWREADY: begin
-                if(awvalid)begin
+                if(awready)begin
                     awvalid <= 1'b0;
                     axi_cs <= AXI_STATE_STORE_BLOCK_TRANSFER;
                     wvalid <= 1'b1;
@@ -225,9 +225,13 @@ always_ff @(posedge clk or negedge rstn)begin
                     reg_wblock <= {{32{1'b0}}, reg_wblock[255:32]};
                     reg_wblock_num <= {1'b0, reg_wblock_num[7:1]};
                     if(reg_wblock_num == 8'h1)begin
-                        wlast <= 1'b1;
+                        wlast <= 1'b0;
                         axi_cs <= AXI_STATE_STORE_BLOCK_WAIT_BVALID;
                         bready <= 1'b1;
+                        wvalid <= 1'b0;
+                    end
+                    else if(reg_wblock_num == 8'h3)begin
+                        wlast <= 1'b1;
                     end
                 end
             end
