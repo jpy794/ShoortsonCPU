@@ -101,7 +101,7 @@ module RegCSR (
 
             csr.euen.fpe <= 1'b0;
 
-            {csr.ecfg[12:11], csr.ecfg[9:0]} <= 12'b0;      // lie
+            csr.ecfg.lie <= 13'b0;
 
             csr.estat.is.swi <= 2'b0;
 
@@ -147,7 +147,7 @@ module RegCSR (
                             'h0: csr.crmd[8:0] <= wr_data[8:0];
                             'h1: csr.prmd[2:0] <= wr_data[2:0];
                             'h2: csr.euen[0:0] <= wr_data[0:0];
-                            'h4: {csr.ecfg[12:11], csr.ecfg[9:0]} <= {wr_data[12:11], wr_data[9:0]};
+                            'h4: csr.ecfg.lie <= wr_data[12:0];
                             'h5: csr.estat[1:0] <= wr_data[1:0];
                             'h6: csr.era <= wr_data;
                             'h7: csr.badv <= wr_data;
@@ -193,7 +193,6 @@ module RegCSR (
     assign csr.prmd.r0_1 = '0;
     assign csr.euen.r0_1 = '0;
     /* ecfg */
-    assign csr.ecfg.lie.r0_1 = '0;
     assign csr.ecfg.r0_1 = '0;
     /* ecfg end */
     /* estat */
