@@ -24,7 +24,8 @@ module DCache (
     output logic wb_rdirty_to_cache,
     output logic hit_wb_rdirty_to_cache,
     output logic hit,
-    output logic [`TAG_WIDTH]rtag_to_cache,
+    output logic [`TAG_WIDTH]wb_rtag_to_cache,
+    output logic [`TAG_WIDTH]re_rtag_to_cache,
     input dcache_state_t dcache_cs
 );
     logic [`INDEX_WIDTH]way_rad;
@@ -64,19 +65,20 @@ module DCache (
     end
     assign hit = |way_hit;
     assign hit_wb_dirty_data = (way_hit[1])? {{way_rdata[7][1]}, {way_rdata[6][1]}, {way_rdata[5][1]},
-        {way_rdata[4][1]}, {way_rdata[3][1]}, {way_rdata[2][1]}, {way_rdata[1][1]}, {way_rdata[1][0]}} :
-        {{way_rdata[7][0]}, {way_rdata[6][0]}, {way_rdata[5][0]}, {way_rdata[4][0]},
+        {way_rdata[4][1]}, {way_rdata[3][1]}, {way_rdata[2][1]}, {way_rdata[1][1]}, {way_rdata[0][1]}} :
+            {{way_rdata[7][0]}, {way_rdata[6][0]}, {way_rdata[5][0]}, {way_rdata[4][0]},
             {way_rdata[3][0]}, {way_rdata[2][0]}, {way_rdata[1][0]}, {way_rdata[0][0]}};
     assign wb_dirty_data = (reg_ad[0])? {{way_rdata[7][1]}, {way_rdata[6][1]}, {way_rdata[5][1]},
-        {way_rdata[4][1]}, {way_rdata[3][1]}, {way_rdata[2][1]}, {way_rdata[1][1]}, {way_rdata[1][0]}} :
+        {way_rdata[4][1]}, {way_rdata[3][1]}, {way_rdata[2][1]}, {way_rdata[1][1]}, {way_rdata[0][1]}} :
         {{way_rdata[7][0]}, {way_rdata[6][0]}, {way_rdata[5][0]}, {way_rdata[4][0]},
             {way_rdata[3][0]}, {way_rdata[2][0]}, {way_rdata[1][0]}, {way_rdata[0][0]}};
-    assign re_dirty_data = (rlru)?{{way_rdata[7][1]}, {way_rdata[6][1]}, {way_rdata[5][1]},
-        {way_rdata[4][1]}, {way_rdata[3][1]}, {way_rdata[2][1]}, {way_rdata[1][1]}, {way_rdata[1][0]}} :
-        {{way_rdata[7][0]}, {way_rdata[6][0]}, {way_rdata[5][0]}, {way_rdata[4][0]},
-            {way_rdata[3][0]}, {way_rdata[2][0]}, {way_rdata[1][0]}, {way_rdata[0][0]}};
+    assign re_dirty_data = (rlru)?{{way_rdata[7][0]}, {way_rdata[6][0]}, {way_rdata[5][0]},
+        {way_rdata[4][0]}, {way_rdata[3][0]}, {way_rdata[2][0]}, {way_rdata[1][0]}, {way_rdata[0][0]}} :
+        {{way_rdata[7][1]}, {way_rdata[6][1]}, {way_rdata[5][1]}, {way_rdata[4][1]},
+            {way_rdata[3][1]}, {way_rdata[2][1]}, {way_rdata[1][1]}, {way_rdata[0][1]}};
 
-    assign rtag_to_cache = (dcache_cs == D_HIT_WRITE_V_DIRTY)? way_rtag[way_hit[1]] :  way_rtag[reg_ad[0]]; 
+    assign wb_rtag_to_cache = (dcache_cs == D_HIT_WRITE_V_DIRTY)? way_rtag[way_hit[1]] :  way_rtag[reg_ad[0]]; 
+    assign re_rtag_to_cache = way_rtag[(~rlru)];
 
     assign way_rad = ad[`INDEX_PART];
     assign way_wad = ad[`INDEX_PART];
@@ -101,7 +103,7 @@ module DCache (
 
     generate
         for(j = 0; j < `WAY_NUM; j = j + 1)begin
-           assign way_wv[j] = (control_en == D_WRITE)? `SET_V : `CLEAR_V;
+           assign way_wv[j] = (control_en == D_WRITE || control_en == D_REQ_STORE_LOAD_BLOCK)? `SET_V : `CLEAR_V;
         end
     endgenerate
 
@@ -186,7 +188,7 @@ module DCache (
                     way_wdirty_en[i] = `UNABLE;
                     way_wllit_en[i] = `UNABLE;
                 end
-                if(ad[0])begin
+                if(way_hit[1])begin
                     way_wv_en[0] = `UNABLE;
                     way_wv_en[1] = `ENABLE;
                 end
@@ -204,7 +206,7 @@ module DCache (
                     way_wdirty_en[i] = `UNABLE;
                     way_wllit_en[i] = `UNABLE;
                 end
-                if(ad[0])begin
+                if(way_hit[1])begin
                     way_wv_en[0] = `UNABLE;
                     way_wv_en[1] = `ENABLE;
                 end
@@ -435,6 +437,24 @@ module DCache (
                     way_wllit_en[1] = `UNABLE;
                 end
             end
+            D_REQ_STORE_LOAD_BLOCK: begin
+                for(i = 0; i < `WAY_NUM; i = i + 1)begin
+                    for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
+                        way_wen[k][i] = `DATA_WRITE_UNABLE;
+                    end
+                    way_wtag_en[i] = `UNABLE;
+                    way_wdirty_en[i] = `UNABLE;
+                    way_wllit_en[i] = `UNABLE;
+                end
+                if(rlru)begin
+                    way_wv_en[0] = `ENABLE;
+                    way_wv_en[1] = `UNABLE;
+                end
+                else begin
+                    way_wv_en[0] = `UNABLE;
+                    way_wv_en[1] = `ENABLE;
+                end
+            end
             default: begin
                 for(i = 0; i < `WAY_NUM; i = i + 1)begin
                     for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
@@ -468,7 +488,7 @@ module DCache (
     //         rdirty_to_cache = way_rdirty[1];
     //     end
     // end
-    assign re_rdirty_to_cache = way_rdirty[rlru];
+    assign re_rdirty_to_cache = way_rdirty[~rlru];
     assign wb_rdirty_to_cache = way_rdirty[pa[1]];
     assign hit_wb_rdirty_to_cache = way_rdirty[way_hit[1]];
 

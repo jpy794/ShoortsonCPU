@@ -130,7 +130,7 @@ always_comb begin
             icache_nobusy_ns = `ICACHE_INDEX_WRITE_V;
         end
         default: begin
-            icache_nobusy_ns = `ICACHE_WAIT;
+            icache_nobusy_ns = `ICACHE_LOOKUP;
         end
     endcase
 end
@@ -146,21 +146,52 @@ always_comb begin
             icache_ns = icache_nobusy_ns;
         end
         `ICACHE_LOOKUP: begin
-            if((~hit_from_icache) && (reg_icache_op == `ICACHE_REQ_LOAD_INS))begin
-                icache_ns = `ICACHE_REQ_LOAD_BLOCK;
-            end
-            else if(hit_from_icache && (reg_icache_op == `ICACHE_REQ_HIT_INVALIDATA))begin
-                icache_ns = `ICACHE_HIT_WRITE_V;
+            // if((~hit_from_icache) && (reg_icache_op == `ICACHE_REQ_LOAD_INS))begin
+            //     icache_ns = `ICACHE_REQ_LOAD_BLOCK;
+            // end
+            // else if(hit_from_icache && (reg_icache_op == `ICACHE_REQ_HIT_INVALIDATA))begin
+            //     icache_ns = `ICACHE_HIT_WRITE_V;
+            // end
+            // else begin
+            //     icache_data_valid = 1'b1;
+            //     icache_busy = 1'b0;
+            //     if(~icache_stall) begin
+            //         icache_ns = icache_nobusy_ns;
+            //     end else begin
+            //         icache_ns = `ICACHE_LOOKUP;
+            //     end
+            // end
+            if(hit_from_icache)begin
+                unique case(reg_icache_op)
+                    `ICACHE_REQ_LOAD_INS: begin
+                        icache_data_valid = 1'b1;
+                        if(~icache_stall)begin
+                            icache_busy = 1'b0;
+                            icache_ns = icache_nobusy_ns;
+                        end
+                        else begin
+                            icache_ns = `ICACHE_LOOKUP;
+                        end
+                    end
+                    `ICACHE_REQ_HIT_INVALIDATA: begin
+                        icache_ns = `ICACHE_HIT_WRITE_V;
+                    end
+                    default: begin
+                        icache_ns = icache_nobusy_ns;
+                        icache_busy = 1'b0;
+                    end
+                endcase
             end
             else begin
-                icache_data_valid = 1'b1;
-                if(~icache_stall) begin
-                    icache_busy = 1'b0;
-                    icache_ns = icache_nobusy_ns;
-                end else begin
-                    icache_busy = 1'b1;
-                    icache_ns = `ICACHE_LOOKUP;
-                end
+                unique case(reg_icache_op)
+                    `ICACHE_REQ_LOAD_INS: begin
+                        icache_ns = `ICACHE_REQ_LOAD_BLOCK;
+                    end
+                    default: begin
+                        icache_ns = icache_nobusy_ns;
+                        icache_busy = 1'b0;
+                    end
+                endcase
             end
         end
         `ICACHE_REQ_LOAD_WORD: begin
@@ -328,7 +359,8 @@ logic re_rdirty_from_dcache;
 logic wb_rdirty_from_dcache;
 logic hit_wb_rdirty_from_dcache;
 logic hit_from_dcache;
-logic [`TAG_WIDTH]rtag_from_dcache;
+logic [`TAG_WIDTH]re_rtag_from_dcache;
+logic [`TAG_WIDTH]wb_rtag_from_dcache;
 
 always_ff @(posedge clk)begin
     if(~dcache_stall && ~dcache_busy)begin
@@ -364,7 +396,6 @@ always_ff @(posedge clk)begin
 end
 
 always_comb begin
-    dcache_nobusy_ns = D_WAIT;
     unique case(dcache_op)
         DCACHE_REQ_LOAD_ATOM: begin
             if(dcache_cached)begin
@@ -438,6 +469,9 @@ always_comb begin
         DCACHE_REQ_CLEAR_LLIT: begin
             dcache_nobusy_ns = D_CLEAR_LLIT;
         end
+        default: begin
+            dcache_nobusy_ns = D_LOAD;
+        end
     endcase
 end
 
@@ -510,24 +544,26 @@ always_comb begin
                         end
                     end
                     default: begin
-                        if(~dcache_stall)begin
-                            dcache_busy = 1'b0;
-                            dcache_ns = dcache_nobusy_ns;
-                        end
+                        dcache_busy = 1'b0;
+                        dcache_ns = dcache_nobusy_ns;
                     end
                 endcase
             end
             else begin
                 unique case(reg_dcache_op)
                     DCACHE_REQ_LOAD_ATOM: begin
-                        dcache_ns = D_SET_LLIT;
+                        dcache_data_valid = 1'b1;
+                        if(~dcache_stall)begin
+                            dcache_ns = D_SET_LLIT;
+                        end
                     end
                     DCACHE_REQ_STORE_ATOM: begin
                         if(rllit_from_dcache[pa_to_dcache[4:2]])begin
                             dcache_ns = D_STORE;
                         end
                         else begin
-                            dcache_ns = D_WAIT;
+                            dcache_busy = 1'b0;
+                            dcache_ns = dcache_nobusy_ns;
                         end
                     end
                     DCACHE_REQ_STORE_WORD: begin
@@ -547,12 +583,30 @@ always_comb begin
                             dcache_ns = D_HIT_WRITE_V;
                         end
                     end
-                    default: begin
+                    DCACHE_REQ_LOAD_WORD: begin
                         dcache_data_valid = 1'b1;
                         if(~dcache_stall)begin
                             dcache_busy = 1'b0;
                             dcache_ns = dcache_nobusy_ns;
                         end
+                    end
+                    DCACHE_REQ_LOAD_BYTE: begin
+                        dcache_data_valid = 1'b1;
+                        if(~dcache_stall)begin
+                            dcache_busy = 1'b0;
+                            dcache_ns = dcache_nobusy_ns;
+                        end
+                    end
+                    DCACHE_REQ_LOAD_HALF_WORD: begin
+                        dcache_data_valid = 1'b1;
+                        if(~dcache_stall)begin
+                            dcache_busy = 1'b0;
+                            dcache_ns = dcache_nobusy_ns;
+                        end
+                    end
+                    default: begin
+                        dcache_ns = dcache_nobusy_ns;
+                        dcache_busy = 1'b0;
                     end 
                 endcase
             end
@@ -588,16 +642,18 @@ always_comb begin
             dcache_ns = dcache_nobusy_ns;
         end
         D_STORE: begin
-            dcache_data_valid = 1'b1;
-            if((reg_dcache_op == DCACHE_REQ_STORE_ATOM) && (~dcache_stall))begin
-                dcache_ns = D_STORE;
+            if((reg_dcache_op == DCACHE_REQ_STORE_ATOM))begin
+                if(~dcache_stall)begin
+                    dcache_ns = dcache_nobusy_ns;
+                    dcache_busy = 1'b0;
+                end
+                dcache_data_valid = 1'b1;
             end
             else begin
                 dcache_busy = 1'b0;
                 dcache_ns = dcache_nobusy_ns;
-            end
+            end  
         end
-      
         D_REQ_STORE_BLOCK: begin
             dcache_ns = D_WAIT_STORE_BLOCK;
         end
@@ -811,10 +867,10 @@ always_comb begin
     dcache_req_ad_to_pipline = {dcache_pa, dcache_va};
     unique case(dcache_ns)
         D_REQ_STORE_BLOCK: begin
-            dcache_req_ad_to_pipline = {rtag_from_dcache, reg_dcache_va[11:5], {5{1'b0}}};
+            dcache_req_ad_to_pipline = {wb_rtag_from_dcache, reg_dcache_va[11:5], {5{1'b0}}};
         end
         D_REQ_STORE_LOAD_BLOCK: begin
-            dcache_req_ad_to_pipline = {rtag_from_dcache, reg_dcache_va[11:5], {5{1'b0}}};
+            dcache_req_ad_to_pipline = {re_rtag_from_dcache, reg_dcache_va[11:5], {5{1'b0}}};
         end
         D_REQ_LOAD_BLOCK: begin
             dcache_req_ad_to_pipline = pa_to_dcache;
@@ -822,9 +878,6 @@ always_comb begin
     endcase
 end
 
-always_ff @(posedge clk)begin
-    reg_rtag_from_dcache <= rtag_from_dcache;
-end
 assign wword_to_pipline = store_data;
 
 //assign wblock_to_pipline = dirty_data_from_dcache;
@@ -1376,7 +1429,8 @@ DCache dcache(.clk(clk),
                 .re_rdirty_to_cache(re_rdirty_from_dcache),
                 .wb_rdirty_to_cache(wb_rdirty_from_dcache),
                 .hit_wb_rdirty_to_cache(hit_wb_rdirty_from_dcache),
-                .rtag_to_cache(rtag_from_dcache),
+                .re_rtag_to_cache(re_rtag_from_dcache),
+                .wb_rtag_to_cache(wb_rtag_from_dcache),
                 .hit(hit_from_dcache),
                 .dcache_cs(dcache_cs)
 );
