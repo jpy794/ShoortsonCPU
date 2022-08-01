@@ -96,7 +96,7 @@ module Memory1 (
 
     assign csr_addr = pass_in_r.csr_addr;
     assign csr_data = pass_in_r.csr_data;
-    assign csr_we = ~wb_flush & pass_in_r.is_wr_csr;
+    assign csr_we = ~mem1_flush & pass_in_r.is_wr_csr;
 
     /* forward */
     // be careful of load-use stall

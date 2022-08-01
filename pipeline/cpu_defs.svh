@@ -149,7 +149,7 @@ typedef struct packed {
 typedef struct packed {
     logic ipi;
     logic ti;
-    logic r0_1;
+    logic noi;
     logic [7:0] hwi;
     logic [1:0] swi;
 } lie_t;
@@ -459,16 +459,16 @@ typedef struct packed {
     logic is_wr_rd_pc_plus4;
     virt_t pc_plus4;
     reg_idx_t rd;
-
-    logic is_wr_csr;
-    csr_addr_t csr_addr;
-    u32_t csr_data;
     
 `ifdef DIFF_TEST
     u32_t inst;
 
     logic is_modify_csr;
     csr_t csr;
+
+    logic is_wr_csr;
+    csr_addr_t csr_addr;
+    u32_t csr_data;
 
     logic is_ld, is_st;
     virt_t va, pa;
@@ -489,15 +489,15 @@ typedef struct packed {
     virt_t pc_plus4;
     reg_idx_t rd;
 
-    logic is_wr_csr;            // only need to check plv in ex
-    csr_addr_t csr_addr;
-    u32_t csr_data;
-
 `ifdef DIFF_TEST
     u32_t inst;
 
     logic is_modify_csr;
     csr_t csr;
+
+    logic is_wr_csr;
+    csr_addr_t csr_addr;
+    u32_t csr_data;
 
     logic is_ld, is_st;
     virt_t va, pa;

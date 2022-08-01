@@ -44,6 +44,13 @@ module Writeback (
     assign reg_we = ~wb_flush & pass_in_r.is_wr_rd;
     
 `ifdef DIFF_TEST
+    csr_addr_t csr_addr;
+    u32_t csr_data;
+    logic csr_we;
+    assign csr_addr = pass_in_r.csr_addr;
+    assign csr_data = pass_in_r.csr_data;
+    assign csr_we = ~wb_flush & pass_in_r.is_wr_csr;
+
     /* from mycpu */
     logic             cmt_valid;
     logic             cmt_cnt_inst;
