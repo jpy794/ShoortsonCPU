@@ -584,8 +584,14 @@ always_comb begin
             dcache_ns = dcache_nobusy_ns;
         end
         D_STORE: begin
-            dcache_busy = 1'b0;
-            dcache_ns = dcache_nobusy_ns;
+            dcache_data_valid = 1'b1;
+            if((reg_dcache_op == DCACHE_REQ_STORE_ATOM) && (~dcache_stall))begin
+                dcache_ns = D_STORE;
+            end
+            else begin
+                dcache_busy = 1'b0;
+                dcache_ns = dcache_nobusy_ns;
+            end
         end
       
         D_REQ_STORE_BLOCK: begin
@@ -653,12 +659,17 @@ end
 
 //contract with cpu
 always_comb begin
-    if(dcache_cs == D_LOAD_WORD_DONE)begin
-        load_data = rword_from_pipline;
-    end
-    else begin
-        load_data = load_data_from_dcache;
-    end
+    load_data = load_data_from_dcache;
+    unique case(dcache_cs)
+        D_STORE:begin
+            if(reg_dcache_op == DCACHE_REQ_STORE_ATOM)begin
+                load_data = {{31{1'b0}}, 1'b1};
+            end
+        end
+        D_LOAD_WORD_DONE:begin
+            load_data = rword_from_pipline;
+        end
+    endcase
 end
 
 //contract with dcache
