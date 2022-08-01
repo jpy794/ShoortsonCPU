@@ -121,7 +121,7 @@ module CPUTop (
         .ex_resolved_in(ex_resolved_br)
     );
 
-    wr_pc_req_t if2_wr_pc_req, ex_wr_pc_req, excp_wr_pc_req;
+    wr_pc_req_t if2_wr_pc_req, mem1_wr_pc_req, excp_wr_pc_req;
     Fetch1 U_Fetch1 (
         .clk, .rst_n,
 
@@ -130,7 +130,7 @@ module CPUTop (
         .btb_predict(btb_pre),
 
         .if2_wr_pc_req(if2_wr_pc_req),
-        .ex_wr_pc_req(ex_wr_pc_req),
+        .mem1_wr_pc_req(mem1_wr_pc_req),
         .excp_wr_pc_req(excp_wr_pc_req),
 
         .rd_csr(if_rd_csr),
@@ -205,9 +205,6 @@ module CPUTop (
     Execute U_Execute(
         .clk, .rst_n,
 
-        /* flush ctrl */
-        .bp_miss_flush,
-        .wr_pc_req(ex_wr_pc_req),
         .br_resolved(ex_resolved_br),
 
         /* forwarding */
@@ -226,6 +223,10 @@ module CPUTop (
     excp_req_t excp_req;
     Memory1 U_Memory1 (
         .clk, .rst_n,
+
+        /* flush ctrl */
+        .bp_miss_flush,
+        .wr_pc_req(mem1_wr_pc_req),
 
         .fwd_req(mem1_fwd_req), 
 
@@ -331,7 +332,7 @@ module CPUTop (
     assign flush_if1 = bp_error_flush | bp_miss_flush | excp_flush;
     assign flush_if2 = bp_miss_flush | excp_flush;
     assign flush_id = bp_miss_flush | excp_flush;
-    assign flush_ex = excp_flush;
+    assign flush_ex = bp_miss_flush | excp_flush;
     assign flush_mem1 = excp_flush;
     assign flush_mem2 = excp_flush;
     assign flush_wb = 1'b0;

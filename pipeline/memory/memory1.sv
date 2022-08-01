@@ -3,6 +3,10 @@
 module Memory1 (
     input clk, rst_n,
 
+    /* branch taken */
+    output logic bp_miss_flush,
+    output wr_pc_req_t wr_pc_req,
+
     /* forward */
     output forward_req_t fwd_req,
 
@@ -57,6 +61,11 @@ module Memory1 (
     assign rdy_out = ~mem1_flush & ~mem1_stall;        // only use this for pass_out.valid
 
     assign dcache_busy_stall = pass_in_r.is_mem & dcache_busy;      // flush has a higher priority, so do not need to AND flush here
+
+    /* branch taken write pc request */
+    assign wr_pc_req.valid = pass_in_r.br_wr_pc_req.valid;
+    assign wr_pc_req.pc = pass_in_r.br_wr_pc_req.pc;
+    assign bp_miss_flush = wr_pc_req.valid;
 
     /* forward */
     // be careful of load-use stall
