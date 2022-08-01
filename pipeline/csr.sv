@@ -17,6 +17,7 @@ module RegCSR (
 
     /* mem1 */
     output csr_t mem1_rd,
+    input logic is_ertn,
 
     /* tlb */
     output csr_t tlb_rd,
@@ -130,49 +131,58 @@ module RegCSR (
                 csr.era <= excp_wr_req.era;
 
                 csr.badv <= excp_wr_req.badv;
-            end else if(tlb_wr_req.we) begin
-                /* wr from tlb */
-                {csr.tlbidx[31], csr.tlbidx[29:24], csr.tlbidx[TLB_IDX_WID-1:0]} <= {tlb_wr_req.tlbidx[31], tlb_wr_req.tlbidx[29:24], tlb_wr_req.tlbidx[TLB_IDX_WID-1:0]};
-                csr.tlbehi[31:13] <= tlb_wr_req.tlbehi[31:13];
-                {csr.tlbelo[0][PALEN-5:8] ,csr.tlbelo[0][6:0]} <= {tlb_wr_req.tlbelo[0][PALEN-5:8] ,tlb_wr_req.tlbelo[0][6:0]};
-                {csr.tlbelo[1][PALEN-5:8] ,csr.tlbelo[1][6:0]} <= {tlb_wr_req.tlbelo[1][PALEN-5:8] ,tlb_wr_req.tlbelo[1][6:0]};
-                csr.asid[9:0] <= tlb_wr_req.asid[9:0];
-            end else if(we) begin
-                /* wr from csr inst */
-                case(addr)
-                    'h0: csr.crmd[8:0] <= wr_data[8:0];
-                    'h1: csr.prmd[2:0] <= wr_data[2:0];
-                    'h2: csr.euen[0:0] <= wr_data[0:0];
-                    'h4: {csr.ecfg[12:11], csr.ecfg[9:0]} <= {wr_data[12:11], wr_data[9:0]};
-                    'h5: csr.estat[1:0] <= wr_data[1:0];
-                    'h6: csr.era <= wr_data;
-                    'h7: csr.badv <= wr_data;
-                    'hc: csr.eentry[31:6] <= wr_data[31:6];
-                    'h10: {csr.tlbidx[31], csr.tlbidx[29:24], csr.tlbidx[TLB_IDX_WID-1:0]} <= {wr_data[31], wr_data[29:24], wr_data[TLB_IDX_WID-1:0]};
-                    'h11: csr.tlbehi[31:13] <= wr_data[31:13];
-                    'h12: {csr.tlbelo[0][PALEN-5:8] ,csr.tlbelo[0][6:0]} <= {wr_data[PALEN-5:8] ,wr_data[6:0]};
-                    'h13: {csr.tlbelo[1][PALEN-5:8] ,csr.tlbelo[1][6:0]} <= {wr_data[PALEN-5:8] ,wr_data[6:0]};
-                    'h18: csr.asid[9:0] <= wr_data[9:0];
-                    'h19: csr.pgdl[31:12] <= wr_data[31:12];
-                    'h1a: csr.pgdh[31:12] <= wr_data[31:12];
-                    'h20: ;
-                    'h30: csr.save[0] <= wr_data;
-                    'h31: csr.save[1] <= wr_data;
-                    'h32: csr.save[2] <= wr_data;
-                    'h33: csr.save[3] <= wr_data;
-                    /* TODO
-                    'h40: csr.tid <= wr_data;
-                    'h41: csr.tcfg <= wr_data;
-                    'h42: csr.tval <= wr_data;
-                    'h44: csr.ticlr <= wr_data;
-                    'h60: csr.llbctl <= wr_data;
-                    */
-                    'h88: csr.tlbrentry[31:6] <= wr_data[31:6];
-                    /* TODO 
-                    'h98: csr.ctag <= wr_data;
-                    */
-                    'h180: {csr.dmw[0][31:29], csr.dmw[0][27:25], csr.dmw[0][5:3], csr.dmw[0][0]} <= {wr_data[31:29], wr_data[27:25], wr_data[5:3], wr_data[0]};
-                    'h181: {csr.dmw[1][31:29], csr.dmw[1][27:25], csr.dmw[1][5:3], csr.dmw[1][0]} <= {wr_data[31:29], wr_data[27:25], wr_data[5:3], wr_data[0]};
+            end else begin
+                unique case(1'b1)
+                    tlb_wr_req.we: begin
+                        /* wr from tlb */
+                        {csr.tlbidx[31], csr.tlbidx[29:24], csr.tlbidx[TLB_IDX_WID-1:0]} <= {tlb_wr_req.tlbidx[31], tlb_wr_req.tlbidx[29:24], tlb_wr_req.tlbidx[TLB_IDX_WID-1:0]};
+                        csr.tlbehi[31:13] <= tlb_wr_req.tlbehi[31:13];
+                        {csr.tlbelo[0][PALEN-5:8] ,csr.tlbelo[0][6:0]} <= {tlb_wr_req.tlbelo[0][PALEN-5:8] ,tlb_wr_req.tlbelo[0][6:0]};
+                        {csr.tlbelo[1][PALEN-5:8] ,csr.tlbelo[1][6:0]} <= {tlb_wr_req.tlbelo[1][PALEN-5:8] ,tlb_wr_req.tlbelo[1][6:0]};
+                        csr.asid[9:0] <= tlb_wr_req.asid[9:0];
+                    end
+                    we: begin
+                        /* wr from csr inst */
+                        case(addr)
+                            'h0: csr.crmd[8:0] <= wr_data[8:0];
+                            'h1: csr.prmd[2:0] <= wr_data[2:0];
+                            'h2: csr.euen[0:0] <= wr_data[0:0];
+                            'h4: {csr.ecfg[12:11], csr.ecfg[9:0]} <= {wr_data[12:11], wr_data[9:0]};
+                            'h5: csr.estat[1:0] <= wr_data[1:0];
+                            'h6: csr.era <= wr_data;
+                            'h7: csr.badv <= wr_data;
+                            'hc: csr.eentry[31:6] <= wr_data[31:6];
+                            'h10: {csr.tlbidx[31], csr.tlbidx[29:24], csr.tlbidx[TLB_IDX_WID-1:0]} <= {wr_data[31], wr_data[29:24], wr_data[TLB_IDX_WID-1:0]};
+                            'h11: csr.tlbehi[31:13] <= wr_data[31:13];
+                            'h12: {csr.tlbelo[0][PALEN-5:8] ,csr.tlbelo[0][6:0]} <= {wr_data[PALEN-5:8] ,wr_data[6:0]};
+                            'h13: {csr.tlbelo[1][PALEN-5:8] ,csr.tlbelo[1][6:0]} <= {wr_data[PALEN-5:8] ,wr_data[6:0]};
+                            'h18: csr.asid[9:0] <= wr_data[9:0];
+                            'h19: csr.pgdl[31:12] <= wr_data[31:12];
+                            'h1a: csr.pgdh[31:12] <= wr_data[31:12];
+                            'h20: ;
+                            'h30: csr.save[0] <= wr_data;
+                            'h31: csr.save[1] <= wr_data;
+                            'h32: csr.save[2] <= wr_data;
+                            'h33: csr.save[3] <= wr_data;
+                            /* TODO
+                            'h40: csr.tid <= wr_data;
+                            'h41: csr.tcfg <= wr_data;
+                            'h42: csr.tval <= wr_data;
+                            'h44: csr.ticlr <= wr_data;
+                            'h60: csr.llbctl <= wr_data;
+                            */
+                            'h88: csr.tlbrentry[31:6] <= wr_data[31:6];
+                            /* TODO 
+                            'h98: csr.ctag <= wr_data;
+                            */
+                            'h180: {csr.dmw[0][31:29], csr.dmw[0][27:25], csr.dmw[0][5:3], csr.dmw[0][0]} <= {wr_data[31:29], wr_data[27:25], wr_data[5:3], wr_data[0]};
+                            'h181: {csr.dmw[1][31:29], csr.dmw[1][27:25], csr.dmw[1][5:3], csr.dmw[1][0]} <= {wr_data[31:29], wr_data[27:25], wr_data[5:3], wr_data[0]};
+                        endcase
+                    end
+                    is_ertn: begin
+                        csr.crmd.plv <= csr.prmd.pplv;
+                        csr.crmd.ie <= csr.prmd.pie;
+                    end
                 endcase
             end
         end

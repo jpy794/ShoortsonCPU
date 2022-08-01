@@ -24,17 +24,13 @@ module Exception(
     logic is_excp;
     assign is_excp = req.excp_pass.valid;
 
-    logic is_ertn;
-    assign is_ertn = req.inst_ertn;
-
     /* to ctrl */
-    assign excp_flush = is_excp | is_int | is_ertn;
+    assign excp_flush = is_excp | is_int;
 
-    virt_t ertn_pc, excp_entry_pc;
-    assign ertn_pc = rd_csr.era;
+    virt_t excp_entry_pc;
     assign excp_entry_pc = (req.excp_pass.esubcode_ecode == TLBR) ? rd_csr.tlbrentry : rd_csr.eentry;
     assign wr_pc_req.valid = excp_flush;
-    assign wr_pc_req.pc = ~req.inst_ertn ? excp_entry_pc : ertn_pc;
+    assign wr_pc_req.pc = excp_entry_pc;
 
     logic [12:0] int_vec;
     assign int_vec = {1'b0, ti_in, 1'b0, hwi_in, rd_csr.estat.is.swi};  // no ipi int
@@ -73,18 +69,13 @@ module Exception(
             wr_csr_req.era = req.epc;
 
             wr_csr_req.estat.r_esubcode_ecode = req.excp_pass.esubcode_ecode;
-        end else if(is_ertn) begin
-            wr_csr_req.we = 1'b1;
-
-            wr_csr_req.crmd.plv = rd_csr.prmd.pplv;
-            wr_csr_req.crmd.ie = rd_csr.prmd.pie;
         end
     end
 
 `ifdef DIFF_TEST
     assign excp_event_out.valid = wr_csr_req.we;
     assign excp_event_out.ecode = wr_csr_req.estat.r_esubcode_ecode[5:0];
-    assign excp_event_out.is_eret = is_ertn;
+    assign excp_event_out.is_eret = 1'b0;
     assign excp_event_out.int_no = int_vec[12:2];
 `endif
 

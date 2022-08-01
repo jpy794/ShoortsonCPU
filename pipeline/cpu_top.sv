@@ -73,7 +73,8 @@ module CPUTop (
         .excp_rd(excp_rd_csr),
         /* wr_req */
         .tlb_wr_req(tlb_wr_csr_req), 
-        .excp_wr_req(excp_wr_csr_req)
+        .excp_wr_req(excp_wr_csr_req),
+        .is_ertn
 `ifdef DIFF_TEST
         ,.wb_rd(wb_rd_csr)
 `endif
@@ -221,16 +222,24 @@ module CPUTop (
     );
 
     excp_req_t excp_req;
+    logic modify_state_flush;
+    logic is_ertn;
     Memory1 U_Memory1 (
         .clk, .rst_n,
 
         /* flush ctrl */
         .bp_miss_flush,
+        .modify_state_flush,
         .wr_pc_req(mem1_wr_pc_req),
+        .is_ertn,
 
         .fwd_req(mem1_fwd_req), 
 
         .rd_csr(mem1_rd_csr),
+
+        .csr_addr(csr_addr_wb),
+        .csr_we(csr_we),
+        .csr_data(csr_wr_data),
 
         .tlb_entrys(dtlb_lookup), 
         .tlb_req,
@@ -286,10 +295,6 @@ module CPUTop (
         .reg_we(reg_we),
         .reg_data(rd_data),
 
-        .csr_addr(csr_addr_wb),
-        .csr_we(csr_we),
-        .csr_data(csr_wr_data),
-
         .flush(flush_wb),
         .next_rdy_in(1'b1),
         .rdy_in(wb_rdy_in),
@@ -329,10 +334,10 @@ module CPUTop (
     assign stall_icache = ~id_rdy_in;
     assign stall_dcache = ~wb_rdy_in;
 
-    assign flush_if1 = bp_error_flush | bp_miss_flush | excp_flush;
-    assign flush_if2 = bp_miss_flush | excp_flush;
-    assign flush_id = bp_miss_flush | excp_flush;
-    assign flush_ex = bp_miss_flush | excp_flush;
+    assign flush_if1 = bp_error_flush | bp_miss_flush | excp_flush | modify_state_flush;
+    assign flush_if2 = bp_miss_flush | excp_flush | modify_state_flush;
+    assign flush_id = bp_miss_flush | excp_flush | modify_state_flush;
+    assign flush_ex = bp_miss_flush | excp_flush | modify_state_flush;
     assign flush_mem1 = excp_flush;
     assign flush_mem2 = excp_flush;
     assign flush_wb = 1'b0;

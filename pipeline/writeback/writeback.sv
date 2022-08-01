@@ -8,11 +8,6 @@ module Writeback (
     output logic reg_we,
     output u32_t reg_data,
 
-    /* to csr */
-    output csr_addr_t csr_addr,
-    output logic csr_we,
-    output u32_t csr_data,
-
     /* pipeline */
     input logic flush, next_rdy_in,
     output logic rdy_in,
@@ -47,10 +42,6 @@ module Writeback (
     assign reg_idx = pass_in_r.rd;
     assign reg_data = pass_in_r.is_wr_rd_pc_plus4 ? pass_in_r.pc_plus4 : pass_in_r.ex_mem_out;
     assign reg_we = ~wb_flush & pass_in_r.is_wr_rd;
-
-    assign csr_addr = pass_in_r.csr_addr;
-    assign csr_data = pass_in_r.csr_data;
-    assign csr_we = ~wb_flush & pass_in_r.is_wr_csr;
     
 `ifdef DIFF_TEST
     /* from mycpu */
@@ -185,11 +176,12 @@ module Writeback (
     );
 
     /* to make csr difftest happy, should work fine if there's only 1 csr inst in pipeline */
-    csr_t csr;
+    csr_t csr, csr_r;
     logic is_modify_csr;
-    assign csr = is_modify_csr ? rd_csr : pass_in_r.csr;
+    assign csr = is_modify_csr ? rd_csr : csr_r;
 
     always_ff @(posedge clk, negedge rst_n) begin
+        csr_r <= pass_in_r.csr;
         if(~rst_n) is_modify_csr <= 1'b0;
         else       is_modify_csr <= pass_in_r.is_modify_csr;
     end

@@ -388,6 +388,8 @@ typedef struct packed {
 
     logic is_cac;
     logic is_ertn;
+
+    logic is_modify_state;
     
     tlb_op_t tlb_op;
 `ifdef DIFF_TEST
@@ -405,7 +407,7 @@ typedef struct packed {
     u32_t ex_out;
 
     /* delay branch taken to mem1 stage */
-    wr_pc_req_t br_wr_pc_req;
+    wr_pc_req_t bp_miss_wr_pc_req;
 
     /* for inst executed in wb */
     logic is_wr_rd;
@@ -429,6 +431,8 @@ typedef struct packed {
 
     tlb_op_t tlb_op;
     asid_t invtlb_asid;         // rj_data[9:0]
+
+    logic is_modify_state;
 
 `ifdef DIFF_TEST
     u32_t inst;
@@ -459,8 +463,6 @@ typedef struct packed {
     logic is_wr_csr;
     csr_addr_t csr_addr;
     u32_t csr_data;
-
-    logic is_ertn;
     
 `ifdef DIFF_TEST
     u32_t inst;

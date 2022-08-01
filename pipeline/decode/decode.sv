@@ -404,6 +404,20 @@ module Decode (
     bru_op_t bru_op;
     assign bru_op = bru_op_t'(inst[29:26]);
 
+    logic is_modify_csr;
+    assign is_modify_csr = inst_csrwr   |       // mem1
+                           inst_csrxchg |
+                           inst_tlbsrch |
+                           inst_tlbrd   |
+                           inst_ertn    ;       // maybe mem2 ?
+    logic is_modify_tlb;
+    assign is_modify_tlb = inst_tlbwr   |
+                           inst_tlbfill |
+                           inst_invtlb  ;
+    
+    logic is_modify_state;
+    assign is_modify_state = is_modify_csr | is_modify_tlb;
+
     always_comb begin
         inst_add_w = 1'b0;
         inst_sub_w = 1'b0;
@@ -633,6 +647,8 @@ module Decode (
     assign pass_out.is_ertn = inst_ertn;
     assign pass_out.tlb_op = tlb_op;
 
+    assign pass_out.is_modify_state = is_modify_state;
+
     `PASS(pc);
     `PASS(btb_pre);
     `PASS(is_pred);
@@ -705,17 +721,6 @@ module Decode (
     `PASS(inst);
 
     /* to make difftest happy */
-    logic is_modify_csr;
-    assign is_modify_csr = inst_csrwr   |       // mem1
-                           inst_csrxchg |
-                           inst_tlbsrch |
-                           inst_tlbrd   |
-                           inst_ertn    ;       // maybe mem2 ?
-    logic is_modify_tlb;
-    assign is_modify_tlb = inst_tlbwr   |
-                           inst_tlbfill |
-                           inst_invtlb  ;
-    
     assign pass_out.is_modify_csr = is_modify_csr;
     assign pass_out.csr = rd_csr;
                            
