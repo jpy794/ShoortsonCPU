@@ -47,7 +47,7 @@ module Execute (
 
     /* forward */
     // be careful of load-use stall
-    assign fwd_req.valid = pass_in_r.is_wr_rd & ~ex_flush;
+    assign fwd_req.valid = (pass_in_r.rd != 5'b0) && pass_in_r.is_wr_rd && ~ex_flush;
     assign fwd_req.idx = pass_in_r.rd;
     assign fwd_req.data_valid = ~(pass_in_r.is_mem & ~pass_in_r.is_store);
     always_comb begin
@@ -217,7 +217,7 @@ module Execute (
     assign pass_out.pc_plus4 = pc_plus4;
     assign pass_out.invtlb_asid = rj_forwarded[9:0];
 
-    assign pass_out.csr_data = pass_in_r.is_mask_csr ? csr_masked : pass_in_r.rkd_data;
+    assign pass_out.csr_data = pass_in_r.is_mask_csr ? csr_masked : rkd_forwarded;
     assign pass_out.rkd_data = rkd_forwarded;
 
     `PASS(pc);

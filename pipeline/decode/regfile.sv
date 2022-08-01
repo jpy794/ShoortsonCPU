@@ -19,13 +19,13 @@ module RegFile (
 
     /* fowarding */
     always_comb begin
-        if(we && (rj == rd))    rj_data = rd_data;
-        else                    rj_data = regfile[rj];
+        if(we && (rj == rd) && (rj != 5'b0))    rj_data = rd_data;
+        else                                    rj_data = regfile[rj];
     end
 
     always_comb begin
-        if(we && (rkd == rd))   rkd_data = rd_data;
-        else                    rkd_data = regfile[rkd];
+        if(we && (rkd == rd) && (rkd != 5'b0))  rkd_data = rd_data;
+        else                                    rkd_data = regfile[rkd];
     end
 
     always_ff @(posedge clk, negedge rst_n) begin
