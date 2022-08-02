@@ -184,11 +184,11 @@ module Memory1 (
     `PASS(is_wr_rd_pc_plus4);
     `PASS(pc_plus4);
     `PASS(rd);
+
+`ifdef DIFF_TEST
     `PASS(is_wr_csr);
     `PASS(csr_addr);
     `PASS(csr_data);
-
-`ifdef DIFF_TEST
     `PASS(inst);
     `PASS(is_modify_csr);
     `PASS(csr);

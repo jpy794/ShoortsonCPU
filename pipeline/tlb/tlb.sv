@@ -100,6 +100,7 @@ module TLB (
     end
 
     always_comb begin
+        wr_csr_req.asid.asid = '0;
         wr_csr_req.we = '0;
         wr_csr_req.tlbehi = rd_csr.tlbehi;
         wr_csr_req.tlbelo[0] = rd_csr.tlbelo[0];

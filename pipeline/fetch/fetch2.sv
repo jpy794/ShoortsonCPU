@@ -163,7 +163,7 @@ module Fetch2 (
             wr_pc_req.valid = 0;
             wr_pc_req.pc = 0;
             wr_pc_req.is_predict = 0;
-            `PASS(next);
+            pass_out.next = pass_in_r.next;
         end
     end
 

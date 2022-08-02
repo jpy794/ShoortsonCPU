@@ -61,7 +61,7 @@ typedef struct packed {
     logic e;
 
     /* physical part */
-    tlb_entry_phy_t [0:0] phy;
+    tlb_entry_phy_t [1:0] phy;
 } tlb_entry_t;
 
 typedef logic [1:0] tlb_lookup_type_t;
