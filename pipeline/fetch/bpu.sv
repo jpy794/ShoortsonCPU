@@ -23,7 +23,7 @@ localparam  STRONGLY_NOTTAKEN = 2'b00,
 logic [BRHISTORY_LENGTH-1 : 0] br_history;
 always_ff @(posedge clk) begin
     if (ex_resolved_in.valid)
-        br_history <= (br_history << 1) + { {BRHISTORY_LENGTH-1 {0}}, ex_resolved_in.taken};
+        br_history <= (br_history << 1) + ex_resolved_in.taken;
 end
 
 // PHT

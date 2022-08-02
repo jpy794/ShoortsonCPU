@@ -652,8 +652,7 @@ module Decode (
     assign pass_out.is_modify_state = is_modify_state;
 
     `PASS(pc);
-    `PASS(btb_pre);
-    `PASS(is_pred);
+    `PASS(next);
 
     // only modify csr in mem1, mem2, and we should set flush after the inst reach mem2
 

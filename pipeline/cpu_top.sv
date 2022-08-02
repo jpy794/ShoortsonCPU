@@ -159,7 +159,7 @@ module CPUTop (
         .excp_pass_out(excp_if1)
     );
 
-    logic bp_error_flush;
+    logic bp_update_flush;  // bp_error, bp_repredict, bp_advance
     Fetch2 U_Fetch2 (
         .clk, .rst_n,
 
@@ -170,7 +170,7 @@ module CPUTop (
         .next_rdy_in(id_rdy_in),
         .rdy_in(if2_rdy_in),
 
-        .bp_error_flush(bp_error_flush),
+        .bp_update_flush(bp_update_flush),
 
         .wr_pc_req(if2_wr_pc_req),
         .btb_invalid(if2_btb_invalid),
@@ -349,7 +349,7 @@ module CPUTop (
     assign stall_icache = ~id_rdy_in;
     assign stall_dcache = ~wb_rdy_in;
 
-    assign flush_if1 = bp_error_flush | bp_miss_flush | excp_flush | modify_state_flush;
+    assign flush_if1 = bp_update_flush | bp_miss_flush | excp_flush | modify_state_flush;
     assign flush_if2 = bp_miss_flush | excp_flush | modify_state_flush;
     assign flush_id = bp_miss_flush | excp_flush | modify_state_flush;
     assign flush_ex = bp_miss_flush | excp_flush | modify_state_flush;

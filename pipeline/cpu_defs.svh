@@ -312,6 +312,10 @@ typedef struct packed {
     btb_target_t target;
 } btb_entry_t;
 
+/* ras */
+localparam RA_STACK_SIZE = 32;
+localparam RA_STACK_IDX_WID = $clog2(RA_STACK_SIZE);
+
 /* to fetch */
 typedef struct packed {
     logic valid;
@@ -332,7 +336,13 @@ typedef struct packed {
 } br_resolved_t;
 
 typedef struct packed {
+    logic is_predict;
+    u32_t pc;
+} next_pc_t;
+
+typedef struct packed {
     logic valid;
+    logic is_predict;
     u32_t pc;
 } wr_pc_req_t;
 
@@ -354,23 +364,20 @@ typedef struct packed {
 typedef struct packed {
     logic valid;
     virt_t pc;
-    virt_t btb_pre;
-    logic is_pred;
+    next_pc_t next;
 } fetch1_fetch2_pass_t;
 
 typedef struct packed {
     logic valid;
     virt_t pc;
-    virt_t btb_pre;
-    logic is_pred;
+    next_pc_t next;
     u32_t inst;
 } fetch2_decode_pass_t;
 
 typedef struct packed {
     logic valid;
     virt_t pc;
-    virt_t btb_pre;
-    logic is_pred;
+    next_pc_t next;
 
     logic is_mul, is_div, is_bru;
     ex_out_sel_t ex_out_sel;
