@@ -184,14 +184,16 @@ module Memory1 (
     `PASS(is_wr_rd_pc_plus4);
     `PASS(pc_plus4);
     `PASS(rd);
+
+`ifdef DIFF_TEST
     `PASS(is_wr_csr);
     `PASS(csr_addr);
     `PASS(csr_data);
-
-`ifdef DIFF_TEST
     `PASS(inst);
     `PASS(is_modify_csr);
     `PASS(csr);
+
+    assign pass_out.is_ertn = is_ertn;
 
     assign pass_out.is_ld = rdy_out & pass_in_r.is_mem & ~pass_in_r.is_store;
     assign pass_out.is_st = rdy_out & pass_in_r.is_mem & pass_in_r.is_store;

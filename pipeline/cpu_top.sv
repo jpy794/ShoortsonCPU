@@ -55,9 +55,11 @@ module CPUTop (
     tlb_wr_csr_req_t tlb_wr_csr_req;
 
 `ifdef DIFF_TEST
-    csr_t wb_rd_csr;
+    csr_t wb_rd_csr, mem2_rd_csr;
 `endif
 
+    logic ti, ti_clr;
+    logic [12:0] is;
     RegCSR U_CSR (
         .clk, .rst_n,
         /* csr inst */
@@ -74,9 +76,14 @@ module CPUTop (
         /* wr_req */
         .tlb_wr_req(tlb_wr_csr_req), 
         .excp_wr_req(excp_wr_csr_req),
-        .is_ertn
+        .is_ertn,
+
+        .is,
+        .ti,
+        .ti_clr
 `ifdef DIFF_TEST
-        ,.wb_rd(wb_rd_csr)
+        ,.wb_rd(wb_rd_csr),
+        .mem2_rd(mem2_rd_csr)
 `endif
     );
 
@@ -152,7 +159,7 @@ module CPUTop (
         .excp_pass_out(excp_if1)
     );
 
-    logic bp_error_flush;
+    logic bp_update_flush;  // bp_error, bp_repredict, bp_advance
     Fetch2 U_Fetch2 (
         .clk, .rst_n,
 
@@ -163,7 +170,7 @@ module CPUTop (
         .next_rdy_in(id_rdy_in),
         .rdy_in(if2_rdy_in),
 
-        .bp_error_flush(bp_error_flush),
+        .bp_update_flush(bp_update_flush),
 
         .wr_pc_req(if2_wr_pc_req),
         .btb_invalid(if2_btb_invalid),
@@ -270,6 +277,8 @@ module CPUTop (
         .dcache_data_valid,
 
         .flush(flush_mem2),
+        // from excp
+        .excp_flush(excp_flush),
         .next_rdy_in(wb_rdy_in),
         .rdy_in(mem2_rdy_in),
 
@@ -278,13 +287,15 @@ module CPUTop (
         .pass_out(pass_mem2),
 
         .excp_req
+`ifdef DIFF_TEST
+        ,.rd_csr(mem2_rd_csr)
+`endif
     );
 
 `ifdef DIFF_TEST
-    excp_event_t excp_event[3];
+    excp_event_t excp_event[2];
     always_ff @(posedge clk) begin
         excp_event[1] <= excp_event[0];
-        excp_event[2] <= excp_event[1];
     end
 `endif
 
@@ -302,7 +313,7 @@ module CPUTop (
         .pass_in(pass_mem2)
 
 `ifdef DIFF_TEST
-        ,.excp_event_in(excp_event[2]),
+        ,.excp_event_in(excp_event[1]),
         .rd_csr(wb_rd_csr)
 `endif
     );
@@ -316,7 +327,11 @@ module CPUTop (
 
     logic excp_flush;
     Exception U_Exception (
-        .ti_in('0), .hwi_in('0),            // TODO: connect real interrupt
+        .clk,
+        .is,
+        .ti_in(ti),
+        .ti_clr,
+        .hwi_in('0),            // TODO: connect real interrupt
         /* from mem1 */
         .req(excp_req),
 
@@ -334,12 +349,12 @@ module CPUTop (
     assign stall_icache = ~id_rdy_in;
     assign stall_dcache = ~wb_rdy_in;
 
-    assign flush_if1 = bp_error_flush | bp_miss_flush | excp_flush | modify_state_flush;
+    assign flush_if1 = bp_update_flush | bp_miss_flush | excp_flush | modify_state_flush;
     assign flush_if2 = bp_miss_flush | excp_flush | modify_state_flush;
     assign flush_id = bp_miss_flush | excp_flush | modify_state_flush;
     assign flush_ex = bp_miss_flush | excp_flush | modify_state_flush;
     assign flush_mem1 = excp_flush;
-    assign flush_mem2 = excp_flush;
+    assign flush_mem2 = 1'b0;
     assign flush_wb = 1'b0;
 
 endmodule

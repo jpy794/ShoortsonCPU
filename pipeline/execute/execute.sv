@@ -103,11 +103,12 @@ module Execute (
     /* branch and btb fill */
     u32_t npc;
     assign npc = br_taken ? alu_out : pass_in_r.pc + 4;
-    assign pass_out.bp_miss_wr_pc_req.valid = ~ex_flush & pass_in_r.is_bru & pass_in_r.is_pred & (npc != pass_in_r.btb_pre);
+    assign pass_out.bp_miss_wr_pc_req.valid = ~ex_flush & pass_in_r.is_bru & pass_in_r.next.is_predict & (npc != pass_in_r.next.pc);
     assign pass_out.bp_miss_wr_pc_req.pc = npc;
 
     assign br_resolved.valid = ~ex_flush & pass_in_r.is_bru;
     assign br_resolved.taken = br_taken;
+    assign br_resolved.pc = pass_in_r.pc;
     assign br_resolved.target_pc = alu_out;
 
     /* mul */

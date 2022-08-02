@@ -58,6 +58,7 @@ module Decode (
     assign load_use_stall = (rj_load_use & is_use_rj) | (rkd_load_use & is_use_rkd);
     always_comb begin
         rj_load_use = 1'b0;
+        rj_forwarded = rj_data;
         if(ex_req.valid && rj == ex_req.idx) begin
             /* seperately forward data from ex to reduce latency */
             rj_load_use = ~ex_req.data_valid;
@@ -73,6 +74,7 @@ module Decode (
     end
     always_comb begin
         rkd_load_use = 1'b0;
+        rkd_forwarded = rkd_data;
         if(ex_req.valid && rkd == ex_req.idx) begin
             /* seperately forward data from ex to reduce latency */
             rkd_load_use = ~ex_req.data_valid;
@@ -650,8 +652,7 @@ module Decode (
     assign pass_out.is_modify_state = is_modify_state;
 
     `PASS(pc);
-    `PASS(btb_pre);
-    `PASS(is_pred);
+    `PASS(next);
 
     // only modify csr in mem1, mem2, and we should set flush after the inst reach mem2
 

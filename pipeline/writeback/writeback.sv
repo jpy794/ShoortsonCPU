@@ -111,7 +111,7 @@ module Writeback (
 
             cmt_int_no <= excp_event_in.int_no;
             cmt_excp_flush  <= excp_event_in.valid;
-            cmt_ertn        <= excp_event_in.is_eret;
+            cmt_ertn        <= pass_in_r.is_ertn;
             cmt_csr_ecode   <= excp_event_in.ecode;
             cmt_tlbfill_en  <= 0;                       // TODO
             cmt_rand_index  <= '0;
@@ -184,45 +184,42 @@ module Writeback (
 
     /* to make csr difftest happy, should work fine if there's only 1 csr inst in pipeline */
     csr_t csr, csr_r;
-    logic is_modify_csr;
-    assign csr = is_modify_csr ? rd_csr : csr_r;
+    //assign csr = excp_event_in.valid ? rd_csr : pass_in_r.csr;
 
     always_ff @(posedge clk, negedge rst_n) begin
         csr_r <= pass_in_r.csr;
-        if(~rst_n) is_modify_csr <= 1'b0;
-        else       is_modify_csr <= pass_in_r.is_modify_csr;
     end
 
     DifftestCSRRegState DifftestCSRRegState(
         .clock              (clk                ),
         .coreid             (0                  ),
-        .crmd               (csr.crmd           ),
-        .prmd               (csr.prmd           ),
-        .euen               (csr.euen           ),
-        .ecfg               (csr.ecfg           ),
-        .estat              (csr.estat          ),
-        .era                (csr.era            ),
-        .badv               (csr.badv           ),
-        .eentry             (csr.eentry         ),
-        .tlbidx             (csr.tlbidx         ),
-        .tlbehi             (csr.tlbehi         ),
-        .tlbelo0            (csr.tlbelo[0]      ),
-        .tlbelo1            (csr.tlbelo[1]      ),
-        .asid               (csr.asid           ),
-        .pgdl               (csr.pgdl           ),
-        .pgdh               (csr.pgdh           ),
-        .save0              (csr.save[0]        ),
-        .save1              (csr.save[1]        ),
-        .save2              (csr.save[2]        ),
-        .save3              (csr.save[3]        ),
-        .tid                (0                  ),
-        .tcfg               (0                  ),
-        .tval               (0                  ),
-        .ticlr              (0                  ),
+        .crmd               (csr_r.crmd           ),
+        .prmd               (csr_r.prmd           ),
+        .euen               (csr_r.euen           ),
+        .ecfg               (csr_r.ecfg           ),
+        .estat              (csr_r.estat          ),
+        .era                (csr_r.era            ),
+        .badv               (csr_r.badv           ),
+        .eentry             (csr_r.eentry         ),
+        .tlbidx             (csr_r.tlbidx         ),
+        .tlbehi             (csr_r.tlbehi         ),
+        .tlbelo0            (csr_r.tlbelo[0]      ),
+        .tlbelo1            (csr_r.tlbelo[1]      ),
+        .asid               (csr_r.asid           ),
+        .pgdl               (csr_r.pgdl           ),
+        .pgdh               (csr_r.pgdh           ),
+        .save0              (csr_r.save[0]        ),
+        .save1              (csr_r.save[1]        ),
+        .save2              (csr_r.save[2]        ),
+        .save3              (csr_r.save[3]        ),
+        .tid                (csr_r.tid            ),
+        .tcfg               (csr_r.tcfg           ),
+        .tval               (csr_r.tval           ),
+        .ticlr              (csr_r.ticlr          ),
         .llbctl             (0                  ),
-        .tlbrentry          (csr.tlbrentry      ),
-        .dmw0               (0                  ),
-        .dmw1               (0                  )
+        .tlbrentry          (csr_r.tlbrentry      ),
+        .dmw0               (csr_r.dmw[0]         ),
+        .dmw1               (csr_r.dmw[1]         )
     );
 `endif
 

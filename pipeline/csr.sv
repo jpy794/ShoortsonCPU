@@ -25,10 +25,14 @@ module RegCSR (
 
     /* excp */
     output csr_t excp_rd,
-    input excp_wr_csr_req_t excp_wr_req
+    input excp_wr_csr_req_t excp_wr_req,
+    input logic [12:0] is,
+
+    /* ti */
+    output logic ti, ti_clr
 
 `ifdef DIFF_TEST
-    ,output csr_t wb_rd
+    ,output csr_t wb_rd, mem2_rd
 `endif
 );
 
@@ -38,6 +42,28 @@ module RegCSR (
     /* verilator lint_on UNOPTFLAT */
     /* verilator lint_on BLKANDNBLK */
 
+    /* tim and int */
+    logic tim_cfg, tim_en;
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(~rst_n) begin
+            tim_en <= 1'b0;
+        end else if(tim_cfg) begin
+            tim_en <= wr_data[0];
+            csr.tcfg <= wr_data;
+            csr.tval <= {wr_data[31:2], 2'b0};
+        end else if(tim_en) begin
+            if(csr.tval == 32'b0) begin
+                tim_en <= csr.tcfg.periodic;
+                csr.tval <= csr.tcfg.periodic ? {csr.tcfg.initval, 2'b0} : 32'hffff_ffff;
+            end else begin
+                csr.tval <= csr.tval - 1;
+            end
+        end
+    end
+    assign ti = (csr.tval == 32'b0) && tim_en;
+    assign ti_clr = we && (addr == 'h44) && wr_data[0];
+    assign tim_cfg = we && (addr == 'h41);
+
     /* read */
     assign if_rd = csr;
     assign id_rd = csr;
@@ -46,6 +72,7 @@ module RegCSR (
     assign excp_rd = csr;
 `ifdef DIFF_TEST
     assign wb_rd = csr;
+    assign mem2_rd = csr;
 `endif
     always_comb begin
         case(addr)
@@ -70,11 +97,12 @@ module RegCSR (
             'h31: rd_data = csr.save[1];
             'h32: rd_data = csr.save[2];
             'h33: rd_data = csr.save[3];
-            /* TODO
+            
             'h40: rd_data = csr.tid;
             'h41: rd_data = csr.tcfg;
             'h42: rd_data = csr.tval;
             'h44: rd_data = csr.ticlr;
+            /* TODO
             'h60: rd_data = csr.llbctl;
             */
             'h88: rd_data = csr.tlbrentry;
@@ -106,7 +134,6 @@ module RegCSR (
             csr.estat.is.swi <= 2'b0;
 
             /* TODO
-            csr.tcfg.en = 1'b0;
             csr.llbcrl.klo = '0;
             */
             csr.dmw[0].plv0 <= 1'b0;
@@ -123,10 +150,6 @@ module RegCSR (
                 csr.prmd.pie <= excp_wr_req.prmd.pie;
 
                 csr.estat.r_esubcode_ecode <= excp_wr_req.estat.r_esubcode_ecode;
-                csr.estat.is.r_ipi <= excp_wr_req.estat.is.r_ipi;
-                csr.estat.is.r_ti <= excp_wr_req.estat.is.r_ti;
-                csr.estat.is.r_hwi <= excp_wr_req.estat.is.r_hwi;
-                csr.estat.is.swi <= excp_wr_req.estat.is.swi;
 
                 csr.era <= excp_wr_req.era;
 
@@ -164,13 +187,15 @@ module RegCSR (
                             'h31: csr.save[1] <= wr_data;
                             'h32: csr.save[2] <= wr_data;
                             'h33: csr.save[3] <= wr_data;
-                            /* TODO
+
                             'h40: csr.tid <= wr_data;
-                            'h41: csr.tcfg <= wr_data;
-                            'h42: csr.tval <= wr_data;
-                            'h44: csr.ticlr <= wr_data;
+                            'h41: ;                         // use it seperately
+                            'h42: ;                         // tval read only
+                            'h44: ;                         // handle ticlr in exception
+                            /* TODO
                             'h60: csr.llbctl <= wr_data;
                             */
+
                             'h88: csr.tlbrentry[31:6] <= wr_data[31:6];
                             /* TODO 
                             'h98: csr.ctag <= wr_data;
@@ -180,6 +205,7 @@ module RegCSR (
                         endcase
                     end
                     is_ertn: begin
+                        /* TODO: llbit also need to be changed here*/
                         csr.crmd.plv <= csr.prmd.pplv;
                         csr.crmd.ie <= csr.prmd.pie;
                     end
@@ -198,7 +224,7 @@ module RegCSR (
     /* estat */
     assign csr.estat.r0_1 = '0;
     assign csr.estat.r0_2 = '0;
-    assign csr.estat.is.r0_1 = '0;
+    assign csr.estat.is[12:2] = is[12:2];
     /* estat end */
     assign csr.eentry.r0_1 = '0;
     /* cpu id */
@@ -235,6 +261,8 @@ module RegCSR (
     assign csr.dmw[1].r0_2 = '0;
     assign csr.dmw[1].r0_3 = '0;
     /* dmw end */
+    /* tim */
+    assign csr.ticlr = '0;      // w1
 
 
 endmodule

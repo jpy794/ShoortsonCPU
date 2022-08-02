@@ -52,12 +52,12 @@ end
 /* exception */
 always_comb begin
     is_exc = '1;
-    ecode = '0;
+    ecode = esubcode_ecode_t'('0);
     if(~tlb_found) begin
         ecode = TLBR;
     end else begin
         if(~phy.v) begin
-            ecode = {5'b0, lookup_type};
+            ecode = esubcode_ecode_t'({5'b0, lookup_type});
         end else if (plv > phy.plv) begin
             ecode = PPI;
         end else if (lookup_type == LOOKUP_STORE && ~phy.d) begin

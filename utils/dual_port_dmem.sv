@@ -20,8 +20,8 @@ module DualPortDmem #(
     end
 
     always_comb begin
-        douta <= ram[addra];
-        doutb <= ram[addrb];      //TO BE FIXED
+        douta = ram[addra];
+        doutb = ram[addrb];
     end
 
 endmodule

@@ -83,28 +83,29 @@ module Fetch1 (
     // btb need 1 clk to output result, so we need to forward pc write req
     assign stall_btb = if1_stall;
     assign btb_pc = npc;
+    assign pass_out.next.pc = npc;
 
     /* fetch1 stage */
     always_comb begin
         if(excp_wr_pc_req.valid) begin
             npc = excp_wr_pc_req.pc;
-            pass_out.is_pred = 0;
+            pass_out.next.is_predict = 0;
         end
         else if(mem1_wr_pc_req.valid) begin
             npc = mem1_wr_pc_req.pc;
-            pass_out.is_pred = 0;
+            pass_out.next.is_predict = 0;
         end
         else if(if2_wr_pc_req.valid) begin
             npc = if2_wr_pc_req.pc;
-            pass_out.is_pred = 0;
+            pass_out.next.is_predict = if2_wr_pc_req.is_predict;
         end
         else if(btb_predict.valid) begin
             npc = btb_predict.npc;      // predict is based on pc(or the pc wr req) in last clk
-            pass_out.is_pred = 1;
+            pass_out.next.is_predict = 1;
         end
         else begin
             npc = pc_r + 4;
-            pass_out.is_pred = 1;
+            pass_out.next.is_predict = 1;
         end
     end
 
@@ -119,7 +120,6 @@ module Fetch1 (
     /* pass */
     assign pass_out.valid = rdy_out;
     assign pass_out.pc = pc_r;
-    assign pass_out.btb_pre = npc;
 
     /* exeption */
     always_comb begin
