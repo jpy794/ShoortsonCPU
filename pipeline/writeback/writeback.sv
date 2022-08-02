@@ -100,8 +100,8 @@ module Writeback (
             cmt_st_paddr    <= pass_in_r.pa;
             cmt_st_vaddr    <= pass_in_r.va;
             cmt_st_data     <= pass_in_r.st_data;
-            cmt_csr_rstat_en<= csr_we & csr_addr == 'h5;
-            cmt_csr_data    <= csr_data;
+            cmt_csr_rstat_en<= csr_we && (csr_addr == 'h5);                 // TO BE FIXED: csr_rd
+            cmt_csr_data    <= pass_in_r.csr.estat;
 
             cmt_wen     <=  reg_we;
             cmt_wdest   <=  reg_idx;
@@ -183,8 +183,7 @@ module Writeback (
     );
 
     /* to make csr difftest happy, should work fine if there's only 1 csr inst in pipeline */
-    csr_t csr, csr_r;
-    //assign csr = excp_event_in.valid ? rd_csr : pass_in_r.csr;
+    csr_t csr_r;
 
     always_ff @(posedge clk, negedge rst_n) begin
         csr_r <= pass_in_r.csr;

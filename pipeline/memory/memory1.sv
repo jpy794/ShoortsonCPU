@@ -61,6 +61,8 @@ module Memory1 (
     end
 
     logic dcache_busy_stall;
+    assign dcache_busy_stall = ~addr_excp.valid & pass_in_r.is_mem & dcache_busy;      // flush has a higher priority, so do not need to AND flush here
+    
     logic rdy_out;
     logic mem1_flush, mem1_stall;
     assign mem1_flush = flush | ~pass_in_r.valid;
@@ -68,8 +70,6 @@ module Memory1 (
 
     assign rdy_in = mem1_flush | ~mem1_stall;
     assign rdy_out = ~mem1_flush & ~mem1_stall;        // only use this for pass_out.valid
-
-    assign dcache_busy_stall = pass_in_r.is_mem & dcache_busy;      // flush has a higher priority, so do not need to AND flush here
 
     /* branch taken write pc request */
     wr_pc_req_t bp_miss_req;

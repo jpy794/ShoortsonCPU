@@ -28,6 +28,9 @@ module RegCSR (
     input excp_wr_csr_req_t excp_wr_req,
     input logic [12:0] is,
 
+    /* swi */
+    output logic [1:0] swi, swi_clr,
+
     /* ti */
     output logic ti, ti_clr
 
@@ -41,6 +44,12 @@ module RegCSR (
     csr_t csr;
     /* verilator lint_on UNOPTFLAT */
     /* verilator lint_on BLKANDNBLK */
+
+    /* swi */
+    logic swi_we;
+    assign swi_we = we && (addr == 'h5);
+    assign swi = swi_we ? wr_data[1:0] : 2'b0;
+    assign swi_clr = swi_we ? ~wr_data[1:0] : 2'b0;
 
     /* tim and int */
     logic tim_cfg, tim_en;
@@ -131,7 +140,7 @@ module RegCSR (
 
             csr.ecfg.lie <= 13'b0;
 
-            csr.estat.is.swi <= 2'b0;
+            // csr.estat.is.swi <= 2'b0;
 
             /* TODO
             csr.llbcrl.klo = '0;
@@ -171,7 +180,7 @@ module RegCSR (
                             'h1: csr.prmd[2:0] <= wr_data[2:0];
                             'h2: csr.euen[0:0] <= wr_data[0:0];
                             'h4: csr.ecfg.lie <= wr_data[12:0];
-                            'h5: csr.estat[1:0] <= wr_data[1:0];
+                            'h5: ;                                      // swi
                             'h6: csr.era <= wr_data;
                             'h7: csr.badv <= wr_data;
                             'hc: csr.eentry[31:6] <= wr_data[31:6];
@@ -224,7 +233,7 @@ module RegCSR (
     /* estat */
     assign csr.estat.r0_1 = '0;
     assign csr.estat.r0_2 = '0;
-    assign csr.estat.is[12:2] = is[12:2];
+    assign csr.estat.is = is;
     /* estat end */
     assign csr.eentry.r0_1 = '0;
     /* cpu id */

@@ -42,10 +42,13 @@ module Fetch1 (
     output excp_pass_t excp_pass_out
 );
 
+    logic icache_busy_stall;
+    assign icache_busy_stall = ~addr_excp.valid & icache_busy;
+
     logic rdy_out;
     logic if1_flush, if1_stall;                      // use if1_flush as ~valid for eu
     assign if1_flush = flush;                        // flush: invalidate current inst in pass_r and allow next inst in
-    assign if1_stall = ~next_rdy_in | icache_busy;   // stall: do not allow next pass_in in
+    assign if1_stall = ~next_rdy_in | icache_busy_stall;   // stall: do not allow next pass_in in
                                                      //        flush has a higher priority
     assign rdy_in = if1_flush | ~if1_stall;
     assign rdy_out = ~if1_flush & ~if1_stall;        // only use this for pass_out.valid

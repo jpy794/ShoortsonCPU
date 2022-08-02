@@ -59,6 +59,7 @@ module CPUTop (
 `endif
 
     logic ti, ti_clr;
+    logic [1:0] swi, swi_clr;
     logic [12:0] is;
     RegCSR U_CSR (
         .clk, .rst_n,
@@ -80,7 +81,9 @@ module CPUTop (
 
         .is,
         .ti,
-        .ti_clr
+        .ti_clr,
+        .swi,
+        .swi_clr
 `ifdef DIFF_TEST
         ,.wb_rd(wb_rd_csr),
         .mem2_rd(mem2_rd_csr)
@@ -327,11 +330,14 @@ module CPUTop (
 
     logic excp_flush;
     Exception U_Exception (
-        .clk,
-        .is,
+        .clk, .rst_n,
+        .swi_in(swi),
+        .swi_clr,
         .ti_in(ti),
         .ti_clr,
         .hwi_in('0),            // TODO: connect real interrupt
+        /* to csr */
+        .is,
         /* from mem1 */
         .req(excp_req),
 
