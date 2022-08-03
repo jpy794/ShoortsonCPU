@@ -7,22 +7,22 @@ module Cache(
     input logic [`VA_WIDTH]icache_va,
     input logic [`PA_WIDTH]icache_pa,
     input logic [`ICACHE_OP_WIDTH]icache_op,
-    input logic icache_stall,
+    input logic icache_taken,
     input logic icache_cached,
     output logic [`DATA_WIDTH]ins,
     output logic icache_ready,
-    output logic icache_busy,
+  //  output logic icache_busy,
     output logic icache_data_valid,
 
     //dcache
     input logic [`VA_WIDTH]dcache_va,
     input logic [`PA_WIDTH]dcache_pa,
     input cache_dcache_op_t dcache_op,
-    input logic dcache_stall,
+    input logic dcache_taken,
     input logic dcache_cached,
     input logic [`DATA_WIDTH]store_data,
     output logic [`DATA_WIDTH]load_data,
-    output logic dcache_busy,
+    output logic dcache_ready,
     output logic dcache_data_valid,
 
     output logic [`AXI_REQ_WIDTH]req_to_axi,
@@ -50,6 +50,11 @@ logic [2:0]dcache_ren_to_pipline;
 logic [`BLOCK_WIDTH]rblock_from_pipline;
 logic [`DATA_WIDTH]rword_from_pipline;
 
+
+logic icache_busy;
+logic dcache_busy;
+assign icache_ready = ~icache_busy;
+assign dcache_ready = ~dcache_busy;
 //icache
 logic [`ICACHE_STATE_WIDTH]icache_cs, icache_ns;
 
@@ -73,19 +78,19 @@ logic hit_from_icache;
 
 //logic icache_cached = 1'b1;
 always_ff @(posedge clk)begin
-    if(~icache_stall && ~icache_busy)begin
+    if (~icache_busy)begin
         reg_icache_va <= icache_va;
     end
 end
 
 always_ff @(posedge clk)begin
-    if(~icache_stall && ~icache_busy)begin
+    if (~icache_busy)begin
         reg_icache_pa <= icache_pa;
     end
 end
 
 always_ff @(posedge clk)begin
-    if(~icache_stall && ~icache_busy)begin
+    if (~icache_busy)begin
         reg_icache_op <= icache_op;
     end
 end
@@ -165,11 +170,12 @@ always_comb begin
                 unique case(reg_icache_op)
                     `ICACHE_REQ_LOAD_INS: begin
                         icache_data_valid = 1'b1;
-                        if(~icache_stall)begin
+                        if(icache_taken)begin
                             icache_busy = 1'b0;
                             icache_ns = icache_nobusy_ns;
                         end
                         else begin
+                            icache_busy = 1'b1;
                             icache_ns = `ICACHE_LOOKUP;
                         end
                     end
@@ -210,7 +216,7 @@ always_comb begin
         end
         `ICACHE_LOAD_WORD_DONE: begin
             icache_data_valid = 1'b1;
-            if(~icache_stall) begin
+            if(icache_taken) begin
                 icache_busy = 1'b0;
                 icache_ns = icache_nobusy_ns;
             end else begin
@@ -243,27 +249,6 @@ always_comb begin
         end
         default: begin
             icache_ns = `ICACHE_WAIT;
-        end
-    endcase
-end
-
-//contract with cpu
-always_comb begin //TOBE DELETED
-    unique case(icache_cs)
-        `ICACHE_WAIT: begin
-            icache_ready = 1'b0;
-        end
-        `ICACHE_LOOKUP: begin
-            icache_ready = 1'b1;
-        end
-        `ICACHE_WRITE_TAG: begin
-            icache_ready = 1'b1;
-        end
-        `ICACHE_INDEX_WRITE_V: begin
-            icache_ready = 1'b1;
-        end
-        default: begin
-            icache_ready = 1'b0;
         end
     endcase
 end
@@ -363,25 +348,25 @@ logic [`TAG_WIDTH]re_rtag_from_dcache;
 logic [`TAG_WIDTH]wb_rtag_from_dcache;
 
 always_ff @(posedge clk)begin
-    if(~dcache_stall && ~dcache_busy)begin
+    if(~dcache_busy)begin
         reg_dcache_op <= dcache_op;
     end
 end
 
 always_ff @(posedge clk)begin
-    if(~dcache_stall && ~dcache_busy)begin
+    if(~dcache_busy)begin
         reg_dcache_pa <= dcache_pa;
     end
 end
 
 always_ff @(posedge clk)begin
-    if(~dcache_stall && ~dcache_busy)begin
+    if(~dcache_busy)begin
         reg_dcache_va <= dcache_va;
     end
 end
 
 always_ff @(posedge clk)begin
-    if(~dcache_stall && ~dcache_busy)begin
+    if(~dcache_busy)begin
         reg_store_data <= store_data;
     end
 end
@@ -553,7 +538,7 @@ always_comb begin
                 unique case(reg_dcache_op)
                     DCACHE_REQ_LOAD_ATOM: begin
                         dcache_data_valid = 1'b1;
-                        if(~dcache_stall)begin
+                        if(dcache_taken)begin
                             dcache_ns = D_SET_LLIT;
                         end
                     end
@@ -585,21 +570,21 @@ always_comb begin
                     end
                     DCACHE_REQ_LOAD_WORD: begin
                         dcache_data_valid = 1'b1;
-                        if(~dcache_stall)begin
+                        if(dcache_taken)begin
                             dcache_busy = 1'b0;
                             dcache_ns = dcache_nobusy_ns;
                         end
                     end
                     DCACHE_REQ_LOAD_BYTE: begin
                         dcache_data_valid = 1'b1;
-                        if(~dcache_stall)begin
+                        if(dcache_taken)begin
                             dcache_busy = 1'b0;
                             dcache_ns = dcache_nobusy_ns;
                         end
                     end
                     DCACHE_REQ_LOAD_HALF_WORD: begin
                         dcache_data_valid = 1'b1;
-                        if(~dcache_stall)begin
+                        if(dcache_taken)begin
                             dcache_busy = 1'b0;
                             dcache_ns = dcache_nobusy_ns;
                         end
@@ -643,7 +628,7 @@ always_comb begin
         end
         D_STORE: begin
             if((reg_dcache_op == DCACHE_REQ_STORE_ATOM))begin
-                if(~dcache_stall)begin
+                if(dcache_taken)begin
                     dcache_ns = dcache_nobusy_ns;
                     dcache_busy = 1'b0;
                 end
@@ -680,7 +665,7 @@ always_comb begin
         end
         D_LOAD_WORD_DONE: begin
             dcache_data_valid = 1'b1;
-            if(~dcache_stall)begin
+            if(dcache_taken)begin
                 dcache_ns = dcache_nobusy_ns;
                 dcache_busy = 1'b0;
             end
@@ -743,7 +728,7 @@ always_comb begin
             ad_to_dcache = {{20{1'b0}}, dcache_clear_llit_cnt, {5{1'b0}}};
         end
         D_LOAD: begin
-            if(~dcache_stall && ~dcache_busy)begin
+            if(~dcache_busy)begin           //TODO
                 ad_to_dcache = {{20{1'b0}}, dcache_va};
             end
         end
@@ -888,525 +873,6 @@ always_comb begin
         D_INDEX_WRITE_V: wblock_to_pipline = wb_dirty_data_from_dcache;
     endcase
 end
-
-// always_comb begin
-//     unique case(dcache_op)
-//         `DCACHE_REQ_LOAD_ATOM: begin
-//             if(dcache_cached)begin
-//                 dcache_pre_s = `D_LOAD;
-//             end
-//             else begin
-//                 dcache_pre_s = `D_WAIT;
-//             end
-//         end
-//         `DCACHE_REQ_LOAD_WORD: begin
-//             if(dcache_cached)begin
-//                 dcache_pre_s = `D_LOAD;
-//             end
-//             else begin
-//                 dcache_pre_s = `D_REQ_TO_PIPLINE_LOAD_WORD;
-//             end
-//         end
-//         `DCACHE_REQ_LOAD_HALF_WORD: begin
-//             if(dcache_cached)begin
-//                 dcache_pre_s = `D_LOAD;
-//             end
-//             else begin
-//                 dcache_pre_s = `D_REQ_TO_PIPLINE_LOAD_WORD;
-//         end
-//         end
-//         `DCACHE_REQ_LOAD_BYTE: begin
-//             if(dcache_cached)begin
-//                 dcache_pre_s = `D_LOAD;
-//             end
-//             else begin
-//                 dcache_pre_s = `D_REQ_TO_PIPLINE_LOAD_WORD;
-//             end
-//         end
-//         `DCACHE_REQ_STORE_ATOM: begin
-//             if(dcache_cached)begin
-//                 dcache_pre_s = `D_LOAD;
-//             end
-//             else begin
-//                 dcache_pre_s = `D_WAIT;
-//         end
-//         end
-//         `DCACHE_REQ_STORE_WORD: begin
-//             if(dcache_cached)begin
-//                 dcache_pre_s = `D_LOAD;
-//             end
-//             else begin
-//                 dcache_pre_s = `D_REQ_TO_PIPLINE_STORE_WORD;
-//             end
-//         end
-//         `DCACHE_REQ_STORE_HALF_WORD: begin
-//             if(dcache_cached)begin
-//                 dcache_pre_s = `D_LOAD;
-//             end
-//             else begin
-//                 dcache_pre_s = `D_REQ_TO_PIPLINE_STORE_WORD;
-//             end
-//         end
-//         `DCACHE_REQ_STORE_BYTE: begin
-//             if(dcache_cached)begin
-//                 dcache_pre_s = `D_LOAD;
-//             end
-//             else begin
-//                 dcache_pre_s = `D_REQ_TO_PIPLINE_STORE_WORD;
-//             end
-//         end
-//         `DCACHE_REQ_INITIALIZE: begin
-//             dcache_pre_s = `D_WRITE_TAG;
-//         end
-//         `DCACHE_REQ_INDEX_INVALIDATA: begin
-//             dcache_pre_s = `D_INDEX_WRITE_V;
-//         end
-//         `DCACHE_REQ_HIT_INVALIDATA: begin
-//             if(dcache_cached)begin
-//                 dcache_pre_s = `D_LOAD;
-//             end
-//             else begin 
-//                 dcache_pre_s = `D_WAIT;
-//             end
-//         end
-//         `DCACHE_REQ_CLEAR_LLIT: begin
-//             dcache_pre_s = `D_CLEAR_LLIT;
-//         end
-//         default: begin
-//             dcache_pre_s = `D_WAIT;
-//         end
-//     endcase
-// end
-
-// always_comb begin
-//     dcache_busy = 1'b1;
-//     dcache_data_valid = 1'b0;
-//     unique case(dcache_cs)
-//         `D_WAIT: begin
-//             dcache_busy = 1'b0;
-//             if(~dcache_stall)begin
-//                 dcache_busy = 1'b0;
-//                 dcache_ns = dcache_pre_s;
-//             end
-//             else begin
-//                 dcache_ns = `D_WAIT;
-//             end
-//         end
-//         `D_LOAD: begin
-//             if(~hit_from_dcache)begin
-//                 unique case(reg_dcache_op)
-//                     `DCACHE_REQ_LOAD_ATOM: begin
-//                         if(rdirty_from_dcache)begin
-//                             dcache_ns = `D_LOAD_ATOM_REQ_TO_PIPLINE_STORE_LOAD_BLOCK;
-//                         end
-//                         else begin
-//                             dcache_ns = `D_LOAD_ATOM_REQ_TO_PIPLINE_LOAD_BLOCK;
-//                         end
-//                     end
-//                     `DCACHE_REQ_LOAD_WORD: begin
-//                         if(rdirty_from_dcache)begin
-//                             dcache_ns = `D_LOAD_REQ_TO_PIPLINE_STORE_LOAD_BLOCK;
-//                         end
-//                         else begin
-//                             dcache_ns = `D_LOAD_REQ_TO_PIPLINE_LOAD_BLOCK;
-//                         end
-//                     end
-//                     `DCACHE_REQ_LOAD_HALF_WORD: begin
-//                         if(rdirty_from_dcache)begin
-//                             dcache_ns = `D_LOAD_REQ_TO_PIPLINE_STORE_LOAD_BLOCK;
-//                         end
-//                         else begin
-//                             dcache_ns = `D_LOAD_REQ_TO_PIPLINE_LOAD_BLOCK;
-//                         end
-//                     end
-//                     `DCACHE_REQ_LOAD_BYTE: begin
-//                         if(rdirty_from_dcache)begin
-//                             dcache_ns = `D_LOAD_REQ_TO_PIPLINE_STORE_LOAD_BLOCK;
-//                         end
-//                         else begin
-//                             dcache_ns = `D_LOAD_REQ_TO_PIPLINE_LOAD_BLOCK;
-//                         end
-//                     end
-//                     `DCACHE_REQ_STORE_WORD: begin
-//                         if(rdirty_from_dcache)begin
-//                             dcache_ns = `D_STORE_REQ_TO_PIPLINE_STORE_LOAD_BLOCK;
-//                         end
-//                         else begin
-//                             dcache_ns = `D_STORE_REQ_TO_PIPLINE_LOAD_BLOCK;
-//                         end
-//                     end
-//                     `DCACHE_REQ_STORE_HALF_WORD: begin
-//                         if(rdirty_from_dcache)begin
-//                             dcache_ns = `D_STORE_REQ_TO_PIPLINE_STORE_LOAD_BLOCK;
-//                         end
-//                         else begin
-//                             dcache_ns = `D_STORE_REQ_TO_PIPLINE_LOAD_BLOCK;
-//                         end
-//                     end
-//                     `DCACHE_REQ_STORE_BYTE: begin
-//                         if(rdirty_from_dcache)begin
-//                             dcache_ns = `D_STORE_REQ_TO_PIPLINE_STORE_LOAD_BLOCK;
-//                         end
-//                         else begin
-//                             dcache_ns = `D_STORE_REQ_TO_PIPLINE_LOAD_BLOCK;
-//                         end
-//                     end
-//                     default: begin
-//                         if(~dcache_stall)begin
-//                             dcache_busy = 1'b0;
-//                             dcache_ns = dcache_pre_s;
-//                         end
-//                         else begin
-//                             dcache_ns = `D_LOAD;
-//                         end
-//                     end
-//                 endcase
-//             end
-//             else begin
-//                 unique case(reg_dcache_op)
-//                     `DCACHE_REQ_LOAD_ATOM: begin
-//                         dcache_ns = `D_SET_LLIT;
-//                     end
-//                     `DCACHE_REQ_STORE_ATOM: begin
-//                         if(rllit_from_dcache[pa_to_dcache[4:2]])begin
-//                             dcache_ns = `D_STORE;
-//                         end
-//                         else begin
-//                             dcache_ns = `D_WAIT;
-//                         end
-//                     end
-//                     `DCACHE_REQ_STORE_WORD: begin
-//                         dcache_ns = `D_STORE;
-//                     end
-//                     `DCACHE_REQ_STORE_HALF_WORD: begin
-//                         dcache_ns = `D_STORE;
-//                     end
-//                     `DCACHE_REQ_STORE_BYTE: begin
-//                         dcache_ns = `D_STORE;
-//                     end
-//                     `DCACHE_REQ_HIT_INVALIDATA: begin
-//                         dcache_ns = `D_HIT_WRITE_V;
-//                     end
-//                     default: begin
-//                         dcache_data_valid = 1'b1;
-//                         if(~dcache_stall)begin
-//                             dcache_busy = 1'b0;
-//                             dcache_ns = dcache_pre_s;
-//                         end
-//                         else begin
-//                             dcache_busy = 1'b1;
-//                             dcache_ns = `D_LOAD;
-//                         end
-//                     end
-//                 endcase
-//             end
-//         end
-//         `D_WRITE_TAG: begin
-//             dcache_busy = 1'b0;
-//             dcache_ns = dcache_pre_s;      
-//         end
-//         `D_INDEX_WRITE_V: begin 
-//             if(rdirty_from_dcache)begin
-//                 dcache_ns = `D_REQ_TO_PIPLINE_STORE_BLOCK;
-//             end
-//             else begin
-//                 dcache_busy = 1'b1;
-//                 dcache_ns = dcache_pre_s;
-//             end  
-//         end
-//         `D_HIT_WRITE_V: begin
-//             if(rdirty_from_dcache)begin
-//                 dcache_ns = `D_REQ_TO_PIPLINE_STORE_BLOCK;
-//             end
-//             else begin
-//                 dcache_ns = dcache_pre_s;
-//                 dcache_busy = 1'b0;
-//             end
-//         end
-//         `D_CLEAR_LLIT: begin
-//             if(dcache_clear_llit_cnt == `DCACHE_CNT_FINISH)begin
-//                 dcache_busy = 1'b0;
-//                 dcache_ns = dcache_pre_s;    
-//             end
-//             else begin
-//                 dcache_ns = `D_CLEAR_LLIT;
-//             end
-//         end
-//         `D_SET_LLIT: begin
-//             dcache_busy = 1'b0;
-//             dcache_ns = dcache_pre_s;
-//         end
-//         `D_STORE: begin
-//             dcache_busy = 1'b0;
-//             dcache_ns = dcache_pre_s;
-//         end
-//         `D_REQ_TO_PIPLINE_LOAD_WORD: begin
-//             dcache_ns = `D_WAIT_LOAD_WORD;
-//         end
-//         `D_WAIT_LOAD_WORD: begin
-//             if(response_from_pipline == `FINISH_DCACHE_REQ)begin
-//                 dcache_ns = `D_LOAD_WORD_DONE;
-//             end
-//             else begin
-//                 dcache_ns = `D_WAIT_LOAD_WORD;
-//             end
-//         end
-//         `D_LOAD_WORD_DONE: begin
-//             dcache_data_valid = 1'b1;
-//             if(~dcache_stall)begin
-//                 dcache_busy = 1'b0;
-//                 dcache_ns = dcache_pre_s;
-//             end
-//             else begin
-//                 dcache_busy = 1'b1;
-//                 dcache_ns = `D_LOAD_WORD_DONE;
-//             end
-//         end
-//         `D_LOAD_ATOM_REQ_TO_PIPLINE_LOAD_BLOCK: begin
-//             dcache_ns = `D_WAIT_LOAD_ATOM;
-//         end
-//         `D_LOAD_ATOM_REQ_TO_PIPLINE_STORE_LOAD_BLOCK: begin
-//             dcache_ns = `D_WAIT_LOAD_ATOM;
-//         end
-//         `D_LOAD_REQ_TO_PIPLINE_LOAD_BLOCK: begin
-//             dcache_ns = `D_WAIT_LOAD_BLOCK;
-//         end
-//         `D_LOAD_REQ_TO_PIPLINE_STORE_LOAD_BLOCK: begin
-//             dcache_ns = `D_WAIT_LOAD_BLOCK;
-//         end
-//         `D_STORE_REQ_TO_PIPLINE_STORE_LOAD_BLOCK: begin
-//             dcache_ns = `D_WAIT_STORE_BLOCK;
-//         end
-//         `D_STORE_REQ_TO_PIPLINE_LOAD_BLOCK: begin
-//             dcache_ns = `D_WAIT_STORE_BLOCK;
-//         end
-//         `D_REQ_TO_PIPLINE_STORE_WORD: begin
-//             dcache_ns = `D_WAIT_STORE_WORD;
-//         end
-//         `D_WAIT_LOAD_ATOM: begin
-//             if(response_from_pipline == `FINISH_DCACHE_REQ)begin
-//                 dcache_ns = `D_WRITE_LOAD_ATOM;
-//             end
-//             else begin
-//                 dcache_ns = `D_WAIT_LOAD_ATOM;
-//             end
-//         end
-//         `D_WAIT_LOAD_BLOCK: begin
-//             if(response_from_pipline == `FINISH_DCACHE_REQ)begin
-//                 dcache_ns = `D_WRITE_LOAD;
-//             end
-//             else begin
-//                 dcache_ns = `D_WRITE_LOAD;
-//             end
-//         end
-//         `D_WAIT_STORE_BLOCK: begin
-//             if(response_from_pipline == `FINISH_DCACHE_REQ)begin
-//                 dcache_ns = `D_WRITE_STORE;
-//             end
-//             else begin
-//                 dcache_ns = `D_WAIT_STORE_BLOCK;
-//             end
-//         end
-//         `D_WAIT_STORE_WORD: begin
-//             if(response_from_pipline == `FINISH_DCACHE_REQ)begin
-//                 dcache_ns = `D_WAIT;
-//             end
-//             else begin
-//                 dcache_ns = `D_WAIT_STORE_WORD;
-//             end
-//         end
-//         `D_WRITE_LOAD: begin
-//             dcache_ns = `D_LOAD;
-//         end
-//         `D_WRITE_STORE: begin
-//             dcache_ns = `D_STORE;
-//         end
-//         `D_WRITE_LOAD_ATOM: begin
-//             dcache_ns = `D_LOAD;
-//         end
-//         `D_REQ_TO_PIPLINE_STORE_BLOCK: begin
-//             dcache_ns = `D_WAIT_STORE;
-//         end
-//         `D_WAIT_STORE: begin
-//             if(response_from_pipline == `FINISH_DCACHE_REQ)begin
-//                 dcache_ns = `D_WAIT;
-//             end
-//             else begin
-//                 dcache_ns = `D_WAIT_STORE;
-//             end
-//         end
-//     endcase
-// end
-
-// always_ff @(posedge clk) begin
-//     if(dcache_ns == `D_CLEAR_LLIT)begin
-//         dcache_clear_llit_cnt <= dcache_clear_llit_cnt + 1;
-//     end
-//     else begin
-//         dcache_clear_llit_cnt <= `DCACHE_CNT_START;
-//     end
-// end
-
-// //contract with cpu
-// always_comb begin
-//     if(dcache_cs == `D_LOAD_WORD_DONE)begin
-//         load_data = rword_from_pipline;
-//     end
-//     else begin
-//         load_data = load_data_from_dcache;
-//     end
-// end
-
-// //contract with pipline
-// assign rdata_to_dcache = rblock_from_pipline;
-// assign pa_to_dcache = {reg_dcache_pa, reg_dcache_va};
-// always_comb begin
-//     ad_to_dcache = pa_to_dcache;
-//     unique case(dcache_ns)
-//         `D_CLEAR_LLIT: begin
-//             ad_to_dcache = {{20{1'b0}}, dcache_clear_llit_cnt, {5{1'b0}}};
-//         end
-//         `D_LOAD: begin
-//             if(~dcache_stall && ~dcache_busy)begin
-//                 ad_to_dcache = {{20{1'b0}}, dcache_va};
-//             end
-//         end
-//     endcase
-// end
-
-// always_comb begin
-//     wen_to_dcache = 4'b0000;
-//     if(dcache_ns == `D_STORE)begin
-//         unique case(reg_dcache_op)
-//             `DCACHE_REQ_STORE_ATOM: begin
-//                 wen_to_dcache = 4'b1111;
-//             end
-//             `DCACHE_REQ_STORE_WORD: begin
-//                 wen_to_dcache = 4'b1111;
-//             end
-//             `DCACHE_REQ_STORE_HALF_WORD: begin
-//                 if(reg_dcache_va[1])begin
-//                     wen_to_dcache = 4'b1100;
-//                 end
-//                 else begin
-//                     wen_to_dcache = 4'b0011;
-//                 end
-//             end
-//             `DCACHE_REQ_STORE_BYTE: begin
-//                 unique case(reg_dcache_va[1:0])
-//                     2'b00: wen_to_dcache = 4'b0001;
-//                     2'b01: wen_to_dcache = 4'b0010;
-//                     2'b10: wen_to_dcache = 4'b0100;
-//                     2'b11: wen_to_dcache = 4'b1000;
-//                 endcase
-//             end
-//             default: $stop;
-//         endcase
-//     end
-// end
-
-// always_ff @(posedge clk)begin
-//     reg_rlru_from_dcache <= rlru_from_dcache;
-// end
-
-// assign select_way_to_dcache = reg_rlru_from_dcache;
-
-// assign wlru_en_to_dcache = (dcache_cs == `D_LOAD && hit_from_dcache)? `ENABLE : `UNABLE;
-
-
-// //contract with pipline
-// always_comb begin
-//     unique case(dcache_ns)
-//         `D_REQ_TO_PIPLINE_LOAD_WORD: begin
-//             dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_WORD;
-//         end
-//         `D_LOAD_ATOM_REQ_TO_PIPLINE_LOAD_BLOCK: begin
-//             dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_BLOCK;
-//         end
-//         `D_LOAD_ATOM_REQ_TO_PIPLINE_STORE_LOAD_BLOCK: begin
-//             dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_STORE_BLOCK;
-//         end
-//         `D_LOAD_REQ_TO_PIPLINE_LOAD_BLOCK: begin
-//             dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_BLOCK;
-//         end
-//         `D_LOAD_REQ_TO_PIPLINE_STORE_LOAD_BLOCK: begin
-//             dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_STORE_BLOCK;
-//         end
-//         `D_STORE_REQ_TO_PIPLINE_STORE_LOAD_BLOCK: begin
-//             dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_STORE_BLOCK;
-//         end
-//         `D_STORE_REQ_TO_PIPLINE_LOAD_BLOCK: begin
-//             dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_LOAD_WORD;
-//         end
-//         `D_REQ_TO_PIPLINE_STORE_WORD: begin
-//             dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_STORE_WORD;
-//         end
-//         `D_REQ_TO_PIPLINE_STORE_BLOCK: begin
-//             dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_STORE_BLOCK;
-//         end
-//         default: begin
-//             dcache_req_to_pipline = `DCACHE_REQ_TO_PIPLINE_NONE;
-//         end
-//     endcase
-// end
-
-// assign dcache_req_ad_to_pipline = ((dcache_ns == `D_REQ_TO_PIPLINE_LOAD_WORD) ||(dcache_ns == `D_REQ_TO_PIPLINE_STORE_WORD))? {dcache_pa, dcache_va} : pa_to_dcache;
-
-// assign wword_to_pipline = store_data;
-
-// assign wblock_to_pipline = dirty_data_from_dcache;
-
-// assign dcache_cached_to_pipline = ((dcache_ns == `D_REQ_TO_PIPLINE_LOAD_WORD) || (dcache_ns == `D_REQ_TO_PIPLINE_STORE_WORD))? dcache_cached : reg_dcache_cached; 
-
-// always_comb begin
-//     if(dcache_ns == `D_REQ_TO_PIPLINE_STORE_WORD)begin
-//         unique case(dcache_op)
-//             `DCACHE_REQ_STORE_WORD: begin
-//                 dcache_wen_to_pipline = 4'b1111;
-//             end
-//             `DCACHE_REQ_STORE_HALF_WORD: begin
-//                 if(dcache_va[1])begin
-//                     dcache_wen_to_pipline = 4'b1100;
-//                 end
-//                 else begin
-//                     dcache_wen_to_pipline = 4'b0011;
-//                 end
-//             end
-//             `DCACHE_REQ_STORE_BYTE: begin  
-//                 unique case(dcache_va[1:0])
-//                     2'b00: dcache_wen_to_pipline = 4'b0001;
-//                     2'b01: dcache_wen_to_pipline = 4'b0010;
-//                     2'b10: dcache_wen_to_pipline = 4'b0100;
-//                     2'b11: dcache_wen_to_pipline = 4'b1000;
-//                 endcase
-//             end
-//             default: $stop;
-//         endcase
-//     end
-//     else begin
-//         dcache_wen_to_pipline = 4'b1000;
-//     end
-// end
-
-// always_comb begin
-//     if(dcache_ns == `D_REQ_TO_PIPLINE_LOAD_WORD)begin
-//         unique case(dcache_op)
-//             `DCACHE_REQ_LOAD_WORD: begin
-//                 dcache_ren_to_pipline = 3'h2;
-//             end
-//             `DCACHE_REQ_LOAD_HALF_WORD: begin
-//                 dcache_ren_to_pipline = 3'h1;
-//             end
-//             `DCACHE_REQ_LOAD_BYTE: begin
-//                 dcache_ren_to_pipline = 3'h0;
-//             end
-//             default: $stop;
-//         endcase
-//     end
-//     else begin
-//         dcache_ren_to_pipline = 3'h2;
-//     end
-// end
 
 DCache dcache(.clk(clk), 
                 .rstn(rstn), 
