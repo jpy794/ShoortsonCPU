@@ -11,18 +11,12 @@ module Memory2 (
     input logic dcache_data_valid,
     output logic dcache_data_ready,
 
-    /* from excp */
-    input logic excp_flush,
-
     /* pipeline */
     input logic flush_i, stall_i,
     output logic stall_o,
     input memory1_memory2_pass_t pass_in,
-    input excp_pass_t excp_pass_in,
-
     output memory2_writeback_pass_t pass_out,
 
-    output excp_req_t excp_req
 `ifdef DIFF_TEST
     ,input csr_t rd_csr
 `endif
@@ -30,14 +24,10 @@ module Memory2 (
 
     /* pipeline start */
     memory1_memory2_pass_t pass_in_r;
-    excp_pass_t excp_pass_in_r;
 
     logic dcache_data_stall;
     assign dcache_data_stall = eu_do & pass_in_r.dcache_req & ~dcache_data_valid & pass_in_r.is_ld;     // TODO: other cache op
     assign stall_o = stall_i | dcache_data_stall;
-
-    logic excp_valid;
-    assign excp_valid = excp_pass_in_r.valid;
 
     logic valid_o;
     assign valid_o = pass_in_r.valid & ~stall_o;        // if ~valid_i, do not set exception valid
@@ -47,16 +37,14 @@ module Memory2 (
 
     /* for this stage */
     logic eu_do;
-    assign eu_do = pass_in_r.valid & ~excp_valid;
+    assign eu_do = pass_in_r.valid;
 
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
             pass_in_r.valid <= 1'b0;
-            excp_pass_in_r.valid <= 1'b0;
             pass_in_r.dcache_req <= 1'b0;       // do not wait for the req if flush
         end else if(~stall_o | flush_i) begin
             pass_in_r <= pass_in;
-            excp_pass_in_r <= excp_pass_in;
         end
     end
 
@@ -66,12 +54,6 @@ module Memory2 (
     /* out valid */
     assign pass_out.valid = valid_with_flush;
     
-    /* exeption */
-    always_comb begin
-        excp_req.valid = valid_with_flush;
-        excp_req.excp_pass = excp_pass_in_r;
-        excp_req.excp_pass.valid = excp_valid & valid_with_flush;
-    end
     /* pipeline end */
 
     /* forward */

@@ -38,7 +38,7 @@ module CPUTop (
     execute_memory1_pass_t pass_ex;
     memory1_memory2_pass_t pass_mem1;
     memory2_writeback_pass_t pass_mem2;
-    excp_pass_t excp_if1, excp_if2, excp_id, excp_ex, excp_mem1;
+    excp_pass_t excp_if1, excp_if2, excp_id, excp_ex;
 
     /* ctrl signals */
     logic if1_flush_i, if2_flush_i, id_flush_i, ex_flush_i, mem1_flush_i, mem2_flush_i, wb_flush_i;
@@ -270,7 +270,8 @@ module CPUTop (
         .pass_in(pass_ex),
         .excp_pass_in(excp_ex), 
         .pass_out(pass_mem1),
-        .excp_pass_out(excp_mem1)
+        
+        .excp_req
     );
 
     Memory2 U_Memory2 (
@@ -282,27 +283,23 @@ module CPUTop (
         .dcache_data_valid,
         .dcache_data_ready,
 
-        // from excp
-        .excp_flush(excp_flush),
-
         .flush_i(mem2_flush_i),
         .stall_i(mem2_stall_i),
         .stall_o(mem2_stall_o),
 
         .pass_in(pass_mem1),
-        .excp_pass_in(excp_mem1), 
         .pass_out(pass_mem2),
 
-        .excp_req
 `ifdef DIFF_TEST
         ,.rd_csr(mem2_rd_csr)
 `endif
     );
 
 `ifdef DIFF_TEST
-    excp_event_t excp_event[2];
+    excp_event_t excp_event[3];
     always_ff @(posedge clk) begin
         excp_event[1] <= excp_event[0];
+        excp_event[2] <= excp_event[1];
     end
 `endif
 
@@ -320,7 +317,7 @@ module CPUTop (
         .pass_in(pass_mem2)
 
 `ifdef DIFF_TEST
-        ,.excp_event_in(excp_event[1]),
+        ,.excp_event_in(excp_event[2]),
         .rd_csr(wb_rd_csr)
 `endif
     );

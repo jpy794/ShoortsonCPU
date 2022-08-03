@@ -42,7 +42,8 @@ module Memory1 (
     input excp_pass_t excp_pass_in,
 
     output memory1_memory2_pass_t pass_out,
-    output excp_pass_t excp_pass_out
+
+    output excp_req_t excp_req
 );
 
     /* pipeline start */
@@ -86,10 +87,15 @@ module Memory1 (
     assign pass_out.valid = valid_with_flush;
     
     /* exeption */
+    excp_pass_t excp_pass;
     always_comb begin
-        if(excp_pass_in_r.valid) excp_pass_out = excp_pass_in_r;
-        else                     excp_pass_out = addr_excp;
-        excp_pass_out.valid = excp_pass_out.valid & valid_with_flush;
+        if(excp_pass_in_r.valid) excp_pass = excp_pass_in_r;
+        else                     excp_pass = addr_excp;
+
+        excp_req.valid = valid_o;
+        excp_req.epc = pass_in_r.pc;
+        excp_req.excp_pass = excp_pass;
+        excp_req.excp_pass.valid = excp_valid & valid_o;
     end
     /* pipeline end */
 
