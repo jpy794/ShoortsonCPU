@@ -14,8 +14,10 @@ module Cache_pipline(
     input logic [`AXI_STRB_WIDTH]wword_en_from_dcache,
     input logic [2:0]rword_en_from_dcache,
 
-    output logic [`BLOCK_WIDTH]rblock_to_cache,
-    output logic [`ADDRESS_WIDTH]rword_to_cache,
+    output logic [`BLOCK_WIDTH]rblock_to_icache,
+    output logic [`BLOCK_WIDTH]rblock_to_dcache,
+    output logic [`DATA_WIDTH]rword_to_icache,
+    output logic [`DATA_WIDTH]rword_to_dcache,
     output logic [`RESPONSE_FROM_PIPLINE_WIDTH]response,
 
     //from axi
@@ -345,16 +347,16 @@ end
 always_ff @(posedge clk)begin
     unique case(ns)
         D_PIPLINE_LOAD_BLOCK_FINISH: begin
-            rblock_to_cache <= rblock_from_axi;
+            rblock_to_dcache <= rblock_from_axi;
         end
         D_PIPLINE_LOAD_WORD_FINISH: begin
-            rword_to_cache <= rword_from_axi;
+            rword_to_dcache <= rword_from_axi;
         end
         I_PIPLINE_LOAD_BLOCK_FINISH: begin
-            rblock_to_cache <= rblock_from_axi;
+            rblock_to_icache <= rblock_from_axi;
         end
         I_PIPLINE_LOAD_WORD_FINISH: begin
-            rword_to_cache <= rword_from_axi;
+            rword_to_icache <= rword_from_axi;
         end
     endcase
 end

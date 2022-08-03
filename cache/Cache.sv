@@ -47,8 +47,10 @@ logic [`DATA_WIDTH]wword_to_pipline;
 logic [`BLOCK_EN]dcache_wen_to_pipline;
 logic [`BLOCK_WIDTH]wblock_to_pipline;
 logic [2:0]dcache_ren_to_pipline;
-logic [`BLOCK_WIDTH]rblock_from_pipline;
-logic [`DATA_WIDTH]rword_from_pipline;
+logic [`BLOCK_WIDTH]rblock_from_pipline_to_icache;
+logic [`DATA_WIDTH]rword_from_pipline_to_icache;
+logic [`BLOCK_WIDTH]rblock_from_pipline_to_dcache;
+logic [`DATA_WIDTH]rword_from_pipline_to_dcache;
 
 
 logic icache_busy;
@@ -255,7 +257,7 @@ end
 
 always_comb begin
     if(icache_cs == `ICACHE_LOAD_WORD_DONE)begin
-        ins = rword_from_pipline;
+        ins = rword_from_pipline_to_icache;
     end
     else begin
         ins = ins_from_icache;
@@ -264,7 +266,7 @@ end
 
 //contract with icache
 
-assign rdata_to_icache = rblock_from_pipline;
+assign rdata_to_icache = rblock_from_pipline_to_icache;
 assign select_way_to_icache = ~reg_rlru_from_icache;
 assign wlru_en_to_icache = (icache_cs == `ICACHE_LOOKUP && hit_from_icache)? `ENABLE : `UNABLE;
 
@@ -712,13 +714,13 @@ always_comb begin
             end
         end
         D_LOAD_WORD_DONE:begin
-            load_data = rword_from_pipline;
+            load_data = rword_from_pipline_to_dcache;
         end
     endcase
 end
 
 //contract with dcache
-assign rdata_to_dcache = rblock_from_pipline;
+assign rdata_to_dcache = rblock_from_pipline_to_dcache;
 assign pa_to_dcache = {reg_dcache_pa, reg_dcache_va};
 
 always_comb begin
@@ -911,8 +913,10 @@ Cache_pipline U_Cache_pipline (.clk(clk), .rstn(rstn),
                 .wblock_from_dcache(wblock_to_pipline),
                 .rword_en_from_dcache(dcache_ren_to_pipline), 
 
-                .rblock_to_cache(rblock_from_pipline), 
-                .rword_to_cache(rword_from_pipline), 
+                .rblock_to_dcache(rblock_from_pipline_to_dcache), 
+                .rword_to_dcache(rword_from_pipline_to_dcache),
+                .rblock_to_icache(rblock_from_pipline_to_icache),
+                .rword_to_icache(rword_from_pipline_to_icache), 
 
                 .response(response_from_pipline),
                 .req_to_axi(req_to_axi), 
