@@ -98,13 +98,24 @@ module AddrTrans (
         excp.valid = 1'b0;
         excp.esubcode_ecode = tlb_ecode;
         if(en) begin
-            if(~align_ok) begin
-                /* unaligned */
-                excp.valid = 1'b1;
-                excp.esubcode_ecode = ALE;
-            end else if(tlb_is_exc & is_tlb) begin
-                /* tlb exception */
-                excp.valid = 1'b1;
+            if(lookup_type == LOOKUP_FETCH) begin
+                if(~align_ok) begin
+                    /* unaligned */
+                    excp.valid = 1'b1;
+                    excp.esubcode_ecode = ADEF;
+                end else if(tlb_is_exc & is_tlb) begin
+                    /* tlb exception */
+                    excp.valid = 1'b1;
+            end
+            end else begin
+                if(~align_ok) begin
+                    /* unaligned */
+                    excp.valid = 1'b1;
+                    excp.esubcode_ecode = ALE;
+                end else if(tlb_is_exc & is_tlb) begin
+                    /* tlb exception */
+                    excp.valid = 1'b1;
+                end
             end
         end
     end
