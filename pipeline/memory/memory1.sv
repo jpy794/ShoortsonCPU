@@ -52,6 +52,7 @@ module Memory1 (
     logic is_mem = pass_in_r.is_mem;
     logic dcache_busy_stall;
     assign dcache_busy_stall = eu_do & is_mem & ~dcache_ready;
+    assign stall_o = stall_i | dcache_busy_stall;
 
     logic valid_o;
     assign valid_o = pass_in_r.valid & ~stall_o;        // if ~valid_i, do not set exception valid

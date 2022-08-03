@@ -3,7 +3,6 @@
 module CPUTop (
     input logic clk, rst_n,
 
-    output logic stall_icache,
     output logic [11:0] icache_idx,
     output logic [2:0] icache_op,
     output logic icache_is_cached,
@@ -12,7 +11,6 @@ module CPUTop (
     input logic icache_ready, icache_data_valid,
     output logic icache_data_ready,
 
-    output logic stall_dcache,
     output logic [11:0] dcache_idx,
     output logic [4:0] dcache_op,
     output logic dcache_is_cached,
@@ -287,9 +285,9 @@ module CPUTop (
         // from excp
         .excp_flush(excp_flush),
 
-        .flush_i(mem1_flush_i),
-        .stall_i(mem1_stall_i),
-        .stall_o(mem1_stall_o),
+        .flush_i(mem2_flush_i),
+        .stall_i(mem2_stall_i),
+        .stall_o(mem2_stall_o),
 
         .pass_in(pass_mem1),
         .excp_pass_in(excp_mem1), 

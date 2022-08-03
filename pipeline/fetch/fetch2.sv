@@ -4,7 +4,6 @@ module Fetch2 (
     input logic clk, rst_n,
 
     /* from cache */
-    input logic icache_ready,
     input u32_t icache_data,
     input logic icache_data_valid,
     output logic icache_data_ready,
