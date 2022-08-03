@@ -59,7 +59,7 @@ module Fetch1 (
     assign eu_do = ~excp_valid;
 
     /* out */
-    assign pass_out.valid = valid_o;
+    assign pass_out.valid = valid_o & ~flush_i;
     assign pass_out.pc = pc_r;
     assign pass_out.icache_req = eu_do;
 
