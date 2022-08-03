@@ -9,8 +9,8 @@ module Fetch2 (
     input logic icache_data_valid,
 
     /* pipeline */
-    input logic flush, next_rdy_in,
-    output logic rdy_in,
+    input logic flush_i, stall_i,
+    output logic stall_o,
 
     /* ctrl */
     output logic bp_update_flush,
@@ -25,30 +25,46 @@ module Fetch2 (
     output excp_pass_t excp_pass_out
 );
 
+    /* pipeline start */
     fetch1_fetch2_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
+    logic icache_data_stall;
+    assign icache_data_stall = eu_do & pass_in_r.icache_req & ~icache_data_valid;
+    assign stall_o = stall_i | icache_data_stall;
+
+    logic valid_o;
+    assign valid_o = pass_in_r.valid & ~stall_o;        // if ~valid_i, do not set exception valid
+
+    /* for this stage */
+    logic eu_do;
+    assign eu_do = pass_in_r.valid & ~excp_pass_out.valid;
+
     always_ff @(posedge clk, negedge rst_n) begin
-        if(~rst_n) begin
+        if(~rst_n | flush_i) begin
             pass_in_r.valid <= 1'b0;
-        end else if(rdy_in) begin
+            excp_pass_in_r.valid <= 1'b0;
+            pass_in_r.icache_req <= 1'b0;       // do not wait for the req if flush
+        end else if(~stall_o) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;
         end
     end
 
-    logic rdy_out;
-    logic if2_flush, if2_stall;
-    assign if2_flush = flush | ~pass_in_r.valid;
-    assign if2_stall = ~next_rdy_in | ~icache_data_valid;
-
-    assign rdy_in = if2_flush | ~if2_stall;
-    assign rdy_out = ~if2_flush & ~if2_stall;        // only use this for pass_out.valid
-    assign working = ~if2_flush & ~if2_stall;
-
-    /* out to next stage */
-    assign pass_out.valid = rdy_out;
+    /* out */
+    `PASS(pc);
+    assign pass_out.valid = valid_o;
     assign pass_out.inst = icache_data;
+    
+    /* exeption */
+    always_comb begin
+        excp_pass_out = excp_pass_in_r;
+        excp_pass_out.valid = excp_pass_out.valid & valid_o;
+    end
+    /* pipeline end */
+
+    /* icache */
+    assign icache_data_ready = ~stall_i;
 
     /* check branch prediction error */
     /* reprediction of return instruction */
@@ -164,19 +180,6 @@ module Fetch2 (
             wr_pc_req.pc = 0;
             wr_pc_req.is_predict = 0;
             pass_out.next = pass_in_r.next;
-        end
-    end
-
-    `PASS(pc);
-
-    /* exception */
-    // no exception in if2
-    always_comb begin
-        excp_pass_out.valid = 1'b0;
-        excp_pass_out.esubcode_ecode = excp_pass_in_r.esubcode_ecode;
-        excp_pass_out.badv = excp_pass_in_r.badv;
-        if(rdy_out) begin
-            excp_pass_out = excp_pass_in_r;
         end
     end
 

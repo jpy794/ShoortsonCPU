@@ -41,8 +41,9 @@ module CPUTop (
     excp_pass_t excp_if1, excp_if2, excp_id, excp_ex, excp_mem1;
 
     /* ctrl signals */
-    logic flush_if1, flush_if2, flush_id, flush_ex, flush_mem1, flush_mem2, flush_wb;
-    logic if1_rdy_in, if2_rdy_in, id_rdy_in, ex_rdy_in, mem1_rdy_in, mem2_rdy_in, wb_rdy_in;
+    logic if1_flush_i, if2_flush_i, id_flush_i, ex_flush_i, mem1_flush_i, mem2_flush_i, wb_flush_i;
+    logic if1_stall_o, if2_stall_o, id_stall_o, ex_stall_o, mem1_stall_o, mem2_stall_o, wb_stall_o;
+    logic if1_stall_i, if2_stall_i, id_stall_i, ex_stall_i, mem1_stall_i, mem2_stall_i, wb_stall_i;
 
     /* mux csr_addr */
     csr_addr_t csr_addr_wb, csr_addr_id, csr_addr;
@@ -154,9 +155,9 @@ module CPUTop (
         .icache_is_cached,
         .icache_busy,
 
-        .flush(flush_if1),
-        .next_rdy_in(if2_rdy_in),
-        .rdy_in(if1_rdy_in),
+        .flush_i(if1_flush_i),
+        .stall_i(if1_stall_i),
+        .stall_o(if1_stall_o),
 
         .pass_out(pass_if1),
         .excp_pass_out(excp_if1)
@@ -169,9 +170,9 @@ module CPUTop (
         .icache_data,
         .icache_data_valid,
 
-        .flush(flush_if2),
-        .next_rdy_in(id_rdy_in),
-        .rdy_in(if2_rdy_in),
+        .flush_i(if2_flush_i),
+        .stall_i(if2_stall_i),
+        .stall_o(if2_stall_o),
 
         .bp_update_flush(bp_update_flush),
 
@@ -201,9 +202,9 @@ module CPUTop (
         .mem1_req(mem1_fwd_req),
         .mem2_req(mem2_fwd_req),
 
-        .flush(flush_id),
-        .next_rdy_in(ex_rdy_in),
-        .rdy_in(id_rdy_in),
+        .flush_i(id_flush_i),
+        .stall_i(id_stall_i),
+        .stall_o(id_stall_o),
 
         .pass_in(pass_if2),
         .excp_pass_in(excp_if2),
@@ -221,9 +222,9 @@ module CPUTop (
         /* forwarding */
         .fwd_req(ex_fwd_req),
 
-        .flush(flush_ex),
-        .next_rdy_in(mem1_rdy_in),
-        .rdy_in(ex_rdy_in),
+        .flush_i(ex_flush_i),
+        .stall_i(ex_stall_i),
+        .stall_o(ex_stall_o),
 
         .pass_in(pass_id),
         .excp_pass_in(excp_id),
@@ -261,9 +262,9 @@ module CPUTop (
         .wr_dcache_data,
         .dcache_busy,
 
-        .flush(flush_mem1),
-        .next_rdy_in(mem2_rdy_in),
-        .rdy_in(mem1_rdy_in),
+        .flush_i(mem1_flush_i),
+        .stall_i(mem1_stall_i),
+        .stall_o(mem1_stall_o),
 
         .pass_in(pass_ex),
         .excp_pass_in(excp_ex), 
@@ -279,11 +280,12 @@ module CPUTop (
         .rd_dcache_data,
         .dcache_data_valid,
 
-        .flush(flush_mem2),
         // from excp
         .excp_flush(excp_flush),
-        .next_rdy_in(wb_rdy_in),
-        .rdy_in(mem2_rdy_in),
+
+        .flush_i(mem1_flush_i),
+        .stall_i(mem1_stall_i),
+        .stall_o(mem1_stall_o),
 
         .pass_in(pass_mem1),
         .excp_pass_in(excp_mem1), 
@@ -309,9 +311,9 @@ module CPUTop (
         .reg_we(reg_we),
         .reg_data(rd_data),
 
-        .flush(flush_wb),
-        .next_rdy_in(1'b1),
-        .rdy_in(wb_rdy_in),
+        .flush_i(wb_flush_i),
+        .stall_i(wb_stall_i),
+        .stall_o(wb_stall_o),
 
         .pass_in(pass_mem2)
 
@@ -352,15 +354,20 @@ module CPUTop (
 `endif
     );
 
-    assign stall_icache = ~id_rdy_in;
-    assign stall_dcache = ~wb_rdy_in;
-
-    assign flush_if1 = bp_update_flush | bp_miss_flush | excp_flush | modify_state_flush;
-    assign flush_if2 = bp_miss_flush | excp_flush | modify_state_flush;
-    assign flush_id = bp_miss_flush | excp_flush | modify_state_flush;
-    assign flush_ex = bp_miss_flush | excp_flush | modify_state_flush;
-    assign flush_mem1 = excp_flush;
-    assign flush_mem2 = 1'b0;
-    assign flush_wb = 1'b0;
+    assign if1_stall_i = if2_stall_o;
+    assign if2_stall_i = id_stall_o;
+    assign id_stall_i = ex_stall_o;
+    assign ex_stall_i = mem1_stall_o;
+    assign mem1_stall_i = mem2_stall_o;
+    assign mem2_stall_i = wb_stall_o;
+    assign wb_stall_i = 1'b0;
+    
+    assign if1_flush_i = bp_update_flush | bp_miss_flush | excp_flush | modify_state_flush;
+    assign if2_flush_i = bp_miss_flush | excp_flush | modify_state_flush;
+    assign id_flush_i = bp_miss_flush | excp_flush | modify_state_flush;
+    assign ex_flush_i = bp_miss_flush | excp_flush | modify_state_flush;
+    assign mem1_flush_i = excp_flush;
+    assign mem2_flush_i = 1'b0;
+    assign wb_flush_i = 1'b0;
 
 endmodule

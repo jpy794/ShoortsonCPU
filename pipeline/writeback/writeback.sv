@@ -9,8 +9,8 @@ module Writeback (
     output u32_t reg_data,
 
     /* pipeline */
-    input logic flush, next_rdy_in,
-    output logic rdy_in,
+    input logic flush_i, stall_i,
+    output logic stall_o,
 
     input memory2_writeback_pass_t pass_in
 `ifdef DIFF_TEST
@@ -19,29 +19,34 @@ module Writeback (
 `endif
 );
 
+    /* pipeline start */
     memory2_writeback_pass_t pass_in_r;
 
+    assign stall_o = stall_i;
+
+    logic valid_o;
+    assign valid_o = pass_in_r.valid & ~stall_o;        // if ~valid_i, do not set exception valid
+
+    /* for this stage */
+    logic eu_do;
+    assign eu_do = pass_in_r.valid;
+
     always_ff @(posedge clk, negedge rst_n) begin
-        if(~rst_n) begin
+        if(~rst_n | flush_i) begin
             pass_in_r.valid <= 1'b0;
-        end else if(rdy_in) begin
+            excp_pass_in_r.valid <= 1'b0;
+        end else if(~stall_o) begin
             pass_in_r <= pass_in;
+            excp_pass_in_r <= excp_pass_in;
         end
     end
-
-    logic rdy_out;
-    logic wb_flush, wb_stall;
-    assign wb_flush = flush | ~pass_in_r.valid;
-    assign wb_stall = ~next_rdy_in;
-
-    assign rdy_in = wb_flush | ~wb_stall;
-    assign rdy_out = ~wb_flush & ~wb_stall;        // only use this for pass_out.valid
+    /* pipeline end */
 
     /* writeback stage */
     
     assign reg_idx = pass_in_r.rd;
     assign reg_data = pass_in_r.is_wr_rd_pc_plus4 ? pass_in_r.pc_plus4 : pass_in_r.ex_mem_out;
-    assign reg_we = ~wb_flush & pass_in_r.is_wr_rd;
+    assign reg_we = eu_do & pass_in_r.is_wr_rd;
     
 `ifdef DIFF_TEST
     csr_addr_t csr_addr;
@@ -49,7 +54,7 @@ module Writeback (
     logic csr_we;
     assign csr_addr = pass_in_r.csr_addr;
     assign csr_data = pass_in_r.csr_data;
-    assign csr_we = ~wb_flush & pass_in_r.is_wr_csr;
+    assign csr_we = eu_do & pass_in_r.is_wr_csr;
 
     /* from mycpu */
     logic             cmt_valid;
@@ -90,7 +95,7 @@ module Writeback (
             {trap, trap_code, cycleCnt, instrCnt} <= 0;
             cmt_int_no <= '0;
         end else if (~trap) begin
-            cmt_valid       <= ~wb_flush;
+            cmt_valid       <= eu_do;
             cmt_cnt_inst    <= '0;                  // TODO
             cmt_timer_64    <= '0;                  // TODO
             cmt_inst_ld_en  <= pass_in_r.is_ld ? pass_in_r.byte_valid : 8'b0;

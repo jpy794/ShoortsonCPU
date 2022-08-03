@@ -27,46 +27,48 @@ module Memory2 (
 `endif
 );
 
+    /* pipeline start */
     memory1_memory2_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
+    logic dcache_data_stall;
+    assign dcache_data_stall = eu_do & pass_in_r.dcache_req & ~dcache_data_valid;
+    assign stall_o = stall_i | dcache_data_stall;
+
+    logic valid_o;
+    assign valid_o = pass_in_r.valid & ~stall_o;        // if ~valid_i, do not set exception valid
+
+    /* for this stage */
+    logic eu_do;
+    assign eu_do = pass_in_r.valid & ~excp_pass_out.valid;
+
     always_ff @(posedge clk, negedge rst_n) begin
-        if(~rst_n) begin
+        if(~rst_n | flush_i) begin
             pass_in_r.valid <= 1'b0;
-        end else if(rdy_in) begin
+            excp_pass_in_r.valid <= 1'b0;
+            pass_in_r.dcache_req <= 1'b0;       // do not wait for the req if flush
+        end else if(~stall_o) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;
         end
     end
-
-    logic dcache_data_stall;
-    logic rdy_out;
-    logic mem2_flush, mem2_stall;
-    assign mem2_flush = flush | ~pass_in_r.valid | excp_flush;
-    assign mem2_stall = ~next_rdy_in | dcache_data_stall;
-
-    logic mem2_no_excp_flush;
-    assign mem2_no_excp_flush = flush | ~pass_in_r.valid;
-
-    assign rdy_in = mem2_flush | ~mem2_stall;
-    assign rdy_out = ~mem2_flush & ~mem2_stall;        // only use this for pass_out.valid
-
-    assign dcache_data_stall = pass_in_r.is_mem & ~pass_in_r.is_store & ~dcache_data_valid;
+    
+    /* exeption */
+    always_comb begin
+        excp_pass_out = excp_pass_in_r;
+        excp_pass_out.valid = excp_pass_out.valid & valid_o;
+    end
+    /* pipeline end */
 
     /* forward */
     // be careful of load-use stall
-    assign fwd_req.valid = (pass_in_r.rd != 5'b0) && pass_in_r.is_wr_rd && ~mem2_flush;
+    assign fwd_req.valid = (pass_in_r.rd != 5'b0) && pass_in_r.is_wr_rd && eu_do;
     assign fwd_req.idx = pass_in_r.rd;
     assign fwd_req.data_valid = ~(pass_in_r.is_mem & ~pass_in_r.is_store);
     always_comb begin
         if(pass_in_r.is_wr_rd_pc_plus4) fwd_req.data = pass_in_r.pc_plus4;
         else                            fwd_req.data = pass_in_r.ex_out;
     end
-
-    /* exception */
-    assign excp_req.excp_pass = excp_pass_in_r;
-    assign excp_req.epc = pass_in_r.pc;
-    assign excp_req.valid = ~mem2_no_excp_flush;
 
     /* memory2 stage */
 

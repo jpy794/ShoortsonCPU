@@ -365,6 +365,7 @@ typedef struct packed {
     logic valid;
     virt_t pc;
     next_pc_t next;
+    logic icache_req;
 } fetch1_fetch2_pass_t;
 
 typedef struct packed {
@@ -483,6 +484,8 @@ typedef struct packed {
     
 `ifdef DIFF_TEST
     u32_t inst;
+
+    logic dcache_req;
 
     logic is_ertn;
     logic is_modify_csr;

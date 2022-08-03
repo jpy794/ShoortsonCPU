@@ -36,54 +36,65 @@ module Memory1 (
     input logic dcache_busy,
 
     /* pipeline */
-    input logic flush, next_rdy_in,
-    output logic rdy_in,
+    input logic flush_i, stall_i,
+    output logic stall_o,
     input execute_memory1_pass_t pass_in,
     input excp_pass_t excp_pass_in,
 
     output memory1_memory2_pass_t pass_out,
     output excp_pass_t excp_pass_out
 );
-    initial begin
-        pass_in_r.is_store = 1'b0;
-    end  //FIX
 
+    /* pipeline start */
     execute_memory1_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
-    always_ff @(posedge clk , negedge rst_n) begin
-        if(~rst_n) begin
+    logic dcache_busy_stall;
+    assign dcache_busy_stall = eu_do & is_mem & dcache_busy;
+
+    logic valid_o;
+    assign valid_o = pass_in_r.valid & ~stall_o;        // if ~valid_i, do not set exception valid
+
+    /* for this stage */
+    logic chk_excp;
+    assign chk_excp = pass_in_r.valid & is_mem;
+    logic eu_do;
+    assign eu_do = pass_in_r.valid & ~excp_pass_out.valid;
+
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(~rst_n | flush_i) begin
             pass_in_r.valid <= 1'b0;
-        end else if(rdy_in) begin
+            excp_pass_in_r.valid <= 1'b0;
+        end else if(~stall_o) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;
         end
     end
 
-    logic dcache_busy_stall;
-    assign dcache_busy_stall = ~addr_excp.valid & pass_in_r.is_mem & dcache_busy;      // flush has a higher priority, so do not need to AND flush here
+    /* out */
+    assign pass_out.dcache_req = pass_in_r.is_mem & eu_do;
     
-    logic rdy_out;
-    logic mem1_flush, mem1_stall;
-    assign mem1_flush = flush | ~pass_in_r.valid;
-    assign mem1_stall = ~next_rdy_in | dcache_busy_stall;
-
-    assign rdy_in = mem1_flush | ~mem1_stall;
-    assign rdy_out = ~mem1_flush & ~mem1_stall;        // only use this for pass_out.valid
+    /* exeption */
+    always_comb begin
+        if(excp_pass_in_r.valid) excp_pass_out = excp_pass_in_r;
+        else                     excp_pass_out = addr_excp;
+        excp_pass_out.valid = excp_pass_out.valid & valid_o;
+    end
+    /* pipeline end */
 
     /* branch taken write pc request */
     wr_pc_req_t bp_miss_req;
-    assign bp_miss_req.valid = pass_in_r.bp_miss_wr_pc_req.valid & ~mem1_flush;
+    assign bp_miss_req.valid = pass_in_r.bp_miss_wr_pc_req.valid & eu_do;
     assign bp_miss_req.pc = pass_in_r.bp_miss_wr_pc_req.pc;
     assign bp_miss_flush = bp_miss_req.valid;
 
     /* modify state inst write pc req */
     wr_pc_req_t modify_state_req;
-    assign modify_state_req.valid = pass_in_r.is_modify_state & ~mem1_flush;
+    assign modify_state_req.valid = pass_in_r.is_modify_state & eu_do;
     assign modify_state_req.pc = pass_in_r.is_ertn ? rd_csr.era : pass_in_r.pc_plus4;
     assign modify_state_flush = modify_state_req.valid;
 
-    assign is_ertn = ~mem1_flush & pass_in_r.is_ertn;
+    assign is_ertn = eu_do & pass_in_r.is_ertn;
 
     always_comb begin
         wr_pc_req = bp_miss_req;
@@ -96,11 +107,11 @@ module Memory1 (
 
     assign csr_addr = pass_in_r.csr_addr;
     assign csr_data = pass_in_r.csr_data;
-    assign csr_we = ~mem1_flush & pass_in_r.is_wr_csr;
+    assign csr_we = eu_do & pass_in_r.is_wr_csr;
 
     /* forward */
     // be careful of load-use stall
-    assign fwd_req.valid = (pass_in_r.rd != 5'b0) && pass_in_r.is_wr_rd && ~mem1_flush;
+    assign fwd_req.valid = (pass_in_r.rd != 5'b0) && pass_in_r.is_wr_rd && eu_do;
     assign fwd_req.idx = pass_in_r.rd;
     assign fwd_req.data_valid = ~(pass_in_r.is_mem & ~pass_in_r.is_store);
     always_comb begin
@@ -114,7 +125,7 @@ module Memory1 (
     phy_t pa;
     excp_pass_t addr_excp;
     AddrTrans U_AddrTrans (
-        .en(~mem1_flush & pass_in_r.is_mem),
+        .en(chk_excp),
         .va(pass_in_r.ex_out),
         .lookup_type(pass_in_r.is_store ? LOOKUP_STORE : LOOKUP_LOAD),
         .byte_type(pass_in_r.byte_type),
@@ -132,7 +143,7 @@ module Memory1 (
     assign dcache_is_cached = mat[0];
     always_comb begin
         dcache_op = DC_NOP;
-        if(~mem1_flush & pass_in_r.is_mem &  ~addr_excp.valid) begin
+        if(pass_out.dcache_req) begin
             if(pass_in_r.is_store) dcache_op = {DC_W[4:2], pass_in_r.byte_type};
             else                   dcache_op = {DC_R[4:2], pass_in_r.byte_type};
         end
@@ -171,7 +182,7 @@ module Memory1 (
     assign tlb_req.invtlb_asid = pass_in_r.invtlb_asid;
 
     /* out to next stage */
-    assign pass_out.valid = rdy_out;
+    assign pass_out.valid = valid_o;
     assign pass_out.byte_en = pass_in_r.ex_out[1:0];
 
     `PASS(pc);
@@ -195,8 +206,8 @@ module Memory1 (
 
     assign pass_out.is_ertn = is_ertn;
 
-    assign pass_out.is_ld = rdy_out & pass_in_r.is_mem & ~pass_in_r.is_store;
-    assign pass_out.is_st = rdy_out & pass_in_r.is_mem & pass_in_r.is_store;
+    assign pass_out.is_ld = ~stall_o & eu_do & pass_in_r.is_mem & ~pass_in_r.is_store;
+    assign pass_out.is_st = ~stall_o & eu_do & pass_in_r.is_mem & pass_in_r.is_store;
     assign pass_out.pa = pa;
     assign pass_out.va = pass_in_r.ex_out;
 
@@ -237,18 +248,5 @@ module Memory1 (
     end
 
 `endif
-
-    always_comb begin
-        excp_pass_out.valid = 1'b0;
-        excp_pass_out.esubcode_ecode = excp_pass_in_r.esubcode_ecode;
-        excp_pass_out.badv = excp_pass_in_r.badv;
-        if(rdy_out) begin
-            if(excp_pass_in_r.valid) begin
-                excp_pass_out = excp_pass_in_r;
-            end else begin
-                excp_pass_out = addr_excp;
-            end
-        end
-    end
 
 endmodule

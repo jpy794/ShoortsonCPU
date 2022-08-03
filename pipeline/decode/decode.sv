@@ -19,8 +19,8 @@ module Decode (
     input forward_req_t ex_req, mem1_req, mem2_req,
 
     /* pipeline */
-    input logic flush, next_rdy_in,
-    output logic rdy_in,
+    input logic flush_i, stall_i,
+    output logic stall_o,
     input fetch2_decode_pass_t pass_in,
     input excp_pass_t excp_pass_in,
 
@@ -28,26 +28,37 @@ module Decode (
     output excp_pass_t excp_pass_out
 );
 
+    /* pipeline start */
     fetch2_decode_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
+    logic load_use_stall;
+    assign stall_o = stall_i | load_use_stall;
+
+    logic valid_o;
+    assign valid_o = pass_in_r.valid & ~stall_o;        // if ~valid_i, do not set exception valid
+
+    /* for this stage */
+    logic eu_do;
+    assign eu_do = pass_in_r.valid & ~excp_pass_out.valid;
+
     always_ff @(posedge clk, negedge rst_n) begin
-        if(~rst_n) begin
+        if(~rst_n | flush_i) begin
             pass_in_r.valid <= 1'b0;
-        end else if(rdy_in) begin
+            excp_pass_in_r.valid <= 1'b0;
+        end else if(~stall_o) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;
         end
     end
-
-    logic load_use_stall;
-    logic rdy_out;
-    logic id_flush, id_stall;
-    assign id_flush = flush | ~pass_in_r.valid;
-    assign id_stall = ~next_rdy_in | load_use_stall;
-
-    assign rdy_in = id_flush | ~id_stall;
-    assign rdy_out = ~id_flush & ~id_stall;        // only use this for pass_out.valid
+    
+    /* exeption */
+    always_comb begin
+        if(excp_pass_in_r.valid) excp_pass_out = excp_pass_in_r;
+        else                     excp_pass_out = id_excp;
+        excp_pass_out.valid = excp_pass_out.valid & valid_o;
+    end
+    /* pipeline end */
 
     u32_t inst;
     assign inst = pass_in_r.inst;
@@ -610,7 +621,7 @@ module Decode (
                         is_br_off   ;
 
     /* out to next stage */
-    assign pass_out.valid = rdy_out;
+    assign pass_out.valid = valid_o;
     assign pass_out.is_mul = is_mul;
     assign pass_out.is_div = is_div;
     assign pass_out.is_bru = is_br;
@@ -706,18 +717,7 @@ module Decode (
         n                   y                       not happended
         n                   n                       bubble              */
     /* if exception (pass in or this stage), flush this stage, and pass exception */
-    always_comb begin
-        excp_pass_out.valid = 1'b0;
-        excp_pass_out.esubcode_ecode = id_excp.esubcode_ecode;
-        excp_pass_out.badv = id_excp.badv;
-        if(rdy_out) begin
-            if(excp_pass_in_r.valid) begin
-                excp_pass_out = excp_pass_in_r;
-            end else begin
-                excp_pass_out = id_excp;
-            end
-        end
-    end
+
 `ifdef DIFF_TEST
     `PASS(inst);
 

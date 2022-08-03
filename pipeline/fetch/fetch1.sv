@@ -35,29 +35,55 @@ module Fetch1 (
     input logic icache_busy,
 
     /* pipeline */
-    input logic flush, next_rdy_in,
-    output logic rdy_in,
+    input logic stall_i,
+    output logic stall_o,
 
     output fetch1_fetch2_pass_t pass_out,
     output excp_pass_t excp_pass_out
 );
 
+    /* pipeline start */
     logic icache_busy_stall;
-    assign icache_busy_stall = ~addr_excp.valid & icache_busy;
+    assign icache_busy_stall = eu_do & icache_busy;
 
-    logic rdy_out;
-    logic if1_flush, if1_stall;                      // use if1_flush as ~valid for eu
-    assign if1_flush = flush;                        // flush: invalidate current inst in pass_r and allow next inst in
-    assign if1_stall = ~next_rdy_in | icache_busy_stall;   // stall: do not allow next pass_in in
-                                                     //        flush has a higher priority
-    assign rdy_in = if1_flush | ~if1_stall;
-    assign rdy_out = ~if1_flush & ~if1_stall;        // only use this for pass_out.valid
+    assign stall_o = stall_i | icache_busy_stall;
+
+    logic valid_o;
+    assign valid_o = ~stall_o;        // if ~valid_i, do not set exception valid
+
+    logic excp_valid;
+    assign excp_valid = addr_excp.valid;
+
+    /* for this stage */
+    logic eu_do;
+    assign eu_do = ~excp_valid;
+
+    /* out */
+    assign pass_out.valid = valid_o;
+    assign pass_out.pc = pc_r;
+    assign pass_out.icache_req = eu_do;
+
+    /* exeption */
+    always_comb begin
+        excp_pass_out = addr_excp;
+        excp_pass_out.valid = excp_pass_out.valid & valid_o;
+    end
+
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(~rst_n) begin
+            pc_r <= 32'h1c000000;
+        end else if(~stall_o) begin
+            pc_r <= npc;
+        end
+    end
+    /* pipeline end */
+
 
     mat_t mat;
     phy_t pa;
     excp_pass_t addr_excp;
     AddrTrans U_AddrTrans (
-        .en(~if1_flush),
+        .en(1'b1),
         .va(pc_r),
         .lookup_type(LOOKUP_FETCH),
         .byte_type(WORD),
@@ -69,8 +95,8 @@ module Fetch1 (
         .tlb_entrys
     );
 
-    /* to cache */
-    assign icache_op = if1_flush | addr_excp.valid ? IC_NOP : IC_R;       // TODO: do not send req to cache if there's exception
+    /* icache */
+    assign icache_op = eu_do ? IC_R : IC_NOP;
     assign icache_idx = pc_r[11:0];
     assign icache_pa = pa;
     assign icache_is_cached = mat[0];
@@ -84,7 +110,7 @@ module Fetch1 (
 
     /* btb stage */
     // btb need 1 clk to output result, so we need to forward pc write req
-    assign stall_btb = if1_stall;
+    assign stall_btb = stall_o;
     assign btb_pc = npc;
     assign pass_out.next.pc = npc;
 
@@ -109,28 +135,6 @@ module Fetch1 (
         else begin
             npc = pc_r + 4;
             pass_out.next.is_predict = 1;
-        end
-    end
-
-    always_ff @(posedge clk, negedge rst_n) begin
-        if(~rst_n) begin
-            pc_r <= 32'h1c000000;
-        end else if(rdy_in) begin
-            pc_r <= npc;
-        end
-    end
-
-    /* pass */
-    assign pass_out.valid = rdy_out;
-    assign pass_out.pc = pc_r;
-
-    /* exeption */
-    always_comb begin
-        excp_pass_out.valid = 1'b0;
-        excp_pass_out.esubcode_ecode = addr_excp.esubcode_ecode;
-        excp_pass_out.badv = addr_excp.badv;
-        if(rdy_out) begin
-            excp_pass_out = addr_excp;
         end
     end
 

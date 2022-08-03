@@ -10,8 +10,8 @@ module Execute (
     output forward_req_t fwd_req,
 
     /* pipeline */
-    input logic flush, next_rdy_in,
-    output logic rdy_in,
+    input logic flush_i, stall_i,
+    output logic stall_o,
     input decode_execute_pass_t pass_in,
     input excp_pass_t excp_pass_in,
 
@@ -19,31 +19,40 @@ module Execute (
     output excp_pass_t excp_pass_out
 );
 
-    /* pipeline regster */
+    /* pipeline start */
     decode_execute_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
+    logic eu_stall;
+    assign stall_o = stall_i | eu_stall;
+
+    logic valid_o;
+    assign valid_o = pass_in_r.valid & ~stall_o;        // if ~valid_i, do not set exception valid
+
+    /* for this stage */
+    logic eu_do;
+    assign eu_do = pass_in_r.valid & ~excp_pass_out.valid;
+
     always_ff @(posedge clk, negedge rst_n) begin
-        if(~rst_n) begin
+        if(~rst_n | flush_i) begin
             pass_in_r.valid <= 1'b0;
-        end else if(rdy_in) begin
+            excp_pass_in_r.valid <= 1'b0;
+        end else if(~stall_o) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;
         end
     end
-
-    logic eu_stall;
-    logic rdy_out;
-    logic ex_flush, ex_stall;
-    assign ex_flush = flush | ~pass_in_r.valid;
-    assign ex_stall = ~next_rdy_in | eu_stall;
-
-    assign rdy_in = ex_flush | ~ex_stall;
-    assign rdy_out = ~ex_flush & ~ex_stall;        // only use this for pass_out.valid
+    
+    /* exeption */
+    always_comb begin
+        excp_pass_out = excp_pass_in_r;
+        excp_pass_out.valid = excp_pass_out.valid & valid_o;
+    end
+    /* pipeline end */
 
     /* forward */
     // be careful of load-use stall
-    assign fwd_req.valid = (pass_in_r.rd != 5'b0) && pass_in_r.is_wr_rd && ~ex_flush;
+    assign fwd_req.valid = (pass_in_r.rd != 5'b0) && pass_in_r.is_wr_rd && eu_do;
     assign fwd_req.idx = pass_in_r.rd;
     assign fwd_req.data_valid = ~(pass_in_r.is_mem & ~pass_in_r.is_store);
     always_comb begin
@@ -103,10 +112,10 @@ module Execute (
     /* branch and btb fill */
     u32_t npc;
     assign npc = br_taken ? alu_out : pass_in_r.pc + 4;
-    assign pass_out.bp_miss_wr_pc_req.valid = ~ex_flush & pass_in_r.is_bru & pass_in_r.next.is_predict & (npc != pass_in_r.next.pc);
+    assign pass_out.bp_miss_wr_pc_req.valid = valid_o & pass_in_r.is_bru & pass_in_r.next.is_predict & (npc != pass_in_r.next.pc);
     assign pass_out.bp_miss_wr_pc_req.pc = npc;
 
-    assign br_resolved.valid = ~ex_flush & pass_in_r.is_bru;
+    assign br_resolved.valid = valid_o & pass_in_r.is_bru;
     assign br_resolved.taken = br_taken;
     assign br_resolved.pc = pass_in_r.pc;
     assign br_resolved.target_pc = alu_out;
@@ -117,8 +126,8 @@ module Execute (
     logic mul_done;
     Mul U_Mul (
         .clk, .rst_n,
-        .is_flush(ex_flush),
-        .is_stall(~next_rdy_in),
+        .is_flush(flush_i),
+        .is_stall(stall_i),
         .a(rj_forwarded),
         .b(rkd_forwarded),
         .en(mul_en),
@@ -145,8 +154,8 @@ module Execute (
     logic div_done;
     Div U_Div (
         .clk, .rst_n,
-        .is_flush(ex_flush),
-        .is_stall(~next_rdy_in),
+        .is_flush(flush_i),
+        .is_stall(stall_i),
         .dividend(rj_forwarded),
         .divisor(rkd_forwarded),
         .en(div_en),
@@ -208,7 +217,7 @@ module Execute (
     assign pc_plus4 = pass_in_r.pc + 4;
 
     /* out to next stage */
-    assign pass_out.valid = rdy_out;
+    assign pass_out.valid = valid_o;
     assign pass_out.ex_out = ex_out;
     assign pass_out.pc_plus4 = pc_plus4;
     assign pass_out.invtlb_asid = rj_forwarded[9:0];
@@ -231,16 +240,6 @@ module Execute (
     `PASS(tlb_op);
 
     `PASS(is_modify_state);
-
-    /* no exception in ex */
-    always_comb begin
-        excp_pass_out.valid = 1'b0;
-        excp_pass_out.esubcode_ecode = excp_pass_in_r.esubcode_ecode;
-        excp_pass_out.badv = excp_pass_in_r.badv;
-        if(rdy_out) begin
-            excp_pass_out = excp_pass_in_r;
-        end
-    end
 
 `ifdef DIFF_TEST
     `PASS(inst);
