@@ -33,7 +33,7 @@ module Memory1 (
     output u32_t dcache_pa,
     output logic dcache_is_cached,
     output u32_t wr_dcache_data,
-    input logic dcache_busy,
+    input logic dcache_ready,
 
     /* pipeline */
     input logic flush_i, stall_i,
@@ -51,7 +51,7 @@ module Memory1 (
 
     logic is_mem = pass_in_r.is_mem;
     logic dcache_busy_stall;
-    assign dcache_busy_stall = eu_do & is_mem & dcache_busy;
+    assign dcache_busy_stall = eu_do & is_mem & ~dcache_ready;
 
     logic valid_o;
     assign valid_o = pass_in_r.valid & ~stall_o;        // if ~valid_i, do not set exception valid

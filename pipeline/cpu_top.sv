@@ -9,7 +9,8 @@ module CPUTop (
     output logic icache_is_cached,
     output logic [31:0] icache_pa,
     input logic [31:0] icache_data,
-    input logic icache_busy, icache_data_valid,
+    input logic icache_ready, icache_data_valid,
+    output logic icache_data_ready,
 
     output logic stall_dcache,
     output logic [11:0] dcache_idx,
@@ -18,7 +19,8 @@ module CPUTop (
     output logic [31:0] dcache_pa,
     output logic [31:0] wr_dcache_data,
     input logic [31:0] rd_dcache_data,
-    input logic dcache_busy, dcache_data_valid,
+    input logic dcache_ready, dcache_data_valid,
+    output logic dcache_data_ready,
 
     // TODO: int
     input logic [7:0] intrpt,
@@ -153,7 +155,7 @@ module CPUTop (
         .icache_op,
         .icache_pa,
         .icache_is_cached,
-        .icache_busy,
+        .icache_ready,
 
         .flush_i(if1_flush_i),
         .stall_i(if1_stall_i),
@@ -169,6 +171,7 @@ module CPUTop (
 
         .icache_data,
         .icache_data_valid,
+        .icache_data_ready,
 
         .flush_i(if2_flush_i),
         .stall_i(if2_stall_i),
@@ -260,7 +263,7 @@ module CPUTop (
         .dcache_pa,
         .dcache_is_cached,
         .wr_dcache_data,
-        .dcache_busy,
+        .dcache_ready,
 
         .flush_i(mem1_flush_i),
         .stall_i(mem1_stall_i),
@@ -279,6 +282,7 @@ module CPUTop (
 
         .rd_dcache_data,
         .dcache_data_valid,
+        .dcache_data_ready,
 
         // from excp
         .excp_flush(excp_flush),

@@ -32,7 +32,7 @@ module Fetch1 (
     output logic [2:0] icache_op,
     output u32_t icache_pa,
     output logic icache_is_cached,
-    input logic icache_busy,
+    input logic icache_ready,
 
     /* pipeline */
     input logic flush_i, stall_i,
@@ -44,7 +44,7 @@ module Fetch1 (
 
     /* pipeline start */
     logic icache_busy_stall;
-    assign icache_busy_stall = eu_do & icache_busy;
+    assign icache_busy_stall = eu_do & ~icache_ready;
 
     assign stall_o = stall_i | icache_busy_stall;
 

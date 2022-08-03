@@ -61,7 +61,7 @@ module core_top(
     logic icache_is_cached;
     logic [31:0] icache_pa;
     logic [31:0] icache_data;
-    logic icache_busy, icache_data_valid;
+    logic icache_ready, icache_data_valid, icache_data_ready;
 
     logic stall_dcache;
     logic [11:0] dcache_idx;
@@ -69,7 +69,7 @@ module core_top(
     logic dcache_is_cached;
     logic [31:0] dcache_pa;
     logic [31:0] rd_dcache_data, wr_dcache_data;
-    logic dcache_busy, dcache_data_valid;
+    logic dcache_ready, dcache_data_valid, dcache_data_ready;
     CPUTop U_CPUTop (
         .clk(aclk),
         .rst_n(aresetn),
@@ -106,21 +106,20 @@ module core_top(
         .icache_va(icache_idx),
         .icache_pa(icache_pa[31:12]),
         .icache_op(icache_op),
-        .icache_taken(stall_icache),        //TODO
-        `ifdef CACHED_TO_TEST
+        `ifdef FORCE_TO_CACHE
             .icache_cached(1'b1),
         `else
             .icache_cached(icache_is_cached),
         `endif
         //.real_icache_cached(icache_is_cached),
         .ins(icache_data),
-        .icache_ready(icache_busy),        //TODO
-        .icache_data_valid(icache_data_valid),
+        .icache_ready,        //TODO
+        .icache_data_valid,
+        .icache_taken(icache_data_ready),
         .dcache_va(dcache_idx),
         .dcache_pa(dcache_pa[31:12]),
         .dcache_op(dcache_op),
-        .dcache_taken(stall_dcache),        //TODO
-        `ifdef CACHED
+        `ifdef FORCE_TO_CACHE
             .dcache_cached(1'b1),
         `else
             .dcache_cached(dcache_is_cached),
@@ -128,8 +127,9 @@ module core_top(
         //.real_dcache_cached(dcache_is_cached),
         .store_data(wr_dcache_data),
         .load_data(rd_dcache_data),
-        .dcache_ready(dcache_busy),     //TODO
-        .dcache_data_valid(dcache_data_valid),
+        .dcache_ready,     //TODO
+        .dcache_data_valid,
+        .dcache_taken(dcache_data_ready),
 
         .req_to_axi(req_to_axi),
         .wblock_to_axi(wblock_to_axi),
