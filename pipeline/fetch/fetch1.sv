@@ -72,7 +72,7 @@ module Fetch1 (
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
             pc_r <= 32'h1c000000;
-        end else if(~stall_o) begin
+        end else if(~stall_o | flush_i) begin
             pc_r <= npc;
         end
     end

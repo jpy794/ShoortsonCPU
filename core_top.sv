@@ -55,7 +55,6 @@ module core_top(
     output [31:0] debug0_wb_inst
 );
 
-    logic stall_icache;
     logic [11:0] icache_idx;
     logic [2:0] icache_op;
     logic icache_is_cached;
@@ -63,7 +62,6 @@ module core_top(
     logic [31:0] icache_data;
     logic icache_ready, icache_data_valid, icache_data_ready;
 
-    logic stall_dcache;
     logic [11:0] dcache_idx;
     logic [4:0] dcache_op;
     logic dcache_is_cached;
