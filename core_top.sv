@@ -106,7 +106,7 @@ module core_top(
         .icache_va(icache_idx),
         .icache_pa(icache_pa[31:12]),
         .icache_op(icache_op),
-        .icache_stall(stall_icache),
+        .icache_taken(stall_icache),        //TODO
         `ifdef CACHED_TO_TEST
             .icache_cached(1'b1),
         `else
@@ -114,12 +114,12 @@ module core_top(
         `endif
         //.real_icache_cached(icache_is_cached),
         .ins(icache_data),
-        .icache_busy(icache_busy),
+        .icache_ready(icache_busy),        //TODO
         .icache_data_valid(icache_data_valid),
         .dcache_va(dcache_idx),
         .dcache_pa(dcache_pa[31:12]),
         .dcache_op(dcache_op),
-        .dcache_stall(stall_dcache),
+        .dcache_taken(stall_dcache),        //TODO
         `ifdef CACHED
             .dcache_cached(1'b1),
         `else
@@ -128,7 +128,7 @@ module core_top(
         //.real_dcache_cached(dcache_is_cached),
         .store_data(wr_dcache_data),
         .load_data(rd_dcache_data),
-        .dcache_busy(dcache_busy),
+        .dcache_ready(dcache_busy),     //TODO
         .dcache_data_valid(dcache_data_valid),
 
         .req_to_axi(req_to_axi),
