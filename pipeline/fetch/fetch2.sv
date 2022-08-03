@@ -126,14 +126,14 @@ module Fetch2 (
     assign is_return = (inst == {6'b010011, 16'b0, 5'b00001, 5'b0});
 
     logic bp_error;
-    assign bp_error = working & ~is_br && pass_in_r.next.is_predict && (pass_in_r.next.pc != pass_in_r.pc + 4);
+    assign bp_error = ~icache_data_stall & ~is_br && pass_in_r.next.is_predict && (pass_in_r.next.pc != pass_in_r.pc + 4);
     assign btb_invalid.valid = bp_error;
     assign btb_invalid.pc = pass_in_r.pc;
 
     virt_t ra;
     logic ra_valid;
     logic pop;
-    assign pop = working & is_return & ra_valid;
+    assign pop = ~icache_data_stall & is_return & ra_valid;
     RAS U_RAS (
         .ra(ra),
         .ra_valid(ra_valid),
@@ -145,11 +145,11 @@ module Fetch2 (
     );
 
     logic bp_repredict;
-    assign bp_repredict = working & is_return & ra_valid;
+    assign bp_repredict = ~icache_data_stall & is_return & ra_valid;
 
     logic bp_advance;
     virt_t jump_to;
-    assign bp_advance = working & (inst_b | inst_bl);
+    assign bp_advance = ~icache_data_stall & (inst_b | inst_bl);
     assign jump_to = pass_in_r.pc + {{4 {inst[9]}}, inst[9:0], inst[25:10], 2'b0};
     
     assign bp_update_flush = bp_error | bp_repredict | bp_advance;
