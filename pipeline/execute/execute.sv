@@ -40,10 +40,10 @@ module Execute (
     assign eu_do = pass_in_r.valid & ~excp_valid;
 
     always_ff @(posedge clk, negedge rst_n) begin
-        if(~rst_n | flush_i) begin
+        if(~rst_n) begin
             pass_in_r.valid <= 1'b0;
             excp_pass_in_r.valid <= 1'b0;
-        end else if(~stall_o) begin
+        end else if(~stall_o | flush_i) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;
         end

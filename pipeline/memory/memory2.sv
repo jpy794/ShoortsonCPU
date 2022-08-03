@@ -33,7 +33,7 @@ module Memory2 (
     excp_pass_t excp_pass_in_r;
 
     logic dcache_data_stall;
-    assign dcache_data_stall = eu_do & pass_in_r.dcache_req & ~dcache_data_valid;
+    assign dcache_data_stall = eu_do & pass_in_r.dcache_req & ~dcache_data_valid & pass_in_r.is_ld;     // TODO: other cache op
     assign stall_o = stall_i | dcache_data_stall;
 
     logic excp_valid;
@@ -50,11 +50,11 @@ module Memory2 (
     assign eu_do = pass_in_r.valid & ~excp_valid;
 
     always_ff @(posedge clk, negedge rst_n) begin
-        if(~rst_n | flush_i) begin
+        if(~rst_n) begin
             pass_in_r.valid <= 1'b0;
             excp_pass_in_r.valid <= 1'b0;
             pass_in_r.dcache_req <= 1'b0;       // do not wait for the req if flush
-        end else if(~stall_o) begin
+        end else if(~stall_o | flush_i) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;
         end
