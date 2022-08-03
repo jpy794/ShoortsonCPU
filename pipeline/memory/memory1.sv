@@ -49,6 +49,7 @@ module Memory1 (
     execute_memory1_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
+    logic is_mem = pass_in_r.is_mem;
     logic dcache_busy_stall;
     assign dcache_busy_stall = eu_do & is_mem & dcache_busy;
 

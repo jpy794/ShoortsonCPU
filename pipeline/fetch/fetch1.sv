@@ -35,7 +35,7 @@ module Fetch1 (
     input logic icache_busy,
 
     /* pipeline */
-    input logic stall_i,
+    input logic flush_i, stall_i,
     output logic stall_o,
 
     output fetch1_fetch2_pass_t pass_out,

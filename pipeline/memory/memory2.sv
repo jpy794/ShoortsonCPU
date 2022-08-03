@@ -9,13 +9,14 @@ module Memory2 (
     /* from dcache */
     input u32_t rd_dcache_data,
     input logic dcache_data_valid,
+    output logic dcache_data_ready,
 
     /* from excp */
     input logic excp_flush,
 
     /* pipeline */
-    input logic flush, next_rdy_in,
-    output logic rdy_in,
+    input logic flush_i, stall_i,
+    output logic stall_o,
     input memory1_memory2_pass_t pass_in,
     input excp_pass_t excp_pass_in,
 
@@ -40,7 +41,7 @@ module Memory2 (
 
     /* for this stage */
     logic eu_do;
-    assign eu_do = pass_in_r.valid & ~excp_pass_out.valid;
+    assign eu_do = pass_in_r.valid & ~excp_pass_in_r.valid;
 
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n | flush_i) begin
@@ -52,11 +53,14 @@ module Memory2 (
             excp_pass_in_r <= excp_pass_in;
         end
     end
+
+    /* dcache */
+    assign dcache_data_ready = ~stall_i;
     
     /* exeption */
     always_comb begin
-        excp_pass_out = excp_pass_in_r;
-        excp_pass_out.valid = excp_pass_out.valid & valid_o;
+        excp_req.valid = pass_in_r.valid;
+        excp_req.excp_pass = excp_pass_in_r;
     end
     /* pipeline end */
 
@@ -109,7 +113,7 @@ module Memory2 (
     end
 
     /* out to next stage */
-    assign pass_out.valid = rdy_out;
+    assign pass_out.valid = valid_o;
     assign pass_out.ex_mem_out = ex_mem_out;
     
     `PASS(pc);
