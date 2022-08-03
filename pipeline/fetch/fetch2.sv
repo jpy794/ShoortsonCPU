@@ -33,12 +33,18 @@ module Fetch2 (
     assign icache_data_stall = eu_do & pass_in_r.icache_req & ~icache_data_valid;
     assign stall_o = stall_i | icache_data_stall;
 
+    logic excp_valid;
+    assign excp_valid = excp_pass_in_r.valid;
+
     logic valid_o;
     assign valid_o = pass_in_r.valid & ~stall_o;        // if ~valid_i, do not set exception valid
 
+    logic valid_with_flush;           // only use this for output
+    assign valid_with_flush = valid_o & ~flush_i;
+
     /* for this stage */
     logic eu_do;
-    assign eu_do = pass_in_r.valid & ~excp_pass_out.valid;
+    assign eu_do = pass_in_r.valid & ~excp_valid;
 
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n | flush_i) begin
@@ -53,13 +59,15 @@ module Fetch2 (
 
     /* out */
     `PASS(pc);
-    assign pass_out.valid = valid_o;
     assign pass_out.inst = icache_data;
+
+    /* out valid */
+    assign pass_out.valid = valid_with_flush;
     
     /* exeption */
     always_comb begin
         excp_pass_out = excp_pass_in_r;
-        excp_pass_out.valid = excp_pass_out.valid & valid_o;
+        excp_pass_out.valid = excp_valid & valid_with_flush;
     end
     /* pipeline end */
 

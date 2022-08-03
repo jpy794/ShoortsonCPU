@@ -54,14 +54,20 @@ module Memory1 (
     assign dcache_busy_stall = eu_do & is_mem & ~dcache_ready;
     assign stall_o = stall_i | dcache_busy_stall;
 
+    logic excp_valid;
+    assign excp_valid = addr_excp.valid | excp_pass_in_r.valid;
+
     logic valid_o;
     assign valid_o = pass_in_r.valid & ~stall_o;        // if ~valid_i, do not set exception valid
+
+    logic valid_with_flush;           // only use this for output
+    assign valid_with_flush = valid_o & ~flush_i;
 
     /* for this stage */
     logic chk_excp;
     assign chk_excp = pass_in_r.valid & is_mem;
     logic eu_do;
-    assign eu_do = pass_in_r.valid & ~excp_pass_out.valid;
+    assign eu_do = pass_in_r.valid & ~excp_valid;
 
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n | flush_i) begin
@@ -75,12 +81,15 @@ module Memory1 (
 
     /* out */
     assign pass_out.dcache_req = pass_in_r.is_mem & eu_do;
+
+    /* out valid */
+    assign pass_out.valid = valid_with_flush;
     
     /* exeption */
     always_comb begin
         if(excp_pass_in_r.valid) excp_pass_out = excp_pass_in_r;
         else                     excp_pass_out = addr_excp;
-        excp_pass_out.valid = excp_pass_out.valid & valid_o;
+        excp_pass_out.valid = excp_pass_out.valid & valid_with_flush;
     end
     /* pipeline end */
 
@@ -184,7 +193,6 @@ module Memory1 (
     assign tlb_req.invtlb_asid = pass_in_r.invtlb_asid;
 
     /* out to next stage */
-    assign pass_out.valid = valid_o;
     assign pass_out.byte_en = pass_in_r.ex_out[1:0];
 
     `PASS(pc);

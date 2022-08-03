@@ -26,12 +26,18 @@ module Execute (
     logic eu_stall;
     assign stall_o = stall_i | eu_stall;
 
+    logic excp_valid;
+    assign excp_valid = excp_pass_in_r.valid;
+
     logic valid_o;
     assign valid_o = pass_in_r.valid & ~stall_o;        // if ~valid_i, do not set exception valid
 
+    logic valid_with_flush;           // only use this for output
+    assign valid_with_flush = valid_o & ~flush_i;
+
     /* for this stage */
     logic eu_do;
-    assign eu_do = pass_in_r.valid & ~excp_pass_out.valid;
+    assign eu_do = pass_in_r.valid & ~excp_valid;
 
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n | flush_i) begin
@@ -42,11 +48,14 @@ module Execute (
             excp_pass_in_r <= excp_pass_in;
         end
     end
+
+    /* out valid */
+    assign pass_out.valid = valid_with_flush;
     
     /* exeption */
     always_comb begin
         excp_pass_out = excp_pass_in_r;
-        excp_pass_out.valid = excp_pass_out.valid & valid_o;
+        excp_pass_out.valid = excp_pass_out.valid & valid_with_flush;
     end
     /* pipeline end */
 
@@ -217,7 +226,6 @@ module Execute (
     assign pc_plus4 = pass_in_r.pc + 4;
 
     /* out to next stage */
-    assign pass_out.valid = valid_o;
     assign pass_out.ex_out = ex_out;
     assign pass_out.pc_plus4 = pc_plus4;
     assign pass_out.invtlb_asid = rj_forwarded[9:0];

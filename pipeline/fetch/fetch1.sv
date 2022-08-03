@@ -48,25 +48,28 @@ module Fetch1 (
 
     assign stall_o = stall_i | icache_busy_stall;
 
+    logic excp_valid;
+    assign excp_valid = addr_excp.valid;
+
     logic valid_o;
     assign valid_o = ~stall_o;        // if ~valid_i, do not set exception valid
 
-    logic excp_valid;
-    assign excp_valid = addr_excp.valid;
+    logic valid_with_flush;           // only use this for output
+    assign valid_with_flush = valid_o & ~flush_i;
 
     /* for this stage */
     logic eu_do;
     assign eu_do = ~excp_valid;
 
     /* out */
-    assign pass_out.valid = valid_o & ~flush_i;
+    assign pass_out.valid = valid_with_flush;
     assign pass_out.pc = pc_r;
     assign pass_out.icache_req = eu_do;
 
     /* exeption */
     always_comb begin
         excp_pass_out = addr_excp;
-        excp_pass_out.valid = excp_pass_out.valid & valid_o;
+        excp_pass_out.valid = excp_valid & valid_with_flush;
     end
 
     always_ff @(posedge clk, negedge rst_n) begin
