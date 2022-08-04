@@ -94,8 +94,8 @@ module Writeback (
             cmt_int_no <= '0;
         end else if (~trap) begin
             cmt_valid       <= eu_do;
-            cmt_cnt_inst    <= '0;                  // TODO
-            cmt_timer_64    <= '0;                  // TODO
+            cmt_cnt_inst    <= pass_in_r.is_rdcnt;
+            cmt_timer_64    <= pass_in_r.cntval_64;
             cmt_inst_ld_en  <= pass_in_r.is_ld ? pass_in_r.byte_valid : 8'b0;
             cmt_ld_paddr    <= pass_in_r.pa;
             cmt_ld_vaddr    <= pass_in_r.va;
@@ -116,8 +116,8 @@ module Writeback (
             cmt_excp_flush  <= excp_event_in.valid;
             cmt_ertn        <= pass_in_r.is_ertn;
             cmt_csr_ecode   <= excp_event_in.ecode;
-            cmt_tlbfill_en  <= 0;                       // TODO
-            cmt_rand_index  <= '0;
+            cmt_tlbfill_en  <= pass_in_r.is_tlbfill;
+            cmt_rand_index  <= pass_in_r.tlb_wr_idx;
 
             trap            <= 0;
             trap_code       <= '0;

@@ -128,6 +128,12 @@ module Memory2 (
     `PASS(pa);
     `PASS(st_data);
     `PASS(byte_valid);
+
+    `PASS(is_rdcnt);
+    `PASS(cntval_64);
+
+    `PASS(is_tlbfill);
+    `PASS(tlb_wr_idx);
 `endif
 
 endmodule

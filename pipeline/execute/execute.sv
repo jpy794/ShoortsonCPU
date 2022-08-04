@@ -9,6 +9,9 @@ module Execute (
     /* forwarding */
     output forward_req_t fwd_req,
 
+    /* rd csr (rdcntid) */
+    input csr_t rd_csr,
+
     /* pipeline */
     input logic flush_i, stall_i,
     output logic stall_o,
@@ -98,9 +101,24 @@ module Execute (
             RKD: alu_b = rkd_forwarded;
             IMM: alu_b = pass_in_r.imm;
             CSR: alu_b = pass_in_r.csr_data;
+            CNT: alu_b = cnt_out;
             default: ;
         endcase
     end
+
+    u32_t cnt_out;
+`ifdef DIFF_TEST
+    logic [63:0] cnt_out_64;
+`endif
+    StableCNT U_StableCNT (
+        .clk, .rst_n,
+        .rd_csr,
+        .op(pass_in_r.cnt_op),
+        .out(cnt_out)
+`ifdef DIFF_TEST
+        ,.out_64(cnt_out_64)
+`endif
+    );
 
     ALU U_ALU (
         .op(pass_in_r.alu_op),
@@ -253,6 +271,9 @@ module Execute (
     `PASS(inst);
     `PASS(is_modify_csr);
     `PASS(csr);
+
+    `PASS(is_rdcnt);
+    assign pass_out.cntval_64 = cnt_out_64;
 `endif
 
 endmodule

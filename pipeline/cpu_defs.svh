@@ -102,7 +102,7 @@ typedef enum logic [6:0] {
 typedef struct packed {
     vppn_t vppn;
     logic [12:0] r0_1;
-} csr_tlbehi_t;
+} csr_tlbehi_t;             // TODO: when exception, write vaddr to here
 
 /* for tlbelo0 tlbelo1 */
 typedef struct packed {
@@ -388,6 +388,7 @@ typedef struct packed {
     mul_op_t mul_op;
     div_op_t div_op;
     bru_op_t bru_op;
+    cnt_op_t cnt_op;
     reg_idx_t rj, rkd, rd;
     forward_req_t ex_req;
     u32_t rj_data, rkd_data;
@@ -419,6 +420,8 @@ typedef struct packed {
 
     logic is_modify_csr;
     csr_t csr;
+
+    logic is_rdcnt;
 `endif
 } decode_execute_pass_t;
 
@@ -461,6 +464,9 @@ typedef struct packed {
 
     logic is_modify_csr;
     csr_t csr;
+
+    logic is_rdcnt;
+    logic [63:0] cntval_64;
 `endif
 } execute_memory1_pass_t;
 
@@ -499,6 +505,12 @@ typedef struct packed {
     virt_t va, pa;
     u32_t st_data;
     logic [7:0] byte_valid;
+
+    logic is_rdcnt;
+    logic [63:0] cntval_64;
+
+    logic is_tlbfill;
+    tlb_idx_t tlb_wr_idx;
 `endif
 } memory1_memory2_pass_t;
 
@@ -529,6 +541,12 @@ typedef struct packed {
     virt_t va, pa;
     u32_t st_data;
     logic [7:0] byte_valid;
+
+    logic is_rdcnt;
+    logic [63:0] cntval_64;
+
+    logic is_tlbfill;
+    tlb_idx_t tlb_wr_idx;
 `endif
 } memory2_writeback_pass_t;
 /* pipeline pass end */
@@ -556,7 +574,7 @@ typedef enum logic [4:0] {
 
 typedef struct packed {
     tlb_op_t tlb_op;
-    logic [4:0] invtlb_op;
+    logic [4:0] invtlb_op;      // rd
     vppn_t invtlb_vppn;
     asid_t invtlb_asid;
 } tlb_op_req_t;

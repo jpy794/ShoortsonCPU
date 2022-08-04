@@ -15,7 +15,14 @@ module TLB (
     /* lookup */
     output tlb_entry_t itlb_lookup[TLB_ENTRY_NUM],
     output tlb_entry_t dtlb_lookup[TLB_ENTRY_NUM]
+`ifdef DIFF_TEST
+    ,output tlb_idx_t tlb_wr_idx
+`endif
 );
+
+`ifdef DIFF_TEST
+    assign tlb_wr_idx = wr_idx;
+`endif
 
     tlb_idx_t rand_idx;
     Counter #(.WID(TLB_IDX_WID)) U_Counter(
@@ -26,6 +33,9 @@ module TLB (
 
     tlb_entry_t entrys[TLB_ENTRY_NUM];
 
+    assign itlb_lookup = entrys;
+    assign dtlb_lookup = entrys;
+
     logic tlbsrch_found;
     tlb_idx_t tlbsrch_idx;
 
@@ -34,12 +44,11 @@ module TLB (
 
     integer j;
     tlb_idx_t wr_idx;
-    logic we_entrys;
     always_ff @(posedge clk) begin
         unique case(tlb_req.tlb_op)
         TLBNOP: ;
         TLBWR, TLBFILL: begin
-            if(rd_csr.estat.r_esubcode_ecode == TLBR) entrys[wr_idx].e <= ~rd_csr.tlbidx.ne;
+            if(rd_csr.estat.r_esubcode_ecode != TLBR) entrys[wr_idx].e <= ~rd_csr.tlbidx.ne;
             else                                      entrys[wr_idx].e <= '1;
 
             entrys[wr_idx].g <= rd_csr.tlbelo[0].g & rd_csr.tlbelo[1].g;
@@ -100,14 +109,13 @@ module TLB (
     end
 
     always_comb begin
-        wr_csr_req.asid.asid = '0;
         wr_csr_req.we = '0;
+        wr_csr_req.asid = rd_csr.asid;
         wr_csr_req.tlbehi = rd_csr.tlbehi;
         wr_csr_req.tlbelo[0] = rd_csr.tlbelo[0];
         wr_csr_req.tlbelo[1] = rd_csr.tlbelo[1];
         wr_csr_req.tlbidx = rd_csr.tlbidx;
 
-        we_entrys = '0;
         wr_idx = idx;
 
         unique case(tlb_req.tlb_op)
@@ -121,8 +129,10 @@ module TLB (
         TLBRD: begin
             wr_csr_req.we = '1;
             if(entrys[idx].e) begin
+                wr_csr_req.tlbidx.ne = 1'b0;
                 wr_csr_req.tlbidx.ps = entrys[idx].ps;
                 wr_csr_req.tlbehi.vppn = entrys[idx].vppn;
+                wr_csr_req.asid.asid = entrys[idx].asid;
                 for(j=0; j<2; j=j+1) begin
                     wr_csr_req.tlbelo[j].ppn = entrys[idx].phy[j].ppn;
                     wr_csr_req.tlbelo[j].plv = entrys[idx].phy[j].plv;
@@ -141,10 +151,8 @@ module TLB (
             end
         end
         TLBWR: begin
-            we_entrys = '1;
         end
         TLBFILL: begin
-            we_entrys = '1;
             wr_idx = rand_idx;
         end
         INVTLB: begin

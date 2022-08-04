@@ -26,6 +26,9 @@ module Memory1 (
     input tlb_entry_t tlb_entrys[TLB_ENTRY_NUM],
 
     output tlb_op_req_t tlb_req,
+`ifdef DIFF_TEST
+    input tlb_idx_t tlb_wr_idx,
+`endif
 
     /* to dcache */
     output logic [11:0] dcache_idx,          // for index
@@ -136,6 +139,14 @@ module Memory1 (
         else                            fwd_req.data = pass_in_r.ex_out;
     end
 
+    /* tlb op */
+    always_comb begin
+        tlb_req.tlb_op = eu_do ? pass_in_r.tlb_op : TLBNOP;
+        tlb_req.invtlb_op = pass_in_r.rd;
+        tlb_req.invtlb_asid = pass_in_r.invtlb_asid;
+        tlb_req.invtlb_vppn = pass_in_r.rkd_data[31:13];
+    end
+
     /* memory1 stage */
 
     mat_t mat;
@@ -219,6 +230,12 @@ module Memory1 (
     `PASS(inst);
     `PASS(is_modify_csr);
     `PASS(csr);
+
+    `PASS(is_rdcnt);
+    `PASS(cntval_64);
+
+    assign pass_out.is_tlbfill = (pass_in_r.tlb_op == TLBFILL);
+    assign pass_out.tlb_wr_idx = tlb_wr_idx;
 
     assign pass_out.is_ertn = is_ertn;
 

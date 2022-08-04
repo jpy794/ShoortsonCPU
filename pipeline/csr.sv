@@ -15,6 +15,9 @@ module RegCSR (
     /* id */
     output csr_t id_rd,
 
+    /* ex */
+    output csr_t ex_rd,
+
     /* mem1 */
     output csr_t mem1_rd,
     input logic is_ertn,
@@ -76,6 +79,7 @@ module RegCSR (
     /* read */
     assign if_rd = csr;
     assign id_rd = csr;
+    assign ex_rd = csr;
     assign mem1_rd = csr;
     assign tlb_rd = csr;
     assign excp_rd = csr;
@@ -139,8 +143,6 @@ module RegCSR (
             csr.euen.fpe <= 1'b0;
 
             csr.ecfg.lie <= 13'b0;
-
-            // csr.estat.is.swi <= 2'b0;
 
             /* TODO
             csr.llbcrl.klo = '0;

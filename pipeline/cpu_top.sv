@@ -51,7 +51,7 @@ module CPUTop (
     logic csr_we;
     assign csr_addr = csr_we ? csr_addr_wb : csr_addr_id;
 
-    csr_t tlb_rd_csr, excp_rd_csr, if_rd_csr, id_rd_csr, mem1_rd_csr;
+    csr_t tlb_rd_csr, excp_rd_csr, if_rd_csr, id_rd_csr, ex_rd_csr, mem1_rd_csr;
     excp_wr_csr_req_t excp_wr_csr_req;
     tlb_wr_csr_req_t tlb_wr_csr_req;
 
@@ -72,6 +72,7 @@ module CPUTop (
         /* to pipeline */
         .if_rd(if_rd_csr),
         .id_rd(id_rd_csr),
+        .ex_rd(ex_rd_csr),
         .mem1_rd(mem1_rd_csr),
         .tlb_rd(tlb_rd_csr),
         .excp_rd(excp_rd_csr),
@@ -108,12 +109,16 @@ module CPUTop (
 
     tlb_op_req_t tlb_req;
     tlb_entry_t itlb_lookup[TLB_ENTRY_NUM], dtlb_lookup[TLB_ENTRY_NUM];
+    tlb_idx_t tlb_wr_idx;
     TLB U_TLB (
         .clk,
         .rd_csr(tlb_rd_csr),
         .wr_csr_req(tlb_wr_csr_req),
         /* tlb inst */
         .tlb_req,
+`ifdef DIFF_TEST
+        .tlb_wr_idx,
+`endif
         /* lookup */
         .itlb_lookup,
         .dtlb_lookup
@@ -223,6 +228,8 @@ module CPUTop (
         /* forwarding */
         .fwd_req(ex_fwd_req),
 
+        .rd_csr(ex_rd_csr),
+
         .flush_i(ex_flush_i),
         .stall_i(ex_stall_i),
         .stall_o(ex_stall_o),
@@ -255,6 +262,9 @@ module CPUTop (
 
         .tlb_entrys(dtlb_lookup), 
         .tlb_req,
+`ifdef DIFF_TEST
+        .tlb_wr_idx,
+`endif
         
         .dcache_idx,
         .dcache_op,

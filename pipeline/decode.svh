@@ -24,13 +24,20 @@ typedef enum logic [1:0] {
     RU = 2'b11
 } div_op_t;
 
+typedef enum logic [1:0] {
+    CNTID,
+    CNTVH,
+    CNTVL
+} cnt_op_t;
+
 // for ALU
 typedef enum logic [3:0] { ADD, SUB, AND, OR, NOR, XOR, SLL, SRL, SRA, SLT, SLTU } alu_op_t;
 typedef enum logic [1:0] { RJ, PC, ZERO } alu_a_sel_t;
 typedef enum logic [1:0] {
     RKD,        // store / br need to read rd
     IMM,
-    CSR
+    CSR,
+    CNT
 } alu_b_sel_t;
 
 typedef enum logic [1:0] {
