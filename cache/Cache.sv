@@ -11,9 +11,9 @@ module Cache(
     input logic icache_req,
     input logic icache_taken,
     output logic cacop_ready,
-    
     input logic [`VA_WIDTH]cacop_idx,
     input logic [`PA_WIDTH]cacop_pa,
+    
     input logic icache_cached,
     output logic [`DATA_WIDTH]ins,
     output logic icache_ready,
