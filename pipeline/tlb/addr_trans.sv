@@ -55,8 +55,8 @@ module AddrTrans (
     always_comb begin
         dmw_plv_ok = 2'b11;
         for(i=0; i<2; i=i+1) begin
-            if(rd_csr.crmd.plv == KERNEL && ~rd_csr.dmw[0].plv0 ||
-               rd_csr.crmd.plv == USER && ~rd_csr.dmw[0].plv3    )
+            if((rd_csr.crmd.plv == KERNEL && ~rd_csr.dmw[i].plv0) ||
+               (rd_csr.crmd.plv == USER && ~rd_csr.dmw[i].plv3)    )
                 dmw_plv_ok[i] = 1'b0;
         end
     end

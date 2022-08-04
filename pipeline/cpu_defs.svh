@@ -68,12 +68,11 @@ typedef struct packed {
     tlb_entry_phy_t [1:0] phy;
 } tlb_entry_t;
 
-typedef logic [1:0] tlb_lookup_type_t;
-typedef enum tlb_lookup_type_t {
+typedef enum logic [1:0] {
     LOOKUP_LOAD =   2'h1,
     LOOKUP_STORE =  2'h2,
     LOOKUP_FETCH =  2'h3
-} tlb_lookup_type_enum_t;
+} tlb_lookup_type_t;
 /* tlb end */
 
 
