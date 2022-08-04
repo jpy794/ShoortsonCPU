@@ -97,8 +97,7 @@ module AddrTrans (
             BYTE:       align_ok = 1'b1;
             HALF_WORD:  align_ok = ~va[0];
             WORD:       align_ok = ~va[1] & ~va[0];
-            default: //$stop;
-                align_ok = 1'b0;
+            default: ;
         endcase
     end
 
@@ -113,6 +112,10 @@ module AddrTrans (
                     /* unaligned */
                     excp.valid = 1'b1;
                     excp.esubcode_ecode = ADEF;
+                end else if(rd_csr.crmd.plv == USER && va[31] && is_tlb) begin
+                    /* plv3 access higher address */
+                    excp.valid = 1'b1;
+                    excp.esubcode_ecode = ADEF;
                 end else if(tlb_is_exc & is_tlb) begin
                     /* tlb exception */
                     excp.valid = 1'b1;
@@ -122,6 +125,10 @@ module AddrTrans (
                     /* unaligned */
                     excp.valid = 1'b1;
                     excp.esubcode_ecode = ALE;
+                end else if(rd_csr.crmd.plv == USER && va[31] && is_tlb) begin
+                    /* plv3 access higher address */
+                    excp.valid = 1'b1;
+                    excp.esubcode_ecode = ADEM;
                 end else if(tlb_is_exc & is_tlb) begin
                     /* tlb exception */
                     excp.valid = 1'b1;
