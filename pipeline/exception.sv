@@ -65,7 +65,9 @@ module Exception(
                      (ecode == ALE) ||
                      (ecode == PIL) ||
                      (ecode == PIS) ||
-                     (ecode == PIF) ;
+                     (ecode == PIF) ||
+                     (ecode == PME) ||
+                     (ecode == PPI) ;
 
     logic excp_tlbr;
     assign excp_tlbr = (ecode == TLBR);
