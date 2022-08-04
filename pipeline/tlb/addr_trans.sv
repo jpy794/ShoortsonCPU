@@ -38,16 +38,26 @@ module AddrTrans (
     mat_t dmw_mat;
     phy_t dmw_pa;
     logic is_dmw_found;
+    logic [1:0] dmw_plv_ok;
     always_comb begin
         is_dmw_found = 1'b0;
         dmw_mat = rd_csr.dmw[0].mat;
         dmw_pa = {rd_csr.dmw[0].pseg, va[28:0]};
         for(i=0; i<2; i=i+1) begin
-            if(rd_csr.dmw[i].vseg == va[31:29]) begin
+            if(rd_csr.dmw[i].vseg == va[31:29] && dmw_plv_ok[i]) begin
                 is_dmw_found = 1'b1;
                 dmw_mat = rd_csr.dmw[i].mat;
                 dmw_pa = {rd_csr.dmw[i].pseg, va[28:0]};
             end
+        end
+    end
+
+    always_comb begin
+        dmw_plv_ok = 2'b11;
+        for(i=0; i<2; i=i+1) begin
+            if(rd_csr.crmd.plv == KERNEL && ~rd_csr.dmw[0].plv0 ||
+               rd_csr.crmd.plv == USER && ~rd_csr.dmw[0].plv3    )
+                dmw_plv_ok[i] = 1'b0;
         end
     end
 
