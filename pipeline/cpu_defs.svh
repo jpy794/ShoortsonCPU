@@ -9,11 +9,6 @@
 localparam GRLEN = 32;
 localparam TIMLEN = 32;     // if change, also need to change tval...
 
-/* access type enum */
-localparam CC = 1;
-localparam SUC = 0;
-/* access type enum end */
-
 typedef logic [4:0] reg_idx_t;
 
 /* tlb */

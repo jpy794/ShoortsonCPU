@@ -136,8 +136,8 @@ module RegCSR (
             csr.crmd.ie <= 1'b0;
             csr.crmd.da <= 1'b1;
             csr.crmd.pg <= 1'b0;
-            csr.crmd.datf <= dat_t'(SUC);
-            csr.crmd.datm <= dat_t'(SUC);
+            csr.crmd.datf <= MAT_NOCACHE;
+            csr.crmd.datm <= MAT_NOCACHE;
 
             csr.euen.fpe <= 1'b0;
 
@@ -190,8 +190,13 @@ module RegCSR (
                             'hc: csr.eentry[31:6] <= wr_data[31:6];
                             'h10: {csr.tlbidx[31], csr.tlbidx[29:24], csr.tlbidx[TLB_IDX_WID-1:0]} <= {wr_data[31], wr_data[29:24], wr_data[TLB_IDX_WID-1:0]};
                             'h11: csr.tlbehi[31:13] <= wr_data[31:13];
+`ifdef DIFF_TEST
+                            'h12: {csr.tlbelo[0][31:8] ,csr.tlbelo[0][6:0]} <= {wr_data[31:8] ,wr_data[6:0]};
+                            'h13: {csr.tlbelo[1][31:8] ,csr.tlbelo[1][6:0]} <= {wr_data[31:8] ,wr_data[6:0]};
+`else
                             'h12: {csr.tlbelo[0][PALEN-5:8] ,csr.tlbelo[0][6:0]} <= {wr_data[PALEN-5:8] ,wr_data[6:0]};
                             'h13: {csr.tlbelo[1][PALEN-5:8] ,csr.tlbelo[1][6:0]} <= {wr_data[PALEN-5:8] ,wr_data[6:0]};
+`endif
                             'h18: csr.asid[9:0] <= wr_data[9:0];
                             'h19: csr.pgdl[31:12] <= wr_data[31:12];
                             'h1a: csr.pgdh[31:12] <= wr_data[31:12];
@@ -255,9 +260,11 @@ module RegCSR (
     assign csr.tlbidx.r0_3 = '0;
     /* tlbidx end */
     assign csr.tlbehi.r0_1 = '0;
+`ifndef DIFF_TEST
     assign csr.tlbelo[0].r0_1 = '0;
-    assign csr.tlbelo[0].r0_2 = '0;
     assign csr.tlbelo[1].r0_1 = '0;
+`endif
+    assign csr.tlbelo[0].r0_2 = '0;
     assign csr.tlbelo[1].r0_2 = '0;
     /* asid */
     assign csr.asid.r0_1 = '0;
