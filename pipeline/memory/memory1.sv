@@ -205,12 +205,6 @@ module Memory1 (
 
     assign wr_dcache_data = mem_in;
 
-    /* to tlb */
-    assign tlb_req.tlb_op = pass_in_r.tlb_op;           // TO BE FIXED: probably req multipile times if stall ?
-    assign tlb_req.invtlb_op = pass_in_r.rd;
-    assign tlb_req.invtlb_vppn = pass_in_r.rkd_data[31:13];
-    assign tlb_req.invtlb_asid = pass_in_r.invtlb_asid;
-
     /* out to next stage */
     assign pass_out.byte_en = pass_in_r.ex_out[1:0];
 

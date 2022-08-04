@@ -15,7 +15,7 @@ module Memory2 (
     input logic flush_i, stall_i,
     output logic stall_o,
     input memory1_memory2_pass_t pass_in,
-    output memory2_writeback_pass_t pass_out,
+    output memory2_writeback_pass_t pass_out
 
 `ifdef DIFF_TEST
     ,input csr_t rd_csr

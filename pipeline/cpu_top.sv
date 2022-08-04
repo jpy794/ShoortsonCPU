@@ -298,7 +298,7 @@ module CPUTop (
         .stall_o(mem2_stall_o),
 
         .pass_in(pass_mem1),
-        .pass_out(pass_mem2),
+        .pass_out(pass_mem2)
 
 `ifdef DIFF_TEST
         ,.rd_csr(mem2_rd_csr)
