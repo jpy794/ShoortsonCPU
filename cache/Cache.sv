@@ -1,4 +1,5 @@
 `include "cache.svh"
+`include "../common_defs.svh"
 
 module Cache(
     input logic clk,
@@ -6,8 +7,13 @@ module Cache(
 
     input logic [`VA_WIDTH]icache_va,
     input logic [`PA_WIDTH]icache_pa,
-    input logic [`ICACHE_OP_WIDTH]icache_op,
+    cache_op_t icache_op,
+    input logic icache_req,
     input logic icache_taken,
+    output logic cacop_ready,
+    
+    input logic [`VA_WIDTH]cacop_idx,
+    input logic [`PA_WIDTH]cacop_pa,
     input logic icache_cached,
     output logic [`DATA_WIDTH]ins,
     output logic icache_ready,
@@ -52,22 +58,21 @@ logic [`DATA_WIDTH]rword_from_pipline_to_icache;
 logic [`BLOCK_WIDTH]rblock_from_pipline_to_dcache;
 logic [`DATA_WIDTH]rword_from_pipline_to_dcache;
 
-
-logic icache_busy;
 logic dcache_busy;
-assign icache_ready = ~icache_busy;
 assign dcache_ready = ~dcache_busy;
 //icache
-logic [`ICACHE_STATE_WIDTH]icache_cs, icache_ns;
+icache_state_t icache_cs, icache_ns, icache_nobusy_ns;
 
 logic [`ICACHE_REQ_TO_PIPLINE_WIDTH]icache_req_to_pipline;
 logic [`ADDRESS_WIDTH]icache_req_ad_to_pipline;
 
 logic [`VA_WIDTH]reg_icache_va;
 logic [`PA_WIDTH]reg_icache_pa;
-logic [`ICACHE_OP_WIDTH]reg_icache_op;
 logic reg_rlru_from_icache;
-
+logic reg_icache_req;
+logic [`VA_WIDTH]reg_cacop_idx;
+logic [`PA_WIDTH]reg_cacop_pa;
+cache_op_t reg_icache_op;
 
 logic [`ADDRESS_WIDTH]ad_to_icache;
 logic [`ADDRESS_WIDTH]pa_to_icache;
@@ -80,20 +85,37 @@ logic hit_from_icache;
 
 //logic icache_cached = 1'b1;
 always_ff @(posedge clk)begin
-    if (~icache_busy)begin
+    if (icache_ready)begin
         reg_icache_va <= icache_va;
     end
 end
 
 always_ff @(posedge clk)begin
-    if (~icache_busy)begin
+    if (icache_ready)begin
         reg_icache_pa <= icache_pa;
     end
 end
 
 always_ff @(posedge clk)begin
-    if (~icache_busy)begin
+    if (icache_ready)begin
+        reg_icache_req <= icache_req;
+    end
+end
+
+always_ff @(posedge clk)begin
+    if(cacop_ready)begin
         reg_icache_op <= icache_op;
+    end
+end
+always_ff @(posedge clk)begin
+    if(cacop_ready)begin
+        reg_cacop_idx <= cacop_idx;
+    end
+end
+
+always_ff @(posedge clk)begin
+    if(cacop_ready)begin
+        reg_cacop_pa <= cacop_pa;
     end
 end
 
@@ -103,56 +125,91 @@ end
 
 always_ff @(posedge clk)begin
     if(~rstn)begin
-        icache_cs <= `ICACHE_WAIT;
+        icache_cs <= ICACHE_WAIT;
     end
     else begin
         icache_cs <= icache_ns;
     end
 end
 
-logic [`ICACHE_STATE_WIDTH] icache_nobusy_ns;
+
+// always_comb begin
+//     unique case(icache_op)
+//         `ICACHE_REQ_LOAD_INS: begin
+//             if(icache_cached)begin
+//                 icache_nobusy_ns = `ICACHE_LOOKUP;
+//             end
+//             else begin
+//                 icache_nobusy_ns = `ICACHE_REQ_LOAD_WORD;
+//             end
+//         end
+//         `ICACHE_REQ_INITIALIZE: begin
+//             icache_nobusy_ns = `ICACHE_WRITE_TAG;
+//         end
+//         `ICACHE_REQ_HIT_INVALIDATA: begin
+//             if(icache_cached)begin
+//                 icache_nobusy_ns = `ICACHE_LOOKUP;
+//             end
+//             else begin
+//                 icache_nobusy_ns = `ICACHE_WAIT;
+//             end
+//         end
+//         `ICACHE_REQ_INDEX_INVALIDATA: begin
+//             icache_nobusy_ns = `ICACHE_INDEX_WRITE_V;
+//         end
+//         default: begin
+//             if(icache_load)begin
+//                 if(icache_cached)begin
+//                     icache_nobusy_ns = `ICACHE_LOOKUP;
+//                 end
+//                 else begin
+//                     icache_nobusy_ns = `ICACHE_REQ_LOAD_WORD;
+//                 end
+//             end
+//             else begin
+//                 icache_nobusy_ns = `ICACHE_LOOKUP;
+//             end
+//         end
+//     endcase
+// end
 
 always_comb begin
     unique case(icache_op)
-        `ICACHE_REQ_LOAD_INS: begin
-            if(icache_cached)begin
-                icache_nobusy_ns = `ICACHE_LOOKUP;
-            end
-            else begin
-                icache_nobusy_ns = `ICACHE_REQ_LOAD_WORD;
-            end
+        CAC_INIT: begin
+            icache_nobusy_ns = ICACHE_WRITE_TAG;
         end
-        `ICACHE_REQ_INITIALIZE: begin
-            icache_nobusy_ns = `ICACHE_WRITE_TAG;
+        CAC_SRCH_INV: begin
+            icache_nobusy_ns = ICACHE_LOAD;
         end
-        `ICACHE_REQ_HIT_INVALIDATA: begin
-            if(icache_cached)begin
-                icache_nobusy_ns = `ICACHE_LOOKUP;
-            end
-            else begin
-                icache_nobusy_ns = `ICACHE_WAIT;
-            end
-        end
-        `ICACHE_REQ_INDEX_INVALIDATA: begin
-            icache_nobusy_ns = `ICACHE_INDEX_WRITE_V;
+        CAC_IDX_INV: begin
+            icache_nobusy_ns = ICACHE_INDEX_WRITE_V;
         end
         default: begin
-            icache_nobusy_ns = `ICACHE_LOOKUP;
+            if(icache_req)begin
+                if(icache_cached)begin
+                    icache_nobusy_ns = ICACHE_LOOKUP;
+                end
+                else begin
+                    icache_nobusy_ns = ICACHE_REQ_LOAD_WORD;
+                end
+            end
+            else begin
+                icache_nobusy_ns = ICACHE_LOOKUP;
+            end
         end
     endcase
 end
 
-logic icache_test_signal;
-assign icache_test_signal = (~hit_from_dcache) && (reg_icache_op == `ICACHE_REQ_LOAD_INS);
 always_comb begin
-    icache_busy = 1'b1;
+    icache_ready = 1'b0;
+    cacop_ready = 1'b0;
     icache_data_valid = 1'b0;
     unique case(icache_cs)
-        `ICACHE_WAIT: begin
-            icache_busy = 1'b0;
+        ICACHE_WAIT: begin
+            icache_ready = 1'b0;
             icache_ns = icache_nobusy_ns;
         end
-        `ICACHE_LOOKUP: begin
+        ICACHE_LOOKUP: begin
             // if((~hit_from_icache) && (reg_icache_op == `ICACHE_REQ_LOAD_INS))begin
             //     icache_ns = `ICACHE_REQ_LOAD_BLOCK;
             // end
@@ -169,94 +226,151 @@ always_comb begin
             //     end
             // end
             if(hit_from_icache)begin
-                unique case(reg_icache_op)
-                    `ICACHE_REQ_LOAD_INS: begin
-                        icache_data_valid = 1'b1;
-                        if(icache_taken)begin
-                            icache_busy = 1'b0;
-                            icache_ns = icache_nobusy_ns;
+                if(reg_icache_req)begin
+                    icache_data_valid = 1'b1;
+                    if(icache_taken)begin
+                        cacop_ready = 1'b1;
+                        // if(icache_op != CAC_NOP)begin
+                        //     icache_ready = 1'b0;
+                        // end
+                        // else begin
+                        //     icache_ready = 1'b1;
+                        // end
+                        if(icache_op == CAC_NOP)begin
+                            icache_ready = 1'b1;
                         end
-                        else begin
-                            icache_busy = 1'b1;
-                            icache_ns = `ICACHE_LOOKUP;
-                        end
-                    end
-                    `ICACHE_REQ_HIT_INVALIDATA: begin
-                        icache_ns = `ICACHE_HIT_WRITE_V;
-                    end
-                    default: begin
                         icache_ns = icache_nobusy_ns;
-                        icache_busy = 1'b0;
                     end
-                endcase
+                    else begin
+                        icache_ns = ICACHE_LOOKUP;
+                    end
+                end
+                else begin
+                    icache_ns = ICACHE_LOOKUP;
+                end
             end
             else begin
-                unique case(reg_icache_op)
-                    `ICACHE_REQ_LOAD_INS: begin
-                        icache_ns = `ICACHE_REQ_LOAD_BLOCK;
+                if(reg_icache_req)begin
+                    icache_ns = ICACHE_REQ_LOAD_BLOCK;
+                end
+                else begin
+                    cacop_ready = 1'b1;
+                    // if(icache_op != CAC_NOP)begin
+                    //     icache_ready = 1'b0;
+                    // end
+                    // else begin
+                    //     icache_ready = 1'b1;
+                    // end
+                    if(icache_op == CAC_NOP)begin
+                        icache_ready = 1'b1;
                     end
-                    default: begin
-                        icache_ns = icache_nobusy_ns;
-                        icache_busy = 1'b0;
-                    end
-                endcase
+                    icache_ns = icache_nobusy_ns;
+                end
             end
         end
-        `ICACHE_REQ_LOAD_WORD: begin
-            icache_ns = `ICACHE_LOAD_WORD_WAIT;
+        ICACHE_REQ_LOAD_WORD: begin
+            icache_ns = ICACHE_LOAD_WORD_WAIT;
         end
-        `ICACHE_REQ_LOAD_BLOCK: begin
-            icache_ns = `ICACHE_LOAD_BLOCK_WAIT;
+        ICACHE_REQ_LOAD_BLOCK: begin
+            icache_ns = ICACHE_LOAD_BLOCK_WAIT;
         end
-        `ICACHE_LOAD_WORD_WAIT: begin
+        ICACHE_LOAD_WORD_WAIT: begin
             if(response_from_pipline == `FINISH_ICACHE_REQ)begin
-                icache_ns = `ICACHE_LOAD_WORD_DONE;
+                icache_ns = ICACHE_LOAD_WORD_DONE;
             end
             else begin
-                icache_ns = `ICACHE_LOAD_WORD_WAIT;
+                icache_ns = ICACHE_LOAD_WORD_WAIT;
             end
         end
-        `ICACHE_LOAD_WORD_DONE: begin
+        ICACHE_LOAD_WORD_DONE: begin
             icache_data_valid = 1'b1;
             if(icache_taken) begin
-                icache_busy = 1'b0;
+                cacop_ready = 1'b1;
+                // if(icache_op != CAC_NOP)begin
+                //     icache_ready = 1'b0;
+                // end
+                // else begin
+                //     icache_ready = 1'b1;
+                // end
+                if(icache_op == CAC_NOP)begin
+                    icache_ready = 1'b1;
+                end
                 icache_ns = icache_nobusy_ns;
-            end else begin
-                icache_busy = 1'b1;
-                icache_ns = `ICACHE_LOAD_WORD_DONE;
+            end 
+            else begin
+                icache_ns = ICACHE_LOAD_WORD_DONE;
             end
         end
-        `ICACHE_LOAD_BLOCK_WAIT: begin
+        ICACHE_LOAD_BLOCK_WAIT: begin
             if(response_from_pipline == `FINISH_ICACHE_REQ)begin
-                icache_ns = `ICACHE_WRITE;
+                icache_ns = ICACHE_WRITE;
             end
             else begin
-                icache_ns = `ICACHE_LOAD_BLOCK_WAIT;
+                icache_ns = ICACHE_LOAD_BLOCK_WAIT;
             end
         end
-        `ICACHE_WRITE: begin
-            icache_ns = `ICACHE_LOOKUP;
+        ICACHE_WRITE: begin
+            icache_ns = ICACHE_LOOKUP;
         end
-        `ICACHE_WRITE_TAG: begin
-            icache_busy = 1'b0;
+        ICACHE_WRITE_TAG: begin
+            cacop_ready = 1'b1;
+            if(icache_op == CAC_NOP)begin
+                icache_ready = 1'b1;
+            end
             icache_ns = icache_nobusy_ns;
         end 
-        `ICACHE_INDEX_WRITE_V: begin
-            icache_busy = 1'b0;
+        ICACHE_INDEX_WRITE_V: begin
+            cacop_ready = 1'b1;
+            // if(icache_op != CAC_NOP)begin
+            //     icache_ready = 1'b0;
+            // end
+            // else begin
+            //     icache_ready = 1'b1;
+            // end
+            if(icache_op == CAC_NOP)begin
+                icache_ready = 1'b1;
+            end
             icache_ns = icache_nobusy_ns;
         end
-        `ICACHE_HIT_WRITE_V: begin
-            icache_busy = 1'b0;
+        ICACHE_HIT_WRITE_V: begin
+            cacop_ready = 1'b1;
+            // if(icache_op != CAC_NOP)begin
+            //     icache_ready = 1'b0;
+            // end
+            // else begin
+            //     icache_ready = 1'b1;
+            // end
+            if(icache_op == CAC_NOP)begin
+                icache_ready = 1'b1;
+            end
             icache_ns = icache_nobusy_ns;
+        end
+        ICACHE_LOAD: begin
+            if(hit_from_icache)begin
+                icache_ns = ICACHE_HIT_WRITE_V;
+            end
+            else begin
+                cacop_ready = 1'b1;
+                // if(icache_op != CAC_NOP)begin
+                //     icache_ready = 1'b0;
+                // end
+                // else begin
+                //     icache_ready = 1'b1;
+                // end
+                if(icache_op == CAC_NOP)begin
+                    icache_ready = 1'b1;
+                end
+                icache_ns = icache_nobusy_ns;
+            end 
         end
         default: begin
-            icache_ns = `ICACHE_WAIT;
+            icache_ns = ICACHE_WAIT;
         end
     endcase
 end
 
 always_comb begin
-    if(icache_cs == `ICACHE_LOAD_WORD_DONE)begin
+    if(icache_cs == ICACHE_LOAD_WORD_DONE)begin
         ins = rword_from_pipline_to_icache;
     end
     else begin
@@ -268,18 +382,21 @@ end
 
 assign rdata_to_icache = rblock_from_pipline_to_icache;
 assign select_way_to_icache = ~reg_rlru_from_icache;
-assign wlru_en_to_icache = (icache_cs == `ICACHE_LOOKUP && hit_from_icache)? `ENABLE : `UNABLE;
+assign wlru_en_to_icache = (icache_cs == ICACHE_LOOKUP && hit_from_icache)? `ENABLE : `UNABLE;
 
 always_comb begin
     unique case(icache_ns)
-        `ICACHE_HIT_WRITE_V: begin
+        ICACHE_HIT_WRITE_V: begin
+            ad_to_icache = {reg_cacop_pa, reg_cacop_idx};
+        end
+        ICACHE_WRITE: begin
             ad_to_icache = {reg_icache_pa, reg_icache_va};
         end
-        `ICACHE_WRITE: begin
-            ad_to_icache = {reg_icache_pa, reg_icache_va};
+        ICACHE_LOAD: begin
+            ad_to_icache = {cacop_pa, cacop_idx};
         end
         default: begin
-            if(icache_busy)begin
+            if(~icache_ready)begin
                 ad_to_icache = {reg_icache_pa, reg_icache_va};
             end
             else begin
@@ -289,15 +406,15 @@ always_comb begin
     endcase
 end
 
-assign pa_to_icache = {reg_icache_pa, reg_icache_va};
+assign pa_to_icache = (icache_cs == ICACHE_LOAD)?{reg_cacop_pa, reg_cacop_idx} : {reg_icache_pa, reg_icache_va};
 
 //contract with pipline
 always_comb begin
     unique case(icache_ns)
-        `ICACHE_REQ_LOAD_WORD: begin
+        ICACHE_REQ_LOAD_WORD: begin
             icache_req_to_pipline = `ICACHE_REQ_TO_PIPLINE_WORD;
         end
-        `ICACHE_REQ_LOAD_BLOCK: begin
+        ICACHE_REQ_LOAD_BLOCK: begin
             icache_req_to_pipline = `ICACHE_REQ_TO_PIPLINE_BLOCK;
         end
         default: begin
@@ -306,7 +423,7 @@ always_comb begin
     endcase
 end
 
-assign icache_req_ad_to_pipline = (icache_ns == `ICACHE_REQ_LOAD_WORD)? {icache_pa, icache_va} : pa_to_icache;
+assign icache_req_ad_to_pipline = (icache_ns == ICACHE_REQ_LOAD_WORD)? {icache_pa, icache_va} : {reg_icache_pa, reg_icache_va};
 
 ICache icache(.clk(clk), .rstn(rstn), .pa(pa_to_icache), .ad(ad_to_icache),
                 .control_en(icache_ns), .wlru_en_from_cache(wlru_en_to_icache),

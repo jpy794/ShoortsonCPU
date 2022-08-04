@@ -6,7 +6,7 @@ module ICache(
 
     input logic [`ADDRESS_WIDTH]pa,
     input logic [`ADDRESS_WIDTH]ad,
-    input logic [`ICACHE_STATE_WIDTH]control_en, 
+    icache_state_t control_en, 
 
     input logic wlru_en_from_cache,
     input logic select_way,
@@ -52,7 +52,7 @@ assign wlru = way_hit[1];       //lru部分不适用于拓展，目前的设计�
 
 generate
     for(j = 0; j < `WAY_NUM; j = j + 1)begin
-        assign way_wtag[j] = (control_en == `ICACHE_WRITE)? ad[`TAG_PART] : `CLEAR_TAG;
+        assign way_wtag[j] = (control_en == ICACHE_WRITE)? ad[`TAG_PART] : `CLEAR_TAG;
     end
 endgenerate
 
@@ -60,7 +60,7 @@ generate
     for(j = 0; j < `WAY_NUM; j = j + 1)begin
      //  assign way_wv[j] = (control_en == `I_WRITE) ? `SET_V : `CLEAR_V;
         always_comb begin
-            if(control_en == `ICACHE_WRITE)begin
+            if(control_en == ICACHE_WRITE)begin
                 way_wv[j] = `SET_V;
             end
             else begin
@@ -79,14 +79,21 @@ endgenerate
 
 always_comb begin                         
     unique case(control_en)
-        `ICACHE_LOOKUP: begin
+        ICACHE_LOOKUP: begin
             for(i = 0; i < `WAY_NUM; i = i + 1)begin
                 way_wen[i] = `DATA_WRITE_UNABLE; 
                 way_wtag_en[i] = `UNABLE;
                 way_wv_en[i] = `UNABLE;
             end
         end
-        `ICACHE_WRITE_TAG: begin
+        ICACHE_LOAD: begin
+            for(i = 0; i < `WAY_NUM; i = i + 1)begin
+                way_wen[i] = `DATA_WRITE_UNABLE; 
+                way_wtag_en[i] = `UNABLE;
+                way_wv_en[i] = `UNABLE;
+            end
+        end
+        ICACHE_WRITE_TAG: begin
             for(i = 0; i < `WAY_NUM; i = i + 1)begin
                 way_wen[i] = `DATA_WRITE_UNABLE;
                 way_wv_en[i] = `UNABLE;      
@@ -100,7 +107,7 @@ always_comb begin
                 way_wtag_en[1] = `UNABLE;
             end 
         end
-        `ICACHE_INDEX_WRITE_V: begin
+        ICACHE_INDEX_WRITE_V: begin
             for(i = 0; i < `WAY_NUM; i = i + 1)begin
                 way_wen[i] = `DATA_WRITE_UNABLE;
                 way_wtag_en[i] = `UNABLE;
@@ -114,7 +121,7 @@ always_comb begin
                 way_wv_en[1] = `UNABLE;
             end
         end
-        `ICACHE_HIT_WRITE_V: begin
+        ICACHE_HIT_WRITE_V: begin
             for(i = 0; i < `WAY_NUM; i = i + 1)begin
                 way_wen[i] = `DATA_WRITE_UNABLE;
                 way_wtag_en[i] = `UNABLE;
@@ -128,7 +135,7 @@ always_comb begin
                 way_wv_en[1] = `UNABLE;
             end
         end
-        `ICACHE_WRITE: begin
+        ICACHE_WRITE: begin
             if(select_way)begin
                 way_wen[0] = `DATA_WRITE_UNABLE;
                 way_wtag_en[0] = `UNABLE;

@@ -56,7 +56,7 @@ module core_top(
 );
 
     logic [11:0] icache_idx;
-    logic [2:0] icache_op;
+    cache_op_t icache_op;
     logic icache_is_cached;
     logic [31:0] icache_pa;
     logic [31:0] icache_data;
@@ -111,8 +111,12 @@ module core_top(
         `endif
         //.real_icache_cached(icache_is_cached),
         .ins(icache_data),
-        .icache_ready,        //TODO
+        .icache_req,
+        .icache_ready,        
         .icache_data_valid,
+        .cacop_idx,
+        .cacop_pa,
+        .cacop_ready,
         .icache_taken(icache_data_ready),
         .dcache_va(dcache_idx),
         .dcache_pa(dcache_pa[31:12]),
