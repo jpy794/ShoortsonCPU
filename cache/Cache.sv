@@ -506,6 +506,12 @@ always_comb begin
                             dcache_ns = D_REQ_LOAD_BLOCK;
                         end
                     end
+                    DCACHE_REQ_STORE_ATOM: begin
+                        if(dcache_taken)begin
+                            dcache_busy = 1'b0;
+                            dcache_ns = dcache_nobusy_ns;
+                        end
+                    end
                     DCACHE_REQ_STORE_WORD: begin
                         if(re_rdirty_from_dcache)begin
                             dcache_ns = D_REQ_STORE_LOAD_BLOCK;
@@ -545,12 +551,17 @@ always_comb begin
                         end
                     end
                     DCACHE_REQ_STORE_ATOM: begin
+                        dcache_data_valid = 1'b1;
                         if(rllit_from_dcache[pa_to_dcache[4:2]])begin
-                            dcache_ns = D_STORE;
+                            if(dcache_taken)begin
+                                dcache_ns = D_STORE;
+                            end
                         end
                         else begin
-                            dcache_busy = 1'b0;
-                            dcache_ns = dcache_nobusy_ns;
+                            if(dcache_taken)begin
+                                dcache_busy = 1'b0;
+                                dcache_ns = dcache_nobusy_ns;
+                            end
                         end
                     end
                     DCACHE_REQ_STORE_WORD: begin
@@ -629,17 +640,8 @@ always_comb begin
             dcache_ns = dcache_nobusy_ns;
         end
         D_STORE: begin
-            if((reg_dcache_op == DCACHE_REQ_STORE_ATOM))begin
-                if(dcache_taken)begin
-                    dcache_ns = dcache_nobusy_ns;
-                    dcache_busy = 1'b0;
-                end
-                dcache_data_valid = 1'b1;
-            end
-            else begin
-                dcache_busy = 1'b0;
-                dcache_ns = dcache_nobusy_ns;
-            end  
+            dcache_busy = 1'b0;
+            dcache_ns = dcache_nobusy_ns;  
         end
         D_REQ_STORE_BLOCK: begin
             dcache_ns = D_WAIT_STORE_BLOCK;
@@ -708,13 +710,18 @@ end
 always_comb begin
     load_data = load_data_from_dcache;
     unique case(dcache_cs)
-        D_STORE:begin
-            if(reg_dcache_op == DCACHE_REQ_STORE_ATOM)begin
-                load_data = {{31{1'b0}}, 1'b1};
-            end
-        end
         D_LOAD_WORD_DONE:begin
             load_data = rword_from_pipline_to_dcache;
+        end
+        D_LOAD: begin
+            if(reg_dcache_op == DCACHE_REQ_STORE_ATOM)begin
+                if(hit_from_dcache && rllit_from_dcache[pa_to_dcache[4:2]])begin
+                    load_data = {{31{1'b0}}, 1'b1};
+                end
+                else begin
+                    load_data = 32'h0;
+                end
+            end
         end
     endcase
 end
