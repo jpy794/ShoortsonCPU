@@ -385,9 +385,7 @@ end
 always_comb begin
     unique case(dcache_op)
         DCACHE_REQ_LOAD_ATOM: begin
-            if(dcache_cached)begin
-                dcache_nobusy_ns = D_LOAD;
-            end
+            dcache_nobusy_ns = D_LOAD;
         end
         DCACHE_REQ_LOAD_WORD: begin
             if(dcache_cached)begin
@@ -414,9 +412,7 @@ always_comb begin
             end
         end
         DCACHE_REQ_STORE_ATOM: begin
-            if(dcache_cached)begin
-                dcache_nobusy_ns = D_LOAD;
-            end
+            dcache_nobusy_ns = D_LOAD;
         end
         DCACHE_REQ_STORE_WORD: begin
             if(dcache_cached)begin
@@ -449,9 +445,7 @@ always_comb begin
             dcache_nobusy_ns = D_INDEX_WRITE_V;
         end
         DCACHE_REQ_HIT_INVALIDATA: begin
-            if(dcache_cached)begin
-                dcache_nobusy_ns = D_LOAD;
-            end
+            dcache_nobusy_ns = D_LOAD;
         end
         DCACHE_REQ_CLEAR_LLIT: begin
             dcache_nobusy_ns = D_CLEAR_LLIT;
