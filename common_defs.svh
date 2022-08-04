@@ -19,4 +19,12 @@ typedef enum logic [1:0] {
 
 typedef logic [1:0] byte_en_t;
 
+/* cacheop */
+typedef enum logic [1:0] {
+    CAC_INIT = 2'b00,
+    CAC_IDX_INV = 2'b01,
+    CAC_SRCH_INV = 2'b10,
+    CAC_NOP = 2'b11
+} cache_op_t;
+
 `endif

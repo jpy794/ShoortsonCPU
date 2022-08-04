@@ -554,13 +554,6 @@ typedef struct packed {
 } memory2_writeback_pass_t;
 /* pipeline pass end */
 
-/* cacheop */
-typedef enum logic [1:0] {
-    C_INIT = 2'b00,
-    C_IDX_INV = 2'b01,
-    C_SRCH_INV = 2'b10
-}  cache_op_t;
-
 typedef enum logic [2:0] {
     IC_NOP =        3'b000,
     IC_R =          3'b001,
