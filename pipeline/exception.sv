@@ -66,6 +66,17 @@ module Exception(
                      (ecode == PIL) ||
                      (ecode == PIS) ||
                      (ecode == PIF) ;
+
+    logic excp_tlbr;
+    assign excp_tlbr = (ecode == TLBR);
+
+    logic wr_tlbehi = (ecode == TLBR) ||
+                      (ecode == PIS) ||
+                      (ecode == PIF) ||
+                      (ecode == PIL) ||
+                      (ecode == PME) ||
+                      (ecode == PPI) ;
+
     always_comb begin
         wr_csr_req.we = 1'b0;
         wr_csr_req.crmd = rd_csr.crmd;
@@ -73,6 +84,7 @@ module Exception(
         wr_csr_req.estat.r_esubcode_ecode = rd_csr.estat.r_esubcode_ecode;
         wr_csr_req.era = rd_csr.era;
         wr_csr_req.badv = rd_csr.badv;
+        wr_csr_req.tlbehi = rd_csr.tlbehi;
         if(is_int) begin
             wr_csr_req.we = 1'b1;
 
@@ -88,6 +100,11 @@ module Exception(
         end else if(is_excp) begin
             wr_csr_req.we = 1'b1;
 
+            if(excp_tlbr) begin
+                wr_csr_req.crmd.da = 1'b1;
+                wr_csr_req.crmd.pg = 1'b0;
+            end
+
             wr_csr_req.crmd.plv = KERNEL;
             wr_csr_req.crmd.ie = 1'b0;
 
@@ -97,6 +114,10 @@ module Exception(
             wr_csr_req.era = req.epc;
 
             wr_csr_req.estat.r_esubcode_ecode = req.excp_pass.esubcode_ecode;
+
+            if(wr_tlbehi)
+                wr_csr_req.tlbehi.vppn = req.excp_pass.badv[31:13];
+
             if(wr_badv)
                 wr_csr_req.badv = req.excp_pass.badv;
         end

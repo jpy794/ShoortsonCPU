@@ -156,6 +156,8 @@ module RegCSR (
                 /* wr from exception */
                 csr.crmd.plv <= excp_wr_req.crmd.plv;
                 csr.crmd.ie <= excp_wr_req.crmd.ie;
+                csr.crmd.da <= excp_wr_req.crmd.da;
+                csr.crmd.pg <= excp_wr_req.crmd.pg;
                 
                 csr.prmd.pplv <= excp_wr_req.prmd.pplv;
                 csr.prmd.pie <= excp_wr_req.prmd.pie;
@@ -165,6 +167,7 @@ module RegCSR (
                 csr.era <= excp_wr_req.era;
 
                 csr.badv <= excp_wr_req.badv;
+                csr.tlbehi.vppn <= excp_wr_req.tlbehi.vppn;
             end else begin
                 unique case(1'b1)
                     tlb_wr_req.we: begin
@@ -219,6 +222,11 @@ module RegCSR (
                         /* TODO: llbit also need to be changed here*/
                         csr.crmd.plv <= csr.prmd.pplv;
                         csr.crmd.ie <= csr.prmd.pie;
+
+                        if(csr.estat.r_esubcode_ecode == TLBR) begin
+                            csr.crmd.da <= 1'b0;
+                            csr.crmd.pg <= 1'b1;
+                        end
                     end
                 endcase
             end

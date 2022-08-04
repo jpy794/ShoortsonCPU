@@ -17,7 +17,11 @@ localparam SUC = 0;
 typedef logic [4:0] reg_idx_t;
 
 /* tlb */
+`ifdef DIFF_TEST
+localparam TLB_ENTRY_NUM = 32;
+`else
 localparam TLB_ENTRY_NUM = 16;
+`endif
 localparam TLB_IDX_WID = $clog2(TLB_ENTRY_NUM);
 localparam ASID_WID = 10;
 /* ps enum */
@@ -293,6 +297,7 @@ typedef struct packed {
     csr_estat_t estat;
     csr_era_t era;
     csr_badv_t badv;
+    csr_tlbehi_t tlbehi;
 } excp_wr_csr_req_t;
 
 /* btb */
