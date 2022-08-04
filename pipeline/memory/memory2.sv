@@ -134,6 +134,8 @@ module Memory2 (
 
     `PASS(is_tlbfill);
     `PASS(tlb_wr_idx);
+
+    `PASS(excp_event);
 `endif
 
 endmodule

@@ -515,6 +515,8 @@ typedef struct packed {
 
     logic is_tlbfill;
     tlb_idx_t tlb_wr_idx;
+
+    excp_event_t excp_event;
 `endif
 } memory1_memory2_pass_t;
 
@@ -551,6 +553,8 @@ typedef struct packed {
 
     logic is_tlbfill;
     tlb_idx_t tlb_wr_idx;
+
+   excp_event_t excp_event;
 `endif
 } memory2_writeback_pass_t;
 /* pipeline pass end */

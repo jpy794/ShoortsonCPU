@@ -47,6 +47,9 @@ module Memory1 (
     output memory1_memory2_pass_t pass_out,
 
     output excp_req_t excp_req
+`ifdef DIFF_TEST
+    ,input excp_event_t excp_event_in
+`endif
 );
 
     /* pipeline start */
@@ -55,7 +58,7 @@ module Memory1 (
 
     logic is_mem;
     assign is_mem = pass_in_r.is_mem;
-    
+
     logic dcache_busy_stall;
     assign dcache_busy_stall = eu_do & is_mem & ~dcache_ready;
     assign stall_o = stall_i | dcache_busy_stall;
@@ -229,6 +232,8 @@ module Memory1 (
 
     `PASS(is_rdcnt);
     `PASS(cntval_64);
+
+    assign pass_out.excp_event = excp_event_in;
 
     assign pass_out.is_tlbfill = (pass_in_r.tlb_op == TLBFILL);
     assign pass_out.tlb_wr_idx = tlb_wr_idx;

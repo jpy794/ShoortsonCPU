@@ -38,7 +38,7 @@ module RegCSR (
     output logic ti, ti_clr
 
 `ifdef DIFF_TEST
-    ,output csr_t wb_rd, mem2_rd
+    ,output csr_t mem2_rd
 `endif
 );
 
@@ -84,7 +84,6 @@ module RegCSR (
     assign tlb_rd = csr;
     assign excp_rd = csr;
 `ifdef DIFF_TEST
-    assign wb_rd = csr;
     assign mem2_rd = csr;
 `endif
     always_comb begin

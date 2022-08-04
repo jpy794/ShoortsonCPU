@@ -56,7 +56,7 @@ module CPUTop (
     tlb_wr_csr_req_t tlb_wr_csr_req;
 
 `ifdef DIFF_TEST
-    csr_t wb_rd_csr, mem2_rd_csr;
+    csr_t mem2_rd_csr;
 `endif
 
     logic ti, ti_clr;
@@ -87,8 +87,7 @@ module CPUTop (
         .swi,
         .swi_clr
 `ifdef DIFF_TEST
-        ,.wb_rd(wb_rd_csr),
-        .mem2_rd(mem2_rd_csr)
+        ,.mem2_rd(mem2_rd_csr)
 `endif
     );
 
@@ -243,6 +242,9 @@ module CPUTop (
     excp_req_t excp_req;
     logic modify_state_flush;
     logic is_ertn;
+`ifdef DIFF_TEST
+    excp_event_t excp_event;
+`endif
     Memory1 U_Memory1 (
         .clk, .rst_n,
 
@@ -282,6 +284,9 @@ module CPUTop (
         .pass_out(pass_mem1),
         
         .excp_req
+`ifdef DIFF_TEST
+        ,.excp_event_in(excp_event)
+`endif
     );
 
     Memory2 U_Memory2 (
@@ -305,14 +310,6 @@ module CPUTop (
 `endif
     );
 
-`ifdef DIFF_TEST
-    excp_event_t excp_event[3];
-    always_ff @(posedge clk) begin
-        excp_event[1] <= excp_event[0];
-        excp_event[2] <= excp_event[1];
-    end
-`endif
-
     Writeback U_Writeback (
         .clk, .rst_n,
 
@@ -325,11 +322,6 @@ module CPUTop (
         .stall_o(wb_stall_o),
 
         .pass_in(pass_mem2)
-
-`ifdef DIFF_TEST
-        ,.excp_event_in(excp_event[2]),
-        .rd_csr(wb_rd_csr)
-`endif
     );
 
     /* debug */
@@ -359,7 +351,7 @@ module CPUTop (
         .rd_csr(excp_rd_csr),
         .wr_csr_req(excp_wr_csr_req)
 `ifdef DIFF_TEST
-        ,.excp_event_out(excp_event[0])
+        ,.excp_event_out(excp_event)
 `endif
     );
 

@@ -13,10 +13,6 @@ module Writeback (
     output logic stall_o,
 
     input memory2_writeback_pass_t pass_in
-`ifdef DIFF_TEST
-    ,input excp_event_t excp_event_in,
-    input csr_t rd_csr
-`endif
 );
 
     /* pipeline start */
@@ -112,10 +108,10 @@ module Writeback (
             cmt_pc      <=  pass_in_r.pc;
             cmt_inst    <=  pass_in_r.inst;
 
-            cmt_int_no <= excp_event_in.int_no;
-            cmt_excp_flush  <= excp_event_in.valid;
+            cmt_int_no <= pass_in_r.excp_event.int_no;
+            cmt_excp_flush  <= pass_in_r.excp_event.valid;
             cmt_ertn        <= pass_in_r.is_ertn;
-            cmt_csr_ecode   <= excp_event_in.ecode;
+            cmt_csr_ecode   <= pass_in_r.excp_event.ecode;
             cmt_tlbfill_en  <= pass_in_r.is_tlbfill;
             cmt_rand_index  <= pass_in_r.tlb_wr_idx;
 
