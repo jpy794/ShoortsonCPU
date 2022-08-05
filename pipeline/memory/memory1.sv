@@ -48,6 +48,7 @@ module Memory1 (
     input logic icache_op_ready,
 
     /* pipeline */
+    output logic set_idle_stall,
     input logic flush_i, stall_i,
     output logic stall_o,
     input execute_memory1_pass_t pass_in,
@@ -198,6 +199,9 @@ module Memory1 (
     logic llbit;
     assign llbit = rd_csr.llbctl.r_rollb;
     assign set_llbit = eu_do && is_atomic && ~is_store;
+
+    /* idle */
+    assign set_idle_stall = eu_do & pass_in_r.is_idle;
 
     /* memory1 stage */
 

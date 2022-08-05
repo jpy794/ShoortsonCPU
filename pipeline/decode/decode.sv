@@ -472,7 +472,7 @@ module Decode (
                            inst_invtlb  ;
     
     logic is_modify_state;
-    assign is_modify_state = is_modify_csr | is_modify_tlb | inst_cacop | inst_ibar;        // make sure i$ can see the result of cacop
+    assign is_modify_state = is_modify_csr | is_modify_tlb | inst_cacop | inst_ibar | inst_idle;        // make sure i$ can see the result of cacop
 
     always_comb begin
         inst_add_w = 1'b0;
@@ -704,6 +704,7 @@ module Decode (
     assign pass_out.is_cac = inst_cacop;
     assign pass_out.is_ertn = inst_ertn;
     assign pass_out.tlb_op = tlb_op;
+    assign pass_out.is_idle = inst_idle;
 
     assign pass_out.is_modify_state = is_modify_state;
 

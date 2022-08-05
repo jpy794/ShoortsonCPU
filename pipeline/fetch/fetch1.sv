@@ -99,7 +99,7 @@ module Fetch1 (
     );
 
     /* icache */
-    assign icache_req = eu_do ? 1'b1 : 1'b0;
+    assign icache_req = eu_do ? ICAC_LD : ICAC_NOP;
     assign icache_idx = pc_r[11:0];
     assign icache_pa = pa;
     assign icache_is_cached = mat[0];

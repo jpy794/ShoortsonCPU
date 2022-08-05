@@ -14,6 +14,7 @@ module Exception(
 
     /* ctrl */
     output logic excp_flush,
+    output logic clr_idle_stall,
 
     /* csr */
     input csr_t rd_csr,
@@ -55,6 +56,9 @@ module Exception(
 
     logic is_int;
     assign is_int = req.valid & rd_csr.crmd.ie & (|(int_vec_r[0] & rd_csr.ecfg.lie));      // in case it is a bubble
+
+    /* wake up cpu on int */
+    assign clr_idle_stall = rd_csr.crmd.ie & (|(int_vec_r[0] & rd_csr.ecfg.lie));          // wait for an int
 
     esubcode_ecode_t ecode;
     assign ecode = req.excp_pass.esubcode_ecode;

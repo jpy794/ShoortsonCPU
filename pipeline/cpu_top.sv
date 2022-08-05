@@ -265,6 +265,8 @@ module CPUTop (
         .wr_pc_req(mem1_wr_pc_req),
         .is_ertn,
         .set_llbit,
+        
+        .set_idle_stall,
 
         .fwd_req(mem1_fwd_req), 
 
@@ -366,6 +368,7 @@ module CPUTop (
         .wr_pc_req(excp_wr_pc_req),
 
         .excp_flush,
+        .clr_idle_stall,
 
         .rd_csr(excp_rd_csr),
         .wr_csr_req(excp_wr_csr_req)
@@ -374,7 +377,14 @@ module CPUTop (
 `endif
     );
 
-    assign if1_stall_i = if2_stall_o;
+    logic idle_stall_r, set_idle_stall, clr_idle_stall;
+    always_ff @(posedge clk, negedge rst_n) begin
+        if(~rst_n)              idle_stall_r <= 1'b0;
+        else if(set_idle_stall) idle_stall_r <= 1'b1;
+        else if(clr_idle_stall) idle_stall_r <= 1'b0;
+    end
+
+    assign if1_stall_i = if2_stall_o | idle_stall_r;
     assign if2_stall_i = id_stall_o;
     assign id_stall_i = ex_stall_o;
     assign ex_stall_i = mem1_stall_o;

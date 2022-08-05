@@ -422,6 +422,9 @@ typedef struct packed {
     logic is_modify_state;
     
     tlb_op_t tlb_op;
+
+    logic is_idle;
+
 `ifdef DIFF_TEST
     u32_t inst;
 
@@ -466,6 +469,8 @@ typedef struct packed {
     asid_t invtlb_asid;         // rj_data[9:0]
 
     logic is_modify_state;
+
+    logic is_idle;
 
 `ifdef DIFF_TEST
     u32_t inst;

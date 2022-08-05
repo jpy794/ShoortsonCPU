@@ -265,6 +265,7 @@ module Execute (
     `PASS(is_cac);
     `PASS(is_ertn);
     `PASS(tlb_op);
+    `PASS(is_idle);
 
     `PASS(is_modify_state);
 
