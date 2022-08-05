@@ -27,4 +27,16 @@ typedef enum logic [1:0] {
     CAC_NOP = 2'b11
 } cache_op_t;
 
+/* cache req */
+typedef enum logic [1:0] {
+    DCAC_NOP = 2'd0,
+    DCAC_LD = 2'd1,
+    DCAC_ST = 2'd2
+} dcache_req_t;
+
+typedef enum logic {
+    ICAC_NOP = 1'b0,
+    ICAC_LD = 1'b1
+} icache_req_t;
+
 `endif

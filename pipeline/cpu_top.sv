@@ -3,22 +3,31 @@
 module CPUTop (
     input logic clk, rst_n,
 
+    output logic  icache_req,
     output logic [11:0] icache_idx,
-    output logic [2:0] icache_op,
-    output logic icache_is_cached,
     output logic [31:0] icache_pa,
+    output logic icache_is_cached,
     input logic [31:0] icache_data,
     input logic icache_ready, icache_data_valid,
     output logic icache_data_ready,
 
+    /* dcache */
+    output dcache_req_t dcache_req,
+    output cache_op_t dcache_op,
     output logic [11:0] dcache_idx,
-    output logic [4:0] dcache_op,
+    output u32_t dcache_pa,
     output logic dcache_is_cached,
-    output logic [31:0] dcache_pa,
-    output logic [31:0] wr_dcache_data,
-    input logic [31:0] rd_dcache_data,
+    output byte_type_t dcache_byte_type,
+    output u32_t wr_dcache_data,
+    input u32_t rd_dcache_data,
     input logic dcache_ready, dcache_data_valid,
     output logic dcache_data_ready,
+
+    /* icache op */
+    output cache_op_t icache_op,
+    output logic [11:0] icache_op_idx,
+    output phy_t icache_op_pa,
+    input logic icache_op_ready,
 
     // TODO: int
     input logic [7:0] intrpt,
@@ -154,7 +163,7 @@ module CPUTop (
         .tlb_entrys(itlb_lookup),
 
         .icache_idx,
-        .icache_op,
+        .icache_req,
         .icache_pa,
         .icache_is_cached,
         .icache_ready,
@@ -268,12 +277,19 @@ module CPUTop (
         .tlb_wr_idx,
 `endif
         
-        .dcache_idx,
         .dcache_op,
+        .dcache_req,
+        .dcache_idx,
         .dcache_pa,
         .dcache_is_cached,
+        .dcache_byte_type,
         .wr_dcache_data,
         .dcache_ready,
+
+        .icache_op,
+        .icache_op_idx,
+        .icache_op_pa,
+        .icache_op_ready,
 
         .flush_i(mem1_flush_i),
         .stall_i(mem1_stall_i),

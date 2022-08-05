@@ -31,12 +31,20 @@ module Memory1 (
 `endif
 
     /* to dcache */
-    output logic [11:0] dcache_idx,          // for index
-    output logic [4:0] dcache_op,
+    output dcache_req_t dcache_req,
+    output cache_op_t dcache_op,
+    output logic [11:0] dcache_idx,
     output u32_t dcache_pa,
     output logic dcache_is_cached,
+    output byte_type_t dcache_byte_type,
     output u32_t wr_dcache_data,
     input logic dcache_ready,
+
+    /* icache op */
+    output cache_op_t icache_op,
+    output logic [11:0] icache_op_idx,
+    output phy_t icache_op_pa,
+    input logic icache_op_ready,
 
     /* pipeline */
     input logic flush_i, stall_i,
@@ -56,12 +64,17 @@ module Memory1 (
     execute_memory1_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
-    logic is_mem;
+    logic is_mem, is_cac, is_cac_srch_inv;
     assign is_mem = pass_in_r.is_mem;
+    assign is_cac = pass_in_r.is_cac;
+
+    logic icache_op_busy_stall;
+    assign icache_op_busy_stall = eu_do & is_icac & ~icache_op_ready;
 
     logic dcache_busy_stall;
     assign dcache_busy_stall = eu_do & is_mem & ~dcache_ready;
-    assign stall_o = stall_i | dcache_busy_stall;
+    
+    assign stall_o = stall_i | dcache_busy_stall | icache_op_busy_stall;
 
     logic excp_valid;
     assign excp_valid = addr_excp.valid | excp_pass_in_r.valid;
@@ -74,7 +87,8 @@ module Memory1 (
 
     /* for this stage */
     logic chk_excp;
-    assign chk_excp = pass_in_r.valid & is_mem;
+    assign chk_excp = pass_in_r.valid & (is_mem | is_cac_srch_inv);
+
     logic eu_do;
     assign eu_do = pass_in_r.valid & ~excp_valid;
 
@@ -89,7 +103,7 @@ module Memory1 (
     end
 
     /* out */
-    assign pass_out.dcache_req = pass_in_r.is_mem & eu_do;
+    assign pass_out.dcache_wait_resp = is_mem & eu_do;
 
     /* out valid */
     assign pass_out.valid = valid_with_flush;
@@ -152,6 +166,31 @@ module Memory1 (
         tlb_req.invtlb_vppn = pass_in_r.rkd_data[31:13];
     end
 
+    /* cacop */
+    logic [4:0] cacop_code;
+    assign cacop_code = pass_in_r.rd;
+
+    logic is_icac, is_dcac, is_srch_inv;
+    always_comb begin
+        is_icac = is_cac && (cacop_code[2:0] == 2'b00);
+        is_dcac = is_cac && (cacop_code[2:0] == 2'b01);
+        is_srch_inv = is_cac && (cacop_code[4:3] == CAC_SRCH_INV);
+    end
+
+    cache_op_t cache_op;
+    assign cache_op = cacop_code[4:3];
+    /* cacop end */
+
+    // to icache
+    assign icache_op_idx = pass_in_r.ex_out[11:0];
+    assign icache_op_pa = pa;
+    always_comb begin
+        icache_op = CAC_NOP;
+        if(eu_do & is_icac) begin
+            icache_op = cache_op;
+        end
+    end
+
     /* memory1 stage */
 
     mat_t mat;
@@ -174,11 +213,21 @@ module Memory1 (
     assign dcache_idx = pass_in_r.ex_out[11:0];
     assign dcache_pa = pa;
     assign dcache_is_cached = mat[0];
+    assign dcache_byte_type = pass_in_r.byte_type;
     always_comb begin
-        dcache_op = DC_NOP;
-        if(pass_out.dcache_req) begin
-            if(pass_in_r.is_store) dcache_op = {DC_W[4:2], pass_in_r.byte_type};
-            else                   dcache_op = {DC_R[4:2], pass_in_r.byte_type};
+        dcache_req = DCAC_NOP;
+        if(eu_do & is_mem) begin
+            if(pass_in_r.is_store) dcache_req = DCAC_ST;
+            else                   dcache_req = DCAC_LD;
+        end
+        // TODO: ll sc
+    end
+
+    /* dcache op */
+    always_comb begin
+        dcache_op = CAC_NOP;
+        if(eu_do & is_dcac) begin
+            dcache_op = cache_op;
         end
     end
 

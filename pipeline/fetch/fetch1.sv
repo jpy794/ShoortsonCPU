@@ -29,7 +29,7 @@ module Fetch1 (
 
     /* to icache */
     output logic [11:0] icache_idx,          // for index
-    output logic [2:0] icache_op,
+    output logic icache_req,
     output u32_t icache_pa,
     output logic icache_is_cached,
     input logic icache_ready,
@@ -64,7 +64,7 @@ module Fetch1 (
     /* out */
     assign pass_out.valid = valid_with_flush;
     assign pass_out.pc = pc_r;
-    assign pass_out.icache_req = eu_do;
+    assign pass_out.icache_wait_resp = eu_do;
 
     /* exeption */
     always_comb begin
@@ -99,7 +99,7 @@ module Fetch1 (
     );
 
     /* icache */
-    assign icache_op = eu_do ? IC_R : IC_NOP;
+    assign icache_req = eu_do ? 1'b1 : 1'b0;
     assign icache_idx = pc_r[11:0];
     assign icache_pa = pa;
     assign icache_is_cached = mat[0];

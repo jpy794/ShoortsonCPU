@@ -364,7 +364,7 @@ typedef struct packed {
     logic valid;
     virt_t pc;
     next_pc_t next;
-    logic icache_req;
+    logic icache_wait_resp;
 } fetch1_fetch2_pass_t;
 
 typedef struct packed {
@@ -487,7 +487,7 @@ typedef struct packed {
     virt_t pc_plus4;
     reg_idx_t rd;
     
-    logic dcache_req;
+    logic dcache_wait_resp;
     logic is_ld, is_st;
 
 `ifdef DIFF_TEST
@@ -553,20 +553,6 @@ typedef struct packed {
 `endif
 } memory2_writeback_pass_t;
 /* pipeline pass end */
-
-typedef enum logic [2:0] {
-    IC_NOP =        3'b000,
-    IC_R =          3'b001,
-    IC_INIT =       3'b100,
-    IC_IDX_INV =    3'b101,
-    IC_SRCH_INV =   3'b110
-} icache_op_t;
-
-typedef enum logic [4:0] {
-    DC_NOP =        5'b00000,
-    DC_R   =        5'b01000,
-    DC_W   =        5'b10000    
-}dcache_op_t;
 
 typedef struct packed {
     tlb_op_t tlb_op;

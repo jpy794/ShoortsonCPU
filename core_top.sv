@@ -55,24 +55,52 @@ module core_top(
     output [31:0] debug0_wb_inst
 );
 
-    logic [11:0] icache_idx;
+    /* icache op */
     cache_op_t icache_op;
+    logic [11:0] icache_op_idx;
+    phy_t icache_op_pa;
+    logic icache_op_ready;
+
+    /* icache req */
+    icache_req_t icache_req;
     logic icache_is_cached;
+    logic [11:0] icache_idx;
     logic [31:0] icache_pa;
     logic [31:0] icache_data;
     logic icache_ready, icache_data_valid, icache_data_ready;
 
-    logic [11:0] dcache_idx;
-    logic [4:0] dcache_op;
+    /* dcache op & req */
+    cache_op_t dcache_op;
+    dcache_req_t dcache_req;
     logic dcache_is_cached;
+    byte_type_t dcache_byte_type;
+    logic [11:0] dcache_idx;
     logic [31:0] dcache_pa;
     logic [31:0] rd_dcache_data, wr_dcache_data;
     logic dcache_ready, dcache_data_valid, dcache_data_ready;
+
     CPUTop U_CPUTop (
         .clk(aclk),
         .rst_n(aresetn),
         .*
     );
+
+    /* encode dcache op */
+    logic dcache_req_valid = (dcache_req != DCAC_NOP);
+    logic dcache_op_valid = (dcache_op != CAC_NOP);
+    logic [4:0] dcache_op_encoded;
+    always_comb begin
+        dcache_op_encoded = 5'b0;       // nop
+        unique case(1'b1)
+            dcache_req_valid: begin
+                dcache_op_encoded = {dcache_req, 1'b0, dcache_byte_type};
+            end
+            dcache_op_valid: begin
+                dcache_op_encoded = {2'b11, 1'b0, dcache_op};
+            end
+            default: ;
+        endcase
+    end
 
 `ifdef FAKE_CACHE
     FakeCache U_FackCache (
@@ -104,23 +132,23 @@ module core_top(
         .icache_va(icache_idx),
         .icache_pa(icache_pa[31:12]),
         .icache_op(icache_op),
-        `ifdef FORCE_TO_CACHE
-            .icache_cached(1'b1),
-        `else
-            .icache_cached(icache_is_cached),
-        `endif
+`ifdef FORCE_TO_CACHE
+        .icache_cached(1'b1),
+`else
+        .icache_cached(icache_is_cached),
+`endif
         //.real_icache_cached(icache_is_cached),
         .ins(icache_data),
         .icache_req,
         .icache_ready,        
         .icache_data_valid,
-        .cacop_idx,
-        .cacop_pa,
-        .cacop_ready,
+        .cacop_idx(icache_op_idx),
+        .cacop_pa(icache_op_pa[31:12]),
+        .cacop_ready(icache_op_ready),
         .icache_taken(icache_data_ready),
         .dcache_va(dcache_idx),
         .dcache_pa(dcache_pa[31:12]),
-        .dcache_op(dcache_op),
+        .dcache_op(dcache_op_encoded),
         `ifdef FORCE_TO_CACHE
             .dcache_cached(1'b1),
         `else

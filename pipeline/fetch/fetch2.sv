@@ -30,7 +30,7 @@ module Fetch2 (
     excp_pass_t excp_pass_in_r;
 
     logic icache_data_stall;
-    assign icache_data_stall = eu_do & pass_in_r.icache_req & ~icache_data_valid;
+    assign icache_data_stall = eu_do & pass_in_r.icache_wait_resp & ~icache_data_valid;
     assign stall_o = stall_i | icache_data_stall;
 
     logic excp_valid;
@@ -50,7 +50,7 @@ module Fetch2 (
         if(~rst_n) begin
             pass_in_r.valid <= 1'b0;
             excp_pass_in_r.valid <= 1'b0;
-            pass_in_r.icache_req <= 1'b0;       // do not wait for the req if flush
+            pass_in_r.icache_wait_resp <= 1'b0;       // do not wait for the req if flush
         end else if(~stall_o | flush_i) begin
             pass_in_r <= pass_in;
             excp_pass_in_r <= excp_pass_in;

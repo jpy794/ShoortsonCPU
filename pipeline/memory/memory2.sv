@@ -26,7 +26,7 @@ module Memory2 (
     memory1_memory2_pass_t pass_in_r;
 
     logic dcache_data_stall;
-    assign dcache_data_stall = eu_do & pass_in_r.dcache_req & ~dcache_data_valid & pass_in_r.is_ld;     // TODO: other cache op
+    assign dcache_data_stall = eu_do & pass_in_r.dcache_wait_resp & ~dcache_data_valid & pass_in_r.is_ld;     // TODO: other cache op
     assign stall_o = stall_i | dcache_data_stall;
 
     logic valid_o;
@@ -42,7 +42,7 @@ module Memory2 (
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin
             pass_in_r.valid <= 1'b0;
-            pass_in_r.dcache_req <= 1'b0;       // do not wait for the req if flush
+            pass_in_r.dcache_wait_resp <= 1'b0;       // do not wait for the req if flush
         end else if(~stall_o | flush_i) begin
             pass_in_r <= pass_in;
         end
