@@ -143,7 +143,7 @@ always_ff @(posedge clk or negedge rstn)begin
                     `REQ_TO_AXI_WRITE_BLOCK: begin
                         awaddr <= {reg_req_ad_from_pipline[31:5], {5{1'b0}}};
                         axi_cs <= AXI_STATE_STORE_BLOCK_WAIT_AWREADY;
-                        wdata <= reg_wblock[31:0];
+                        wdata <= wblock[31:0];
                       //  reg_wblock <= {{32{1'b0}}, reg_wblock[255:32]};
                         wstrb <= 4'b1111;
                         awvalid <= 1'b1;

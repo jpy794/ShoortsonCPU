@@ -976,6 +976,12 @@ always_comb begin
                 ad_to_dcache = {{20{1'b0}}, dcache_va};
             end
         end
+        D_INDEX_WRITE_V: begin
+            ad_to_dcache = {{20{1'b0}}, dcache_va};
+        end
+        D_WRITE_TAG: begin
+            ad_to_dcache = {{20{1'b0}}, dcache_va};
+        end
     endcase
 end
 
