@@ -65,7 +65,7 @@ module Memory1 (
     execute_memory1_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
-    logic is_atomic, is_store, is_mem, is_cac, is_cac_srch_inv;
+    logic is_atomic, is_store, is_mem, is_cac;
     assign is_mem = pass_in_r.is_mem;
     assign is_cac = pass_in_r.is_cac;
     assign is_atomic = pass_in_r.is_atomic;
@@ -90,7 +90,7 @@ module Memory1 (
 
     /* for this stage */
     logic chk_excp;
-    assign chk_excp = pass_in_r.valid & (is_mem | is_cac_srch_inv);
+    assign chk_excp = pass_in_r.valid & (is_mem | is_srch_inv);
 
     logic eu_do;
     assign eu_do = pass_in_r.valid & ~excp_valid;
