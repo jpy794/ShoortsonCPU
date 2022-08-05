@@ -63,6 +63,7 @@ module CPUTop (
     csr_t tlb_rd_csr, excp_rd_csr, if_rd_csr, id_rd_csr, ex_rd_csr, mem1_rd_csr;
     excp_wr_csr_req_t excp_wr_csr_req;
     tlb_wr_csr_req_t tlb_wr_csr_req;
+    logic set_llbit;
 
 `ifdef DIFF_TEST
     csr_t mem2_rd_csr;
@@ -89,6 +90,7 @@ module CPUTop (
         .tlb_wr_req(tlb_wr_csr_req), 
         .excp_wr_req(excp_wr_csr_req),
         .is_ertn,
+        .set_llbit,
 
         .is,
         .ti,
@@ -262,6 +264,7 @@ module CPUTop (
         .modify_state_flush,
         .wr_pc_req(mem1_wr_pc_req),
         .is_ertn,
+        .set_llbit,
 
         .fwd_req(mem1_fwd_req), 
 

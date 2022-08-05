@@ -187,6 +187,10 @@ module Decode (
 
     logic bad_inst;
 
+    logic is_atomic;
+    assign is_atomic = inst_ll_w  |
+                       inst_sc_w  ;
+
     logic is_mem;
     logic is_store, is_load;
     assign is_mem = inst_ld_b  |
@@ -196,10 +200,13 @@ module Decode (
                     inst_ld_w  |
                     inst_st_b  |
                     inst_st_h  |
-                    inst_st_w  ;
+                    inst_st_w  |
+                    inst_ll_w  |
+                    inst_sc_w  ;
     assign is_store = inst_st_b |
                       inst_st_h |
-                      inst_st_w ;
+                      inst_st_w |
+                      inst_sc_w ;
     assign is_load = is_mem & ~is_store;
 
     logic is_mem_signed;
@@ -207,7 +214,7 @@ module Decode (
                            inst_ld_h ;
 
     byte_type_t mem_byte_type;
-    assign mem_byte_type = byte_type_t'(inst[23:22]);
+    assign mem_byte_type = is_atomic ? WORD : byte_type_t'(inst[23:22]);
 
     logic is_br_off;
     assign is_br_off =  inst_b    |
@@ -336,7 +343,8 @@ module Decode (
                       inst_pcaddu12i |
                       inst_lu12i_w   |
                       is_br_wb       |
-                      is_cnt         ;
+                      is_cnt         |
+                      inst_sc_w      ;          // write result 0 or 1 to rd
 
     logic is_rd_as_rk;
     assign is_rd_as_rk = is_store |
@@ -688,6 +696,7 @@ module Decode (
     assign pass_out.is_mask_csr = inst_csrxchg;
     assign pass_out.csr_addr = csr_addr;
     assign pass_out.csr_data = csr_data;
+    assign pass_out.is_atomic = is_atomic;
     assign pass_out.is_mem = is_mem;
     assign pass_out.is_store = is_store;
     assign pass_out.is_signed = is_mem_signed;

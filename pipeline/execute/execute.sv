@@ -257,6 +257,7 @@ module Execute (
     `PASS(rd);
     `PASS(is_wr_csr);
     `PASS(csr_addr);
+    `PASS(is_atomic);
     `PASS(is_mem);
     `PASS(is_store);
     `PASS(is_signed);

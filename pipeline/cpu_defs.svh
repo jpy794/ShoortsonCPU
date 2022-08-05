@@ -232,6 +232,12 @@ typedef struct packed {
     logic clr;              // w1 r0
 } csr_ticlr_t;
 
+typedef struct packed {
+    logic [28:0] r0_1;
+    logic klo;
+    logic w1_wcllb;
+    logic r_rollb;
+} csr_llbctl_t;
 
 typedef struct packed {
     csr_crmd_t crmd;
@@ -256,6 +262,7 @@ typedef struct packed {
     csr_tcfg_t tcfg;
     csr_tval_t tval;
     csr_ticlr_t ticlr;
+    csr_llbctl_t llbctl;
 } csr_t;
 
 typedef struct packed {
@@ -403,6 +410,7 @@ typedef struct packed {
     u32_t csr_data;
 
     /* for inst executed in mem */
+    logic is_atomic;
     logic is_mem;
     logic is_store;
     logic is_signed;
@@ -444,6 +452,7 @@ typedef struct packed {
     u32_t csr_data;
 
     /* for inst executed in mem */
+    logic is_atomic;
     logic is_mem;
     logic is_store;
     logic is_signed;
@@ -475,6 +484,7 @@ typedef struct packed {
 
     u32_t ex_out;
 
+    logic is_atomic;
     logic is_mem;
     logic is_store;
     logic is_signed;

@@ -17,6 +17,7 @@ module Memory1 (
     output csr_addr_t csr_addr,
     output logic csr_we,
     output u32_t csr_data,
+    output logic set_llbit,
 
     /* modify state inst */    
     output modify_state_flush,
@@ -64,9 +65,11 @@ module Memory1 (
     execute_memory1_pass_t pass_in_r;
     excp_pass_t excp_pass_in_r;
 
-    logic is_mem, is_cac, is_cac_srch_inv;
+    logic is_atomic, is_store, is_mem, is_cac, is_cac_srch_inv;
     assign is_mem = pass_in_r.is_mem;
     assign is_cac = pass_in_r.is_cac;
+    assign is_atomic = pass_in_r.is_atomic;
+    assign is_store = pass_in_r.is_store;
 
     logic icache_op_busy_stall;
     assign icache_op_busy_stall = eu_do & is_icac & ~icache_op_ready;
@@ -103,7 +106,7 @@ module Memory1 (
     end
 
     /* out */
-    assign pass_out.dcache_wait_resp = is_mem & eu_do;
+    assign pass_out.dcache_wait_resp = ~is_store & is_mem & eu_do;
 
     /* out valid */
     assign pass_out.valid = valid_with_flush;
@@ -191,6 +194,11 @@ module Memory1 (
         end
     end
 
+    /* atomic */
+    logic llbit;
+    assign llbit = rd_csr.llbctl.r_rollb;
+    assign set_llbit = eu_do && is_atomic && ~is_store;
+
     /* memory1 stage */
 
     mat_t mat;
@@ -217,8 +225,12 @@ module Memory1 (
     always_comb begin
         dcache_req = DCAC_NOP;
         if(eu_do & is_mem) begin
-            if(pass_in_r.is_store) dcache_req = DCAC_ST;
-            else                   dcache_req = DCAC_LD;
+            if(pass_in_r.is_store) begin
+                if((is_atomic & llbit) | ~is_atomic)
+                    dcache_req = DCAC_ST;
+            end else begin
+                dcache_req = DCAC_LD;
+            end
         end
         // TODO: ll sc
     end
@@ -259,9 +271,10 @@ module Memory1 (
 
     /* out to next stage */
     assign pass_out.byte_en = pass_in_r.ex_out[1:0];
+    assign pass_out.ex_out = is_atomic & is_store ? {31'b0, llbit} : pass_in_r.ex_out;
 
     `PASS(pc);
-    `PASS(ex_out);
+    `PASS(is_atomic);
     `PASS(is_mem);
     `PASS(is_store);
     `PASS(is_signed);

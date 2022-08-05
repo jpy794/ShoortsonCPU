@@ -21,6 +21,7 @@ module RegCSR (
     /* mem1 */
     output csr_t mem1_rd,
     input logic is_ertn,
+    input logic set_llbit,
 
     /* tlb */
     output csr_t tlb_rd,
@@ -114,9 +115,8 @@ module RegCSR (
             'h41: rd_data = csr.tcfg;
             'h42: rd_data = csr.tval;
             'h44: rd_data = csr.ticlr;
-            /* TODO
+
             'h60: rd_data = csr.llbctl;
-            */
             'h88: rd_data = csr.tlbrentry;
             /* TODO
             'h98: rd_data = csr.ctag;
@@ -143,9 +143,8 @@ module RegCSR (
 
             csr.ecfg.lie <= 13'b0;
 
-            /* TODO
-            csr.llbcrl.klo = '0;
-            */
+            csr.llbctl.klo <= 1'b0;
+
             csr.dmw[0].plv0 <= 1'b0;
             csr.dmw[0].plv3 <= 1'b0;
             csr.dmw[1].plv0 <= 1'b0;
@@ -210,9 +209,11 @@ module RegCSR (
                             'h41: ;                         // use it seperately
                             'h42: ;                         // tval read only
                             'h44: ;                         // handle ticlr in exception
-                            /* TODO
-                            'h60: csr.llbctl <= wr_data;
-                            */
+
+                            'h60: begin
+                                if(wr_data[1]) csr.llbctl.r_rollb <= 1'b0;      // w1_wcllb
+                                csr.llbctl.klo <= wr_data[2];
+                            end
 
                             'h88: csr.tlbrentry[31:6] <= wr_data[31:6];
                             /* TODO 
@@ -227,10 +228,16 @@ module RegCSR (
                         csr.crmd.plv <= csr.prmd.pplv;
                         csr.crmd.ie <= csr.prmd.pie;
 
+                        if(csr.llbctl.klo)  csr.llbctl.klo <= 1'b0;
+                        else                csr.llbctl.r_rollb <= 1'b0;
+                        
                         if(csr.estat.r_esubcode_ecode == TLBR) begin
                             csr.crmd.da <= 1'b0;
                             csr.crmd.pg <= 1'b1;
                         end
+                    end
+                    set_llbit: begin
+                        csr.llbctl.r_rollb <= 1'b1;
                     end
                 endcase
             end
@@ -288,6 +295,9 @@ module RegCSR (
     /* dmw end */
     /* tim */
     assign csr.ticlr = '0;      // w1
+    /* llbctl */
+    assign csr.llbctl.r0_1 = '0;
+    assign csr.llbctl.w1_wcllb = '0;
 
 
 endmodule

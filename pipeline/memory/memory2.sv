@@ -26,7 +26,7 @@ module Memory2 (
     memory1_memory2_pass_t pass_in_r;
 
     logic dcache_data_stall;
-    assign dcache_data_stall = eu_do & pass_in_r.dcache_wait_resp & ~dcache_data_valid & pass_in_r.is_ld;     // TODO: other cache op
+    assign dcache_data_stall = eu_do & pass_in_r.dcache_wait_resp & ~dcache_data_valid;     // TODO: other cache op
     assign stall_o = stall_i | dcache_data_stall;
 
     logic valid_o;
@@ -100,8 +100,8 @@ module Memory2 (
     /* sel ex_mem_out */
     u32_t ex_mem_out;
     always_comb begin
-        if(pass_in_r.is_mem) ex_mem_out = mem_out;
-        else                 ex_mem_out = pass_in_r.ex_out;
+        if(pass_in_r.is_mem & ~pass_in_r.is_store) ex_mem_out = mem_out;            // do not mux for store (inst_sc_w)
+        else                                       ex_mem_out = pass_in_r.ex_out;
     end
 
     /* out to next stage */
