@@ -18,6 +18,7 @@ module Memory1 (
     output logic csr_we,
     output u32_t csr_data,
     output logic set_llbit,
+    output logic clr_llbit,
 
     /* modify state inst */    
     output modify_state_flush,
@@ -200,6 +201,7 @@ module Memory1 (
     logic llbit;
     assign llbit = rd_csr.llbctl.r_rollb;
     assign set_llbit = eu_do && is_atomic && ~is_store;
+    assign clr_llbit = ~stall_o && eu_do && is_atomic && is_store;      // consider stall to make sure we do not read a wrong llbit
 
     /* idle */
     assign set_idle_stall = eu_do & pass_in_r.is_idle;

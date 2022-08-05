@@ -21,7 +21,7 @@ module RegCSR (
     /* mem1 */
     output csr_t mem1_rd,
     input logic is_ertn,
-    input logic set_llbit,
+    input logic set_llbit, clr_llbit,
 
     /* tlb */
     output csr_t tlb_rd,
@@ -238,6 +238,9 @@ module RegCSR (
                     end
                     set_llbit: begin
                         csr.llbctl.r_rollb <= 1'b1;
+                    end
+                    clr_llbit: begin
+                        csr.llbctl.r_rollb <= 1'b0;
                     end
                 endcase
             end

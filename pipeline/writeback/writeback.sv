@@ -214,7 +214,7 @@ module Writeback (
         .tcfg               (csr_r.tcfg           ),
         .tval               (csr_r.tval           ),
         .ticlr              (csr_r.ticlr          ),
-        .llbctl             (0                  ),
+        .llbctl             (csr_r.llbctl         ),
         .tlbrentry          (csr_r.tlbrentry      ),
         .dmw0               (csr_r.dmw[0]         ),
         .dmw1               (csr_r.dmw[1]         )
