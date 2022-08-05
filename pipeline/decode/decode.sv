@@ -472,7 +472,7 @@ module Decode (
                            inst_invtlb  ;
     
     logic is_modify_state;
-    assign is_modify_state = is_modify_csr | is_modify_tlb | inst_cacop;        // make sure i$ can see the result of cacop
+    assign is_modify_state = is_modify_csr | is_modify_tlb | inst_cacop | inst_ibar;        // make sure i$ can see the result of cacop
 
     always_comb begin
         inst_add_w = 1'b0;
