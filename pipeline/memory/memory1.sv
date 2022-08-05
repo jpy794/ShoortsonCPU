@@ -160,8 +160,12 @@ module Memory1 (
     assign fwd_req.idx = pass_in_r.rd;
     assign fwd_req.data_valid = ~(pass_in_r.is_mem & ~pass_in_r.is_store);
     always_comb begin
-        if(pass_in_r.is_wr_rd_pc_plus4) fwd_req.data = pass_in_r.pc_plus4;
-        else                            fwd_req.data = pass_in_r.ex_out;
+        fwd_req.data = pass_in_r.ex_out;
+        unique case(1'b1)
+            pass_in_r.is_wr_rd_pc_plus4: fwd_req.data = pass_in_r.pc_plus4;
+            is_atomic & is_store:        fwd_req.data = llbit;
+            default:                     fwd_req.data = pass_in_r.ex_out;
+        endcase
     end
 
     /* tlb op */

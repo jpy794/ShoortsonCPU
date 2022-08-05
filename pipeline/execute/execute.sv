@@ -66,7 +66,7 @@ module Execute (
     // be careful of load-use stall
     assign fwd_req.valid = (pass_in_r.rd != 5'b0) && pass_in_r.is_wr_rd && eu_do;
     assign fwd_req.idx = pass_in_r.rd;
-    assign fwd_req.data_valid = ~(pass_in_r.is_mem & ~pass_in_r.is_store);
+    assign fwd_req.data_valid = ~(pass_in_r.is_mem & ~pass_in_r.is_store) && ~(pass_in_r.is_atomic && pass_in_r.is_store);
     always_comb begin
         if(pass_in_r.is_wr_rd_pc_plus4) fwd_req.data = pc_plus4;
         else                            fwd_req.data = ex_out;
