@@ -253,6 +253,7 @@ module CPUTop (
     excp_req_t excp_req;
     logic modify_state_flush;
     logic is_ertn;
+    logic int_valid;
 `ifdef DIFF_TEST
     excp_event_t excp_event;
 `endif
@@ -265,7 +266,7 @@ module CPUTop (
         .wr_pc_req(mem1_wr_pc_req),
         .is_ertn,
         .set_llbit,
-        
+
         .set_idle_stall,
 
         .fwd_req(mem1_fwd_req), 
@@ -304,7 +305,8 @@ module CPUTop (
         .excp_pass_in(excp_ex), 
         .pass_out(pass_mem1),
         
-        .excp_req
+        .excp_req,
+        .int_valid
 `ifdef DIFF_TEST
         ,.excp_event_in(excp_event)
 `endif
@@ -364,6 +366,7 @@ module CPUTop (
         .is,
         /* from mem1 */
         .req(excp_req),
+        .int_valid,
 
         .wr_pc_req(excp_wr_pc_req),
 

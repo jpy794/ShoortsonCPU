@@ -56,7 +56,8 @@ module Memory1 (
 
     output memory1_memory2_pass_t pass_out,
 
-    output excp_req_t excp_req
+    output excp_req_t excp_req,
+    input logic int_valid,
 `ifdef DIFF_TEST
     ,input excp_event_t excp_event_in
 `endif
@@ -94,7 +95,7 @@ module Memory1 (
     assign chk_excp = pass_in_r.valid & (is_mem | is_srch_inv);
 
     logic eu_do;
-    assign eu_do = pass_in_r.valid & ~excp_valid;
+    assign eu_do = pass_in_r.valid & ~excp_valid & ~int_valid;
 
     always_ff @(posedge clk, negedge rst_n) begin
         if(~rst_n) begin

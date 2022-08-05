@@ -8,6 +8,7 @@ module Exception(
 
     /* from mem1 */
     excp_req_t req,
+    output logic int_valid,
 
     /* to if1 */
     output wr_pc_req_t wr_pc_req,
@@ -58,7 +59,8 @@ module Exception(
     assign is_int = req.valid & rd_csr.crmd.ie & (|(int_vec_r[0] & rd_csr.ecfg.lie));      // in case it is a bubble
 
     /* wake up cpu on int */
-    assign clr_idle_stall = rd_csr.crmd.ie & (|(int_vec_r[0] & rd_csr.ecfg.lie));          // wait for an int
+    assign int_valid = rd_csr.crmd.ie & (|(int_vec_r[0] & rd_csr.ecfg.lie));
+    assign clr_idle_stall = int_valid;                  // wait for an int
 
     esubcode_ecode_t ecode;
     assign ecode = req.excp_pass.esubcode_ecode;
