@@ -67,7 +67,8 @@ always_ff @(posedge clk)begin
 end
 
 always_ff @(posedge clk)begin
-    if((cs == PIPLINE_STORE_WORD_FINISH) || (cs == D_PIPLINE_LOAD_WORD_FINISH) || (cs == D_PIPLINE_LOAD_BLOCK_FINISH))begin
+    if((ns == PIPLINE_STORE_WORD_FINISH) || (ns == D_PIPLINE_LOAD_WORD_FINISH) ||
+         (ns == D_PIPLINE_LOAD_BLOCK_FINISH) || (ns == PIPLINE_STORE_BLOCK_FINISH))begin
         reg_req_from_dcache <= DCACHE_REQ_TO_PIPLINE_NONE;
     end
     else begin
