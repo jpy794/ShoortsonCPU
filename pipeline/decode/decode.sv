@@ -400,7 +400,7 @@ module Decode (
                        inst_sltui  |
                        inst_addi_w |
                        inst_cacop  |
-                       is_mem      ;
+                       (is_mem & ~is_atomic);
             
     logic is_uimm12;
     logic [11:0] uimm12;
@@ -660,8 +660,10 @@ module Decode (
                         inst_sra_w  |
                         is_mul      |
                         is_div      |
-                        is_mem      |
-                        is_br_off   ;
+                        is_store    |
+                        is_br_off   |
+                        inst_csrwr  |
+                        inst_csrxchg;
 
     /* out to next stage */
     assign pass_out.is_mul = is_mul;
