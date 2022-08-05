@@ -313,8 +313,8 @@ module Memory1 (
 
     assign pass_out.is_ertn = is_ertn;
 
-    assign pass_out.is_ld = ~stall_o & eu_do & pass_in_r.is_mem & ~pass_in_r.is_store;
-    assign pass_out.is_st = ~stall_o & eu_do & pass_in_r.is_mem & pass_in_r.is_store;
+    assign pass_out.is_ld = (dcache_op == DCAC_LD);
+    assign pass_out.is_st = (dcache_op == DCAC_ST);
     assign pass_out.pa = pa;
     assign pass_out.va = pass_in_r.ex_out;
 
