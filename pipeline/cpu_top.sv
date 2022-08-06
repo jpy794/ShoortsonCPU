@@ -29,7 +29,6 @@ module CPUTop (
     output phy_t icache_op_pa,
     input logic icache_op_ready,
 
-    // TODO: int
     input logic [7:0] intrpt,
 
     // TODO:DEBUG LINE
@@ -366,7 +365,7 @@ module CPUTop (
         .swi_clr,
         .ti_in(ti),
         .ti_clr,
-        .hwi_in('0),            // TODO: connect real interrupt
+        .hwi_in(intrpt),
         /* to csr */
         .is,
         /* from mem1 */
