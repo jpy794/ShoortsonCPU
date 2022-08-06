@@ -55,10 +55,11 @@ module CPUTop (
     logic if1_stall_i, if2_stall_i, id_stall_i, ex_stall_i, mem1_stall_i, mem2_stall_i, wb_stall_i;
 
     /* mux csr_addr */
-    csr_addr_t csr_addr_wb, csr_addr_id, csr_addr;
+    logic csr_bad_addr;
+    csr_addr_t csr_addr_mem1, csr_addr_id, csr_addr;
     u32_t csr_wr_data, csr_rd_data;
     logic csr_we;
-    assign csr_addr = csr_we ? csr_addr_wb : csr_addr_id;
+    assign csr_addr = csr_we ? csr_addr_mem1 : csr_addr_id;
 
     csr_t tlb_rd_csr, excp_rd_csr, if_rd_csr, id_rd_csr, ex_rd_csr, mem1_rd_csr;
     excp_wr_csr_req_t excp_wr_csr_req;
@@ -76,6 +77,7 @@ module CPUTop (
         .clk, .rst_n,
         /* csr inst */
         .addr(csr_addr),
+        .bad_addr(csr_bad_addr),
         .rd_data(csr_rd_data),
         .we(csr_we),
         .wr_data(csr_wr_data),
@@ -207,6 +209,7 @@ module CPUTop (
 
         .csr_addr_out(csr_addr_id),
         .csr_data(csr_rd_data),
+        .csr_bad_addr,
 
         .rd_csr(id_rd_csr),
 
@@ -275,7 +278,7 @@ module CPUTop (
 
         .rd_csr(mem1_rd_csr),
 
-        .csr_addr(csr_addr_wb),
+        .csr_addr(csr_addr_mem1),
         .csr_we(csr_we),
         .csr_data(csr_wr_data),
 

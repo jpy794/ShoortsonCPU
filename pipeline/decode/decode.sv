@@ -8,6 +8,7 @@ module Decode (
     /* from csr */
     output csr_addr_t csr_addr_out,
     input u32_t csr_data,
+    input logic csr_bad_addr,
 
     input csr_t rd_csr,
 
@@ -457,6 +458,9 @@ module Decode (
     csr_addr_t csr_addr;
     assign csr_addr = inst[18:10];
 
+    logic csr_non_zero_bad_addr;
+    assign csr_non_zero_bad_addr = (inst[23:19] != 5'b0) || csr_bad_addr;
+
     bru_op_t bru_op;
     assign bru_op = bru_op_t'(inst[29:26]);
 
@@ -694,10 +698,10 @@ module Decode (
     assign pass_out.imm = imm;
     assign pass_out.is_wr_rd = is_wr_rd;
     assign pass_out.is_wr_rd_pc_plus4 = is_br_wb;
-    assign pass_out.is_wr_csr = inst_csrwr | inst_csrxchg;
+    assign pass_out.is_wr_csr = (inst_csrwr | inst_csrxchg) && ~csr_non_zero_bad_addr;
     assign pass_out.is_mask_csr = inst_csrxchg;
     assign pass_out.csr_addr = csr_addr;
-    assign pass_out.csr_data = csr_data;
+    assign pass_out.csr_data = csr_non_zero_bad_addr ? 32'b0 : csr_data;
     assign pass_out.is_atomic = is_atomic;
     assign pass_out.is_mem = is_mem;
     assign pass_out.is_store = is_store;

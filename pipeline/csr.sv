@@ -6,6 +6,7 @@ module RegCSR (
     /* rw inst */
     input csr_addr_t addr,
     output u32_t rd_data,
+    output logic bad_addr,
     input logic we,
     input u32_t wr_data,
 
@@ -88,7 +89,9 @@ module RegCSR (
     assign mem2_rd = csr;
 `endif
     always_comb begin
-        case(addr)
+        bad_addr = 1'b0;
+        rd_data = 32'b0;
+        unique case(addr)
             'h0: rd_data = csr.crmd;
             'h1: rd_data = csr.prmd;
             'h2: rd_data = csr.euen;
@@ -123,7 +126,10 @@ module RegCSR (
             */
             'h180: rd_data = csr.dmw[0];
             'h181: rd_data = csr.dmw[1];
-            default: rd_data = '0;
+            default: begin
+                bad_addr = 1'b1;
+                rd_data = 32'b0;
+            end
         endcase
     end
 
