@@ -33,7 +33,7 @@ always_comb begin
                 if({entrys[i].vppn, 13'b0}[VALEN-1:PS_4MB+1] == va[VALEN-1:PS_4MB+1]) begin
                     tlb_found = '1;
                     phy = entrys[i].phy[va[PS_4MB]];
-                    pa = {{entrys[i].phy[va[PS_4MB]].ppn, 12'b0}[VALEN-1:PS_4MB+1], va[PS_4MB:0]};
+                    pa = {{entrys[i].phy[va[PS_4MB]].ppn, 12'b0}[VALEN-1:PS_4MB], va[PS_4MB-1:0]};
                     mat = entrys[i].phy[va[PS_4MB]].mat;
                 end
             end else begin
@@ -41,7 +41,7 @@ always_comb begin
                 if({entrys[i].vppn, 13'b0}[VALEN-1:PS_4KB+1] == va[VALEN-1:PS_4KB+1]) begin
                     tlb_found = '1;
                     phy = entrys[i].phy[va[PS_4KB]];
-                    pa = {{entrys[i].phy[va[PS_4KB]].ppn, 12'b0}[VALEN-1:PS_4KB+1], va[PS_4KB:0]};
+                    pa = {{entrys[i].phy[va[PS_4KB]].ppn, 12'b0}[VALEN-1:PS_4KB], va[PS_4KB-1:0]};
                     mat = entrys[i].phy[va[PS_4KB]].mat;
                 end
             end
