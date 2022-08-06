@@ -57,6 +57,10 @@ module DCache (
     logic [`WAY]way_hit;
 
     logic [`ADDRESS_WIDTH]reg_ad;
+    logic reg_wlru;
+    logic [`INDEX_WIDTH]reg_lru_rad;
+    logic [`INDEX_WIDTH]reg_lru_wad;
+    logic reg_wlru_en;
     integer i ;
     integer k ;
     genvar j ;
@@ -87,7 +91,7 @@ module DCache (
     assign lru_wad = pa[`INDEX_PART];
     
     assign wlru_en = wlru_en_from_cache; 
-    assign rlru_to_cache = real_rlru;
+    assign rlru_to_cache = rlru;
     assign wlru = way_hit[1];
     generate
         for(j = 0; j < `WAY_NUM; j = j + 1)begin
@@ -131,15 +135,31 @@ module DCache (
         end
     endgenerate 
 
+    
     always_comb begin
-        if((lru_rad == lru_wad) && (wlru_en))begin
-            real_rlru = wlru;
+        if((reg_lru_rad == reg_lru_wad) && (reg_wlru_en))begin
+            real_rlru = reg_wlru;
         end
         else begin
             real_rlru = rlru;
         end
     end
 
+    always_ff @(posedge clk)begin
+        reg_wlru_en <= wlru_en;
+    end
+
+    always_ff @(posedge clk)begin
+        reg_lru_wad <= lru_wad;
+    end
+
+    always_ff @(posedge clk)begin
+        reg_lru_rad <= lru_rad;
+    end
+
+    always_ff @(posedge clk)begin
+        reg_wlru <= wlru;
+    end
     always_comb begin
         unique case(control_en)
             D_LOAD: begin
