@@ -152,7 +152,7 @@ module Memory1 (
 
     assign csr_addr = pass_in_r.csr_addr;
     assign csr_data = pass_in_r.csr_data;
-    assign csr_we = eu_do & pass_in_r.is_wr_csr;
+    assign csr_we = eu_do & pass_in_r.is_wr_csr & ~stall_o;     // make difftest happy
 
     /* forward */
     // be careful of load-use stall
