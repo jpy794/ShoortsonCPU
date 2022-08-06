@@ -204,7 +204,7 @@ module Memory1 (
     /* atomic */
     logic llbit;
     assign llbit = rd_csr.llbctl.r_rollb;
-    assign set_llbit = eu_do && is_atomic && ~is_store;
+    assign set_llbit = ~stall_o && eu_do && is_atomic && ~is_store;      // in case difftest get wrong llbctl at mem2
     assign clr_llbit = ~stall_o && eu_do && is_atomic && is_store;      // consider stall to make sure we do not read a wrong llbit
 
     /* idle */
