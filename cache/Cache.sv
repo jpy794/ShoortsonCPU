@@ -1024,7 +1024,7 @@ always_ff @(posedge clk)begin
     reg_rlru_from_dcache <= rlru_from_dcache;
 end
 
-assign select_way_to_dcache = ~reg_rlru_from_dcache;
+assign select_way_to_dcache = ~rlru_from_dcache;
 
 assign wlru_en_to_dcache = (dcache_cs == D_LOAD && hit_from_dcache)? 1'b1 : 1'b0;
 

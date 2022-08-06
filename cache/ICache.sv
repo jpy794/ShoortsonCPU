@@ -157,7 +157,7 @@ always_comb begin
             for(i = 0; i < `WAY_NUM; i = i + 1)begin
                 way_wen[i] = `DATA_WRITE_UNABLE;
                 way_wtag_en[i] = `UNABLE;
-                way_wv_en[i] = `ENABLE;
+                way_wv_en[i] = `UNABLE;
             end
         end
     endcase

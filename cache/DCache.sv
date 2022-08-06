@@ -45,6 +45,7 @@ module DCache (
     logic [`LLIT_WIDTH]way_wllit[`WAY];
     logic rlru;
     logic wlru;
+    logic real_rlru;
 
     logic [`BLOCK_EN]way_wen[`BLOCK][`WAY];
     logic way_wtag_en[`WAY];
@@ -72,13 +73,13 @@ module DCache (
         {way_rdata[4][1]}, {way_rdata[3][1]}, {way_rdata[2][1]}, {way_rdata[1][1]}, {way_rdata[0][1]}} :
         {{way_rdata[7][0]}, {way_rdata[6][0]}, {way_rdata[5][0]}, {way_rdata[4][0]},
             {way_rdata[3][0]}, {way_rdata[2][0]}, {way_rdata[1][0]}, {way_rdata[0][0]}};
-    assign re_dirty_data = (rlru)?{{way_rdata[7][0]}, {way_rdata[6][0]}, {way_rdata[5][0]},
+    assign re_dirty_data = (real_rlru)?{{way_rdata[7][0]}, {way_rdata[6][0]}, {way_rdata[5][0]},
         {way_rdata[4][0]}, {way_rdata[3][0]}, {way_rdata[2][0]}, {way_rdata[1][0]}, {way_rdata[0][0]}} :
         {{way_rdata[7][1]}, {way_rdata[6][1]}, {way_rdata[5][1]}, {way_rdata[4][1]},
             {way_rdata[3][1]}, {way_rdata[2][1]}, {way_rdata[1][1]}, {way_rdata[0][1]}};
 
     assign wb_rtag_to_cache = (dcache_cs == D_HIT_WRITE_V_DIRTY)? way_rtag[way_hit[1]] :  way_rtag[reg_ad[0]]; 
-    assign re_rtag_to_cache = way_rtag[(~rlru)];
+    assign re_rtag_to_cache = way_rtag[(~real_rlru)];
 
     assign way_rad = ad[`INDEX_PART];
     assign way_wad = ad[`INDEX_PART];
@@ -86,7 +87,7 @@ module DCache (
     assign lru_wad = pa[`INDEX_PART];
     
     assign wlru_en = wlru_en_from_cache; 
-    assign rlru_to_cache = rlru;
+    assign rlru_to_cache = real_rlru;
     assign wlru = way_hit[1];
     generate
         for(j = 0; j < `WAY_NUM; j = j + 1)begin
@@ -129,6 +130,15 @@ module DCache (
             end
         end
     endgenerate 
+
+    always_comb begin
+        if((lru_rad == lru_wad) && (wlru_en))begin
+            real_rlru = wlru;
+        end
+        else begin
+            real_rlru = rlru;
+        end
+    end
 
     always_comb begin
         unique case(control_en)
@@ -446,7 +456,7 @@ module DCache (
                     way_wdirty_en[i] = `UNABLE;
                     way_wllit_en[i] = `UNABLE;
                 end
-                if(rlru)begin
+                if(real_rlru)begin
                     way_wv_en[0] = `ENABLE;
                     way_wv_en[1] = `UNABLE;
                 end

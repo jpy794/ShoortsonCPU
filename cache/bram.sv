@@ -67,16 +67,8 @@ module vl (
     output logic doutb
 );
 logic enb;
-logic doutb_from_dualportbram;
 assign enb = 1'b1;
-always_comb begin
-    if((addra == addrb) && (wea)) begin
-        doutb = dina;
-    end
-    else begin
-        doutb = doutb_from_dualportbram;
-    end
-end
+
 DualPortBram #(.WID(1), .SIZE(128))
 dualportbram(.clk(clka), 
              .ena(ena),
@@ -85,7 +77,7 @@ dualportbram(.clk(clka),
              .addra(addra),
              .addrb(addrb),
              .dina(dina),
-             .doutb(doutb_from_dualportbram) );
+             .doutb(doutb));
     
 endmodule
 
