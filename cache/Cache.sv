@@ -96,14 +96,24 @@ always_ff @(posedge clk)begin
 end
 
 always_ff @(posedge clk)begin
-    if (icache_ready)begin
-        reg_icache_req <= icache_req;
+    if(~rstn)begin
+        reg_icache_req <= 1'b0;
+    end
+    else begin
+        if (icache_ready)begin
+            reg_icache_req <= icache_req;
+        end
     end
 end
 
 always_ff @(posedge clk)begin
-    if(cacop_ready)begin
-        reg_icache_op <= icache_op;
+    if(~rstn)begin
+        reg_icache_op <= CAC_NOP;
+    end
+    else begin
+        if(cacop_ready)begin
+            reg_icache_op <= icache_op;
+        end
     end
 end
 always_ff @(posedge clk)begin
@@ -489,8 +499,13 @@ logic [`TAG_WIDTH]re_rtag_from_dcache;
 logic [`TAG_WIDTH]wb_rtag_from_dcache;
 
 always_ff @(posedge clk)begin
-    if(~dcache_busy)begin
-        reg_dcache_op <= dcache_op;
+    if(~rstn)begin
+        reg_dcache_op <= DCACHE_REQ_NONE;
+    end
+    else begin
+        if(~dcache_busy)begin
+            reg_dcache_op <= dcache_op;
+        end
     end
 end
 
