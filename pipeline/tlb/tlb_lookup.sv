@@ -13,11 +13,17 @@ module TLBLookup(
     output phy_t pa,
     output mat_t mat,
     output esubcode_ecode_t ecode,
-    output logic is_exc
+    output logic is_exc,
+
+    /* tlbsrch */
+    output logic found,
+    output tlb_idx_t found_idx
 );
 
 logic tlb_found;
 tlb_entry_phy_t phy;
+
+assign found = tlb_found;
 
 /* lookup */
 integer i;
@@ -32,6 +38,7 @@ always_comb begin
                 /* 4MB */
                 if({entrys[i].vppn, 13'b0}[VALEN-1:PS_4MB+1] == va[VALEN-1:PS_4MB+1]) begin
                     tlb_found = '1;
+                    found_idx = i;
                     phy = entrys[i].phy[va[PS_4MB]];
                     pa = {{entrys[i].phy[va[PS_4MB]].ppn, 12'b0}[VALEN-1:PS_4MB], va[PS_4MB-1:0]};
                     mat = entrys[i].phy[va[PS_4MB]].mat;
@@ -40,6 +47,7 @@ always_comb begin
                 /* 4KB */
                 if({entrys[i].vppn, 13'b0}[VALEN-1:PS_4KB+1] == va[VALEN-1:PS_4KB+1]) begin
                     tlb_found = '1;
+                    found_idx = i;
                     phy = entrys[i].phy[va[PS_4KB]];
                     pa = {{entrys[i].phy[va[PS_4KB]].ppn, 12'b0}[VALEN-1:PS_4KB], va[PS_4KB-1:0]};
                     mat = entrys[i].phy[va[PS_4KB]].mat;

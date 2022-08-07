@@ -37,7 +37,9 @@ module TLB (
     assign dtlb_lookup = entrys;
 
     logic tlbsrch_found;
+    assign tlbsrch_found = tlb_req.found;
     tlb_idx_t tlbsrch_idx;
+    assign tlbsrch_idx = tlb_req.found_idx;
 
     tlb_idx_t idx;
     assign idx = rd_csr.tlbidx.index;
@@ -159,21 +161,6 @@ module TLB (
         end
         default: ;
         endcase
-    end
-
-    /* for tlbsrch */
-    integer i;
-    always_comb begin
-        tlbsrch_found = '0;
-        tlbsrch_idx = '0;
-        for(i=0; i<$size(entrys); i=i+1) begin
-            if(entrys[i].g || entrys[i].asid == rd_csr.asid.asid) begin
-                if(entrys[i].vppn == rd_csr.tlbehi.vppn) begin
-                    tlbsrch_found = '1;
-                    tlbsrch_idx = i[TLB_IDX_WID-1:0];
-                end
-            end
-        end
     end
 
 endmodule

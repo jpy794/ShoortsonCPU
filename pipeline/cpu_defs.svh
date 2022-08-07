@@ -574,6 +574,10 @@ typedef struct packed {
     logic [4:0] invtlb_op;      // rd
     vppn_t invtlb_vppn;
     asid_t invtlb_asid;
+    
+    /* tlbsrch */
+    logic found;
+    tlb_idx_t found_idx;
 } tlb_op_req_t;
 
 `endif

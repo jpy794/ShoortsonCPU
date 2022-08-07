@@ -174,6 +174,10 @@ module Memory1 (
         tlb_req.invtlb_op = pass_in_r.rd;
         tlb_req.invtlb_asid = pass_in_r.invtlb_asid;
         tlb_req.invtlb_vppn = pass_in_r.rkd_data[31:13];
+
+        /* tlbsrch */
+        tlb_req.found = found;
+        tlb_req.found_idx = found_idx;
     end
 
     /* cacop */
@@ -210,6 +214,12 @@ module Memory1 (
     /* idle */
     assign set_idle_stall = eu_do & pass_in_r.is_idle;
 
+    /* tlbsrch */
+    logic is_tlbsrch;
+    assign is_tlbsrch = (pass_in_r.tlb_op == TLBSRCH);
+    logic found;
+    tlb_idx_t found_idx;
+
     /* memory1 stage */
 
     mat_t mat;
@@ -217,7 +227,7 @@ module Memory1 (
     excp_pass_t addr_excp;
     AddrTrans U_AddrTrans (
         .en(chk_excp),
-        .va(pass_in_r.ex_out),
+        .va(is_tlbsrch ? {rd_csr.tlbehi.vppn, 13'b0} : pass_in_r.ex_out),
         .lookup_type(pass_in_r.is_store ? LOOKUP_STORE : LOOKUP_LOAD),
         .byte_type(pass_in_r.byte_type),
         .mat,
@@ -225,7 +235,11 @@ module Memory1 (
         .excp(addr_excp),
 
         .rd_csr,
-        .tlb_entrys
+        .tlb_entrys,
+
+        /* tlbsrch */
+        .found,
+        .found_idx
     );
 
     /* to dcache */

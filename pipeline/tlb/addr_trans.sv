@@ -10,7 +10,11 @@ module AddrTrans (
     output excp_pass_t excp,
 
     input csr_t rd_csr,
-    input tlb_entry_t tlb_entrys[TLB_ENTRY_NUM]
+    input tlb_entry_t tlb_entrys[TLB_ENTRY_NUM],
+
+    /* tlbsrch */
+    output logic found,
+    output tlb_idx_t found_idx
 );
 
     /* tlb_lookup */
@@ -30,7 +34,11 @@ module AddrTrans (
         .pa(tlb_pa),
         .mat(tlb_mat),
         .ecode(tlb_ecode),
-        .is_exc(tlb_is_exc)
+        .is_exc(tlb_is_exc),
+        
+        /* tlbsrch */
+        .found,
+        .found_idx
     );
 
     /* dmw lookup */
