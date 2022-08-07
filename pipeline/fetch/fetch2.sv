@@ -46,7 +46,7 @@ module Fetch2 (
     logic eu_do;
     assign eu_do = pass_in_r.valid & ~excp_valid;
 
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(~rst_n) begin
             pass_in_r.valid <= 1'b0;
             excp_pass_in_r.valid <= 1'b0;

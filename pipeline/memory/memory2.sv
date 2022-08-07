@@ -39,7 +39,7 @@ module Memory2 (
     logic eu_do;
     assign eu_do = pass_in_r.valid;
 
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(~rst_n) begin
             pass_in_r.valid <= 1'b0;
             pass_in_r.dcache_wait_resp <= 1'b0;       // do not wait for the req if flush

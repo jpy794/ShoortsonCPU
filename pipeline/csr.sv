@@ -58,7 +58,7 @@ module RegCSR (
 
     /* tim and int */
     logic tim_cfg, tim_en;
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(~rst_n) begin
             tim_en <= 1'b0;
         end else if(tim_cfg) begin
@@ -136,7 +136,7 @@ module RegCSR (
     /* write */
 
     /* write csr at wb stage */
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(~rst_n) begin
             csr.crmd.plv <= plv_t'(2'b0);
             csr.crmd.ie <= 1'b0;

@@ -131,7 +131,7 @@ module FakeCache (
     assign araddr = addr;
     assign awaddr = addr;
 
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(~rst_n) begin
             state <= S_IDLE;
             busy <= NO_BUSY;

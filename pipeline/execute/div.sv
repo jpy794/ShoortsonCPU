@@ -33,7 +33,7 @@ module Div(
     type_State state, next;
     logic [31:0] cnt, cnt_next;
 
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(!rst_n) begin
             state <= S_IDLE;
         end else begin

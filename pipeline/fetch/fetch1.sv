@@ -72,7 +72,7 @@ module Fetch1 (
         excp_pass_out.valid = excp_valid & valid_with_flush;
     end
 
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(~rst_n) begin
             pc_r <= 32'h1c000000;
         end else if(~stall_o | flush_i) begin

@@ -60,7 +60,7 @@ assign invalid_idx = btb_invalid_in.pc[INST_ALIGN_WID+:BTB_IDX_WID];
 
 logic [BTB_SIZE-1:0] valid;
 
-always_ff @(posedge clk, negedge rst_n) begin
+always_ff @(posedge clk) begin
     if(~rst_n) begin
         valid <= '0;
     end else if (btb_invalid_in.valid) begin

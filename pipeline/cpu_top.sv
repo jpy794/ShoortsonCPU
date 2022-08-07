@@ -385,7 +385,7 @@ module CPUTop (
     );
 
     logic idle_stall_r, set_idle_stall, clr_idle_stall;
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(~rst_n)              idle_stall_r <= 1'b0;
         else if(set_idle_stall) idle_stall_r <= 1'b1;
         else if(clr_idle_stall) idle_stall_r <= 1'b0;

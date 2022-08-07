@@ -32,7 +32,7 @@ module Mul (
         state = S_IDLE;
     end
 
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(!rst_n) begin
             state <= S_IDLE;
         end else begin
@@ -40,7 +40,7 @@ module Mul (
         end
     end
 
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(!rst_n) begin
             done <= 1'b0;
         end else begin

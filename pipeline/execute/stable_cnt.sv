@@ -12,7 +12,7 @@ module StableCNT (
 
     /* stable counter */
     logic [63:0] stable_cnt;
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(~rst_n) stable_cnt <= 64'b0;
         else       stable_cnt <= stable_cnt + 1;
     end

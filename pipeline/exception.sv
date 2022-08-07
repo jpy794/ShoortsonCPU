@@ -44,7 +44,7 @@ module Exception(
     logic [12:0] clr;
     assign clr = {1'b0, ti_clr, 1'b0, 8'b0, swi_clr};
     assign int_vec = {1'b0, ti_in, 1'b0, hwi_in, swi_in};  // no ipi int
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(~rst_n)  begin
             int_vec_r[1] <= 13'b0;                     // reset swi
             int_vec_r[0] <= 13'b0;

@@ -27,7 +27,7 @@ module Writeback (
     logic eu_do;
     assign eu_do = pass_in_r.valid;
 
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if(~rst_n) begin
             pass_in_r.valid <= 1'b0;
         end else if(~stall_o | flush_i) begin
@@ -82,7 +82,7 @@ module Writeback (
     logic     [63:0]  cycleCnt;
     logic     [63:0]  instrCnt;
 
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         if (~rst_n) begin
             {cmt_valid, cmt_cnt_inst, cmt_timer_64, cmt_inst_ld_en, cmt_ld_paddr, cmt_ld_vaddr, cmt_inst_st_en, cmt_st_paddr, cmt_st_vaddr, cmt_st_data, cmt_csr_rstat_en, cmt_csr_data} <= 0;
             {cmt_wen, cmt_wdest, cmt_wdata, cmt_pc, cmt_inst} <= 0;
@@ -184,7 +184,7 @@ module Writeback (
     /* to make csr difftest happy, should work fine if there's only 1 csr inst in pipeline */
     csr_t csr_r;
 
-    always_ff @(posedge clk, negedge rst_n) begin
+    always_ff @(posedge clk) begin
         csr_r <= pass_in_r.csr;
     end
 
