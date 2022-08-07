@@ -37,13 +37,11 @@ module Cache(
     output logic [`AXI_STRB_WIDTH]wword_en_to_axi,
     output logic [2:0]rword_en_to_axi,
     output logic [`ADDRESS_WIDTH]ad_to_axi,
-    output logic cached_to_axi,
 
     input logic [`BLOCK_WIDTH]rblock_from_axi,
     input logic [`DATA_WIDTH]rword_from_axi,
     input logic ready_from_axi,
-    input logic task_finish_from_axi   ,
-    output logic [`REQ_FROM_WIDTH]req_from_to_axi
+    input logic task_finish_from_axi  
 
 );
 //logic dcache_cached = 1'b1;
@@ -213,54 +211,11 @@ always_comb begin
     icache_data_valid = 1'b0;
     unique case(icache_cs)
         ICACHE_WAIT: begin
-            icache_ready = 1'b0;
+            icache_ready = 1'b1;
             icache_ns = icache_nobusy_ns;
         end
         ICACHE_LOOKUP: begin
-            // if((~hit_from_icache) && (reg_icache_op == `ICACHE_REQ_LOAD_INS))begin
-            //     icache_ns = `ICACHE_REQ_LOAD_BLOCK;
-            // end
-            // else if(hit_from_icache && (reg_icache_op == `ICACHE_REQ_HIT_INVALIDATA))begin
-            //     icache_ns = `ICACHE_HIT_WRITE_V;
-            // end
-            // else begin
-            //     icache_data_valid = 1'b1;
-            //     icache_busy = 1'b0;
-            //     if(~icache_stall) begin
-            //         icache_ns = icache_nobusy_ns;
-            //     end else begin
-            //         icache_ns = `ICACHE_LOOKUP;
-            //     end
-            // end
             if(hit_from_icache)begin
-                // if(reg_icache_req)begin
-                //     icache_data_valid = 1'b1;
-                //     if(icache_taken)begin
-                //         cacop_ready = 1'b1;
-                //         // if(icache_op != CAC_NOP)begin
-                //         //     icache_ready = 1'b0;
-                //         // end
-                //         // else begin
-                //         //     icache_ready = 1'b1;
-                //         // end
-                //         if(icache_op == CAC_NOP)begin
-                //             icache_ready = 1'b1;
-                //         end
-                //         icache_ns = icache_nobusy_ns;
-                //     end
-                //     else begin
-                //         icache_ns = ICACHE_LOOKUP;
-                //     end
-                //     if(icache_op != CAC_NOP)begin
-                    
-                //     end
-                //     else begin
-
-                //     end
-                // end
-                // else begin
-                //     icache_ns = ICACHE_LOOKUP;
-                // end
                 cacop_ready = 1'b1;
                 if(icache_op == CAC_NOP)begin
                     if(reg_icache_req)begin
@@ -290,12 +245,6 @@ always_comb begin
                 end
                 else begin
                     cacop_ready = 1'b1;
-                    // if(icache_op != CAC_NOP)begin
-                    //     icache_ready = 1'b0;
-                    // end
-                    // else begin
-                    //     icache_ready = 1'b1;
-                    // end
                     if(icache_op == CAC_NOP)begin
                         icache_ready = 1'b1;
                     end
@@ -318,23 +267,6 @@ always_comb begin
             end
         end
         ICACHE_LOAD_WORD_DONE: begin
-            // icache_data_valid = 1'b1;
-            // if(icache_taken) begin
-            //     cacop_ready = 1'b1;
-            //     // if(icache_op != CAC_NOP)begin
-            //     //     icache_ready = 1'b0;
-            //     // end
-            //     // else begin
-            //     //     icache_ready = 1'b1;
-            //     // end
-            //     if(icache_op == CAC_NOP)begin
-            //         icache_ready = 1'b1;
-            //     end
-            //     icache_ns = icache_nobusy_ns;
-            // end 
-            // else begin
-            //     icache_ns = ICACHE_LOAD_WORD_DONE;
-            // end
             cacop_ready = 1'b1;
             if(icache_op == CAC_NOP)begin
                 icache_data_valid = 1'b1;
@@ -384,17 +316,6 @@ always_comb begin
             end
         end 
         ICACHE_INDEX_WRITE_V: begin
-            // cacop_ready = 1'b1;
-            // // if(icache_op != CAC_NOP)begin
-            // //     icache_ready = 1'b0;
-            // // end
-            // // else begin
-            // //     icache_ready = 1'b1;
-            // // end
-            // if(icache_op == CAC_NOP)begin
-            //     icache_ready = 1'b1;
-            // end
-            // icache_ns = icache_nobusy_ns;
             cacop_ready = 1'b1;
             if(icache_op == CAC_NOP)begin
                 if(reg_icache_req)begin
@@ -415,17 +336,6 @@ always_comb begin
             end
         end
         ICACHE_HIT_WRITE_V: begin
-            // cacop_ready = 1'b1;
-            // // if(icache_op != CAC_NOP)begin
-            // //     icache_ready = 1'b0;
-            // // end
-            // // else begin
-            // //     icache_ready = 1'b1;
-            // // end
-            // if(icache_op == CAC_NOP)begin
-            //     icache_ready = 1'b1;
-            // end
-            // icache_ns = icache_nobusy_ns;
             cacop_ready = 1'b1;
             if(icache_op == CAC_NOP)begin
                 if(reg_icache_req)begin
@@ -450,17 +360,6 @@ always_comb begin
                 icache_ns = ICACHE_HIT_WRITE_V;
             end
             else begin
-                // cacop_ready = 1'b1;
-                // // if(icache_op != CAC_NOP)begin
-                // //     icache_ready = 1'b0;
-                // // end
-                // // else begin
-                // //     icache_ready = 1'b1;
-                // // end
-                // if(icache_op == CAC_NOP)begin
-                //     icache_ready = 1'b1;
-                // end
-                // icache_ns = icache_nobusy_ns;
                 cacop_ready = 1'b1;
                 if(icache_op == CAC_NOP)begin
                     if(reg_icache_req)begin
@@ -566,7 +465,6 @@ cache_dcache_op_t reg_dcache_op;
 logic [`PA_WIDTH]reg_dcache_pa;
 logic [`VA_WIDTH]reg_dcache_va;
 logic reg_rlru_from_dcache;
-logic [`TAG_WIDTH]reg_rtag_from_dcache;
 logic [`DATA_WIDTH]reg_store_data;
 
 logic [`DCACHE_CNT_WIDTH]dcache_clear_llit_cnt;

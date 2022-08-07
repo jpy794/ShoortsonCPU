@@ -73,7 +73,7 @@ module DCache (
         {way_rdata[4][1]}, {way_rdata[3][1]}, {way_rdata[2][1]}, {way_rdata[1][1]}, {way_rdata[0][1]}} :
             {{way_rdata[7][0]}, {way_rdata[6][0]}, {way_rdata[5][0]}, {way_rdata[4][0]},
             {way_rdata[3][0]}, {way_rdata[2][0]}, {way_rdata[1][0]}, {way_rdata[0][0]}};
-    assign wb_dirty_data = (pa[0])? {{way_rdata[7][1]}, {way_rdata[6][1]}, {way_rdata[5][1]},
+    assign wb_dirty_data = (reg_ad[0])? {{way_rdata[7][1]}, {way_rdata[6][1]}, {way_rdata[5][1]},
         {way_rdata[4][1]}, {way_rdata[3][1]}, {way_rdata[2][1]}, {way_rdata[1][1]}, {way_rdata[0][1]}} :
         {{way_rdata[7][0]}, {way_rdata[6][0]}, {way_rdata[5][0]}, {way_rdata[4][0]},
             {way_rdata[3][0]}, {way_rdata[2][0]}, {way_rdata[1][0]}, {way_rdata[0][0]}};
@@ -519,7 +519,7 @@ module DCache (
     //     end
     // end
     assign re_rdirty_to_cache = way_rdirty[~real_rlru];
-    assign wb_rdirty_to_cache = way_rdirty[pa[1]];
+    assign wb_rdirty_to_cache = way_rdirty[reg_ad[0]];
     assign hit_wb_rdirty_to_cache = way_rdirty[way_hit[1]];
 
 

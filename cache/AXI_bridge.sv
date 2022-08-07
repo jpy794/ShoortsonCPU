@@ -83,7 +83,7 @@ logic [2:0]reg_rword_en;
 logic [`BLOCK_WIDTH]reg_wblock;
 logic [7:0]reg_wblock_num;
 
-always_ff @(posedge clk or negedge rstn)begin
+always_ff @(posedge clk)begin
     if(~rstn)begin
         reg_req_from_pipline <= `REQ_TO_AXI_NONE;
     end
@@ -116,9 +116,15 @@ end
 
 
 
-always_ff @(posedge clk or negedge rstn)begin
+always_ff @(posedge clk)begin
     if(~rstn)begin
         axi_cs <= AXI_STATE_WAIT;
+        arvalid <= 1'b0;
+        awvalid <= 1'b0;
+        rready <= 1'b0;
+        bready <= 1'b0;
+        wvalid <= 1'b0;
+        wlast <= 1'b0;
     end
     else begin
         unique case(axi_cs)
@@ -247,7 +253,6 @@ always_ff @(posedge clk or negedge rstn)begin
 end
 
 always_ff @(posedge clk)begin
-    task_finish <= 1'b0;
     unique case(axi_cs)
         AXI_STATE_LOAD_WORD_WAIT_RVALID: begin
             if(rvalid)begin
@@ -268,6 +273,9 @@ always_ff @(posedge clk)begin
             if(rlast && rvalid)begin
                 task_finish <= 1'b1;
             end
+        end
+        default: begin
+            task_finish <= 1'b0;
         end
     endcase
 end
