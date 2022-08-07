@@ -58,7 +58,7 @@ module Memory1 (
     output memory1_memory2_pass_t pass_out,
 
     output excp_req_t excp_req,
-    input logic int_valid,
+    input logic int_valid
 `ifdef DIFF_TEST
     ,input excp_event_t excp_event_in
 `endif
@@ -188,7 +188,7 @@ module Memory1 (
     end
 
     cache_op_t cache_op;
-    assign cache_op = cacop_code[4:3];
+    assign cache_op = cache_op_t'(cacop_code[4:3]);
     /* cacop end */
 
     // to icache
