@@ -30,6 +30,7 @@ integer i;
 u32_t entry_va, entry_4m_pa, entry_4k_pa;
 always_comb begin
     tlb_found = '0;
+    found_idx = '0;
     phy = '0;
     pa = '0;
     mat = mat_t'('0);
