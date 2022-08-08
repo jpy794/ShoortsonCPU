@@ -28,10 +28,6 @@ module Mul (
     
     type_State state, next;
 
-    initial begin
-        state = S_IDLE;
-    end
-
     always_ff @(posedge clk) begin
         if(!rst_n) begin
             state <= S_IDLE;

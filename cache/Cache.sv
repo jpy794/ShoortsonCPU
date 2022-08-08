@@ -841,7 +841,7 @@ always_comb begin
         D_WRITE: begin
             dcache_ns = D_LOAD;
         end
-        default: $stop;
+        default: ;
     endcase
 end
 
@@ -988,7 +988,7 @@ always_comb begin
                     2'b11: dcache_wen_to_pipline = 4'b1000;
                 endcase
             end
-            default: $stop;
+            default: ;
         endcase
     end
 end
@@ -1006,7 +1006,7 @@ always_comb begin
             DCACHE_REQ_LOAD_BYTE: begin
                 dcache_ren_to_pipline = 3'h0;
             end
-            default: $stop;
+            default: ;
         endcase
     end
 end

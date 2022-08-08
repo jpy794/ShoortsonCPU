@@ -499,13 +499,14 @@ module DCache (
         endcase
     end
 
+    integer l;
     always_comb begin
-        for(i = 0; i < `WAY_NUM; i = i + 1)begin
-            if((way_rtag[i] == pa[`TAG_PART]) && (way_rv[i]))begin
-                way_hit[i] = `HIT;
+        for(l = 0; l < `WAY_NUM; l = l + 1)begin
+            if((way_rtag[l] == pa[`TAG_PART]) && (way_rv[l]))begin
+                way_hit[l] = `HIT;
             end
             else begin
-                way_hit[i] = `MISS;
+                way_hit[l] = `MISS;
             end
         end
     end

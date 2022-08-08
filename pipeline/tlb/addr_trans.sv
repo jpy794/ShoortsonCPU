@@ -60,12 +60,13 @@ module AddrTrans (
         end
     end
 
+    integer j;
     always_comb begin
         dmw_plv_ok = 2'b11;
-        for(i=0; i<2; i=i+1) begin
-            if((rd_csr.crmd.plv == KERNEL && ~rd_csr.dmw[i].plv0) ||
-               (rd_csr.crmd.plv == USER && ~rd_csr.dmw[i].plv3)    )
-                dmw_plv_ok[i] = 1'b0;
+        for(j=0; j<2; j=j+1) begin
+            if((rd_csr.crmd.plv == KERNEL && ~rd_csr.dmw[j].plv0) ||
+               (rd_csr.crmd.plv == USER && ~rd_csr.dmw[j].plv3)    )
+                dmw_plv_ok[j] = 1'b0;
         end
     end
 

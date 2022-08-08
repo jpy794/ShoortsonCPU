@@ -163,13 +163,14 @@ always_comb begin
     endcase
 end
 
+integer k;
 always_comb begin
-    for(i = 0; i < `WAY_NUM; i = i + 1)begin
-        if((way_rtag[i] == pa[`TAG_PART]) && (way_rv[i]))begin
-            way_hit[i] = `HIT;
+    for(k = 0; k < `WAY_NUM; k = k + 1)begin
+        if((way_rtag[k] == pa[`TAG_PART]) && (way_rv[k]))begin
+            way_hit[k] = `HIT;
         end
         else begin
-            way_hit[i] = `MISS;
+            way_hit[k] = `MISS;
         end
     end
 end 
