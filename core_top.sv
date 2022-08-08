@@ -88,15 +88,15 @@ module core_top(
     /* encode dcache op */
     logic dcache_req_valid = (dcache_req != DCAC_NOP);
     logic dcache_op_valid = (dcache_op != CAC_NOP);
-    logic [4:0] dcache_op_encoded;
+    cache_dcache_op_t dcache_op_encoded;
     always_comb begin
-        dcache_op_encoded = 5'b0;       // nop
+        dcache_op_encoded = cache_dcache_op_t'(5'b0);       // nop
         unique case(1'b1)
             dcache_req_valid: begin
-                dcache_op_encoded = {dcache_req, 1'b0, dcache_byte_type};
+                dcache_op_encoded = cache_dcache_op_t'({dcache_req, 1'b0, dcache_byte_type});
             end
             dcache_op_valid: begin
-                dcache_op_encoded = {2'b11, 1'b0, dcache_op};
+                dcache_op_encoded = cache_dcache_op_t'({2'b11, 1'b0, dcache_op});
             end
             default: ;
         endcase

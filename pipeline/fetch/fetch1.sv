@@ -29,7 +29,7 @@ module Fetch1 (
 
     /* to icache */
     output logic [11:0] icache_idx,          // for index
-    output logic icache_req,
+    output icache_req_t icache_req,
     output u32_t icache_pa,
     output logic icache_is_cached,
     input logic icache_ready,

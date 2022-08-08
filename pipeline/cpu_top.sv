@@ -3,7 +3,7 @@
 module CPUTop (
     input logic clk, rst_n,
 
-    output logic  icache_req,
+    output icache_req_t  icache_req,
     output logic [11:0] icache_idx,
     output logic [31:0] icache_pa,
     output logic icache_is_cached,
