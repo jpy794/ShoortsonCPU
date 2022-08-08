@@ -503,7 +503,6 @@ typedef struct packed {
     reg_idx_t rd;
     
     logic dcache_wait_resp;
-    logic is_ld, is_st;
 
 `ifdef DIFF_TEST
     u32_t inst;
@@ -516,6 +515,7 @@ typedef struct packed {
     csr_addr_t csr_addr;
     u32_t csr_data;
 
+    logic is_ld, is_st;
     virt_t va, pa;
     u32_t st_data;
     logic [7:0] byte_valid;
