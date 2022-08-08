@@ -228,6 +228,7 @@ always_comb begin
         I_PIPLINE_LOAD_WORD_FINISH: begin
             ns = PIPLINE_WAIT;
         end
+        default: ;
     endcase
 end
 

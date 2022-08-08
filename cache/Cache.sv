@@ -871,6 +871,7 @@ always_comb begin
                 end
             end
         end
+        default: ;
     endcase
 end
 
@@ -895,6 +896,7 @@ always_comb begin
         D_WRITE_TAG: begin
             ad_to_dcache = {{20{1'b0}}, dcache_va};
         end
+        default: ;
     endcase
 end
 
@@ -930,6 +932,7 @@ always_comb begin
         D_WRITE: begin
             wen_to_dcache = 4'b1111;
         end
+        default: ;
     endcase
 end
 
@@ -1023,6 +1026,7 @@ always_comb begin
         D_REQ_LOAD_BLOCK: begin
             dcache_req_ad_to_pipline = pa_to_dcache;
         end
+        default: ;
     endcase
 end
 
@@ -1034,6 +1038,7 @@ always_comb begin
     unique case(dcache_cs)
         D_HIT_WRITE_V_DIRTY: wblock_to_pipline = hit_wb_dirty_data_from_dcache;
         D_INDEX_WRITE_V: wblock_to_pipline = wb_dirty_data_from_dcache;
+        default: ;
     endcase
 end
 
