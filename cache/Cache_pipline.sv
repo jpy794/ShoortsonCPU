@@ -93,6 +93,9 @@ always_ff @(posedge clk)begin
     if(req_from_dcache == DCACHE_REQ_TO_PIPLINE_LOAD_WORD)begin
         rword_en_to_axi <= rword_en_from_dcache;
     end
+    else if(req_from_icache == `ICACHE_REQ_TO_PIPLINE_WORD)begin
+        rword_en_to_axi <= 3'h2;
+    end
 end
 
 always_ff @(posedge clk)begin
