@@ -39,27 +39,28 @@ module Exception(
     assign wr_pc_req.valid = excp_flush;
     assign wr_pc_req.pc = excp_entry_pc;
 
-    logic [12:0] int_vec;
-    logic [1:0] [12:0] int_vec_r;
-    logic [12:0] clr;
-    assign clr = {1'b0, ti_clr, 1'b0, 8'b0, swi_clr};
-    assign int_vec = {1'b0, ti_in, 1'b0, hwi_in, swi_in};  // no ipi int
+    logic [12:0] int_vec;                       // not need / need reg in cpu
+    logic [12:0] int_vec_core, int_vec_core_r;
+    logic [12:0] clr_core;
+    assign int_vec_core = {1'b0, ti_in, 1'b0, 8'b0, swi_in};
+    assign clr_core = {1'b0, ti_clr, 1'b0, 8'b0, swi_clr};
+    assign int_vec = {1'b0, 1'b0, 1'b0, hwi_in, 2'b0};  // no ipi int
+
     always_ff @(posedge clk) begin
-        if(~rst_n)  begin
-            int_vec_r[1] <= 13'b0;                     // reset swi
-            int_vec_r[0] <= 13'b0;
+        if(~rst_n) begin
+            int_vec_core_r <= '0;
         end else begin
-            int_vec_r[1] <= ~clr & (int_vec | int_vec_r[1]);
-            int_vec_r[0] <= int_vec_r[1];
+            int_vec_core_r <= ~clr_core & (int_vec_core | int_vec_core_r);
         end
     end
-    assign is = int_vec_r[0];
+
+    assign is = int_vec | int_vec_core_r;
 
     logic is_int;
-    assign is_int = req.valid & rd_csr.crmd.ie & (|(int_vec_r[0] & rd_csr.ecfg.lie));      // in case it is a bubble
+    assign is_int = req.valid & rd_csr.crmd.ie & (|(is & rd_csr.ecfg.lie));      // in case it is a bubble
 
     /* wake up cpu on int */
-    assign int_valid = rd_csr.crmd.ie & (|(int_vec_r[0] & rd_csr.ecfg.lie));
+    assign int_valid = rd_csr.crmd.ie & (|(is & rd_csr.ecfg.lie));
     assign clr_idle_stall = int_valid;                  // wait for an int
 
     esubcode_ecode_t ecode;
