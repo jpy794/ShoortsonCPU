@@ -146,6 +146,7 @@ always_comb begin
                         `ICACHE_REQ_TO_PIPLINE_WORD: begin
                             ns = I_PIPLINE_REQ_LOAD_WORD;
                         end
+                        default: ;
                     endcase
                 end
             endcase
@@ -233,29 +234,34 @@ always_comb begin
 end
 
 always_ff @(posedge clk)begin
-    unique case(ns)
-        I_PIPLINE_REQ_LOAD_BLOCK: begin
-            req_to_axi <= `REQ_TO_AXI_LOAD_BLOCK;
-        end
-        I_PIPLINE_REQ_LOAD_WORD: begin
-            req_to_axi <= `REQ_TO_AXI_LOAD_WORD;
-        end
-        D_PIPLINE_REQ_LOAD_BLOCK: begin
-            req_to_axi <= `REQ_TO_AXI_LOAD_BLOCK;
-        end
-        D_PIPLINE_REQ_LOAD_WORD: begin
-            req_to_axi <= `REQ_TO_AXI_LOAD_WORD;
-        end
-        PIPLINE_REQ_STORE_BLOCK: begin
-            req_to_axi <= `REQ_TO_AXI_WRITE_BLOCK;
-        end
-        PIPLINE_REQ_STORE_WORD: begin
-            req_to_axi <= `REQ_TO_AXI_WRITE_WORD;
-        end
-        default: begin
-            req_to_axi <= `REQ_TO_AXI_NONE;
-        end
-    endcase
+    if(~rstn)begin
+        req_to_axi <= `REQ_TO_AXI_NONE;
+    end
+    else begin
+        unique case(ns)
+            I_PIPLINE_REQ_LOAD_BLOCK: begin
+                req_to_axi <= `REQ_TO_AXI_LOAD_BLOCK;
+            end
+            I_PIPLINE_REQ_LOAD_WORD: begin
+                req_to_axi <= `REQ_TO_AXI_LOAD_WORD;
+            end
+            D_PIPLINE_REQ_LOAD_BLOCK: begin
+                req_to_axi <= `REQ_TO_AXI_LOAD_BLOCK;
+            end
+            D_PIPLINE_REQ_LOAD_WORD: begin
+                req_to_axi <= `REQ_TO_AXI_LOAD_WORD;
+            end
+            PIPLINE_REQ_STORE_BLOCK: begin
+                req_to_axi <= `REQ_TO_AXI_WRITE_BLOCK;
+            end
+            PIPLINE_REQ_STORE_WORD: begin
+                req_to_axi <= `REQ_TO_AXI_WRITE_WORD;
+            end
+            default: begin
+                req_to_axi <= `REQ_TO_AXI_NONE;
+            end
+        endcase
+    end
 end
 
 // always_ff @(posedge clk)begin
