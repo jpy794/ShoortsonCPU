@@ -300,6 +300,7 @@ always_ff @(posedge clk)begin
         I_PIPLINE_REQ_LOAD_BLOCK: begin
             ad_to_axi <= reg_req_ad_from_icache;
         end
+        default: ;
     endcase
 end
 
@@ -364,6 +365,7 @@ always_ff @(posedge clk)begin
         I_PIPLINE_LOAD_WORD_FINISH: begin
             rword_to_icache <= rword_from_axi;
         end
+        default: ;
     endcase
 end
 

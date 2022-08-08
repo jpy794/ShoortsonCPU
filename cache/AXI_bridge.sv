@@ -248,6 +248,7 @@ always_ff @(posedge clk)begin
                     bready <= 1'b0;
                 end
             end
+            default: ;
         endcase 
     end
 end

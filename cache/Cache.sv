@@ -945,7 +945,6 @@ assign wlru_en_to_dcache = (dcache_cs == D_LOAD && hit_from_dcache)? 1'b1 : 1'b0
 //contract with pipline
 
 always_comb begin
-    dcache_req_to_pipline = DCACHE_REQ_TO_PIPLINE_NONE;
     unique case(dcache_ns)
         D_REQ_STORE_BLOCK: begin
             dcache_req_to_pipline = DCACHE_REQ_TO_PIPLINE_STORE_BLOCK;
@@ -962,6 +961,7 @@ always_comb begin
         D_REQ_STORE_LOAD_BLOCK: begin
             dcache_req_to_pipline = DCACHE_REQ_TO_PIPLINE_STORE_BLOCK;
         end
+        default: dcache_req_to_pipline = DCACHE_REQ_TO_PIPLINE_NONE;
     endcase
 end
 
