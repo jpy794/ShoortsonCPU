@@ -109,6 +109,7 @@ module Fetch2 (
             {6'b011001, {26{1'b?}}}: inst_bge = 1'b1;
             {6'b011010, {26{1'b?}}}: inst_bltu = 1'b1;
             {6'b011011, {26{1'b?}}}: inst_bgeu = 1'b1;
+            default: ;
         endcase
     end
 
