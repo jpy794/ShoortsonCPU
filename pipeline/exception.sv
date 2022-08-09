@@ -135,7 +135,7 @@ module Exception(
 `ifdef DIFF_TEST
     assign excp_event_out.valid = wr_csr_req.we;
     assign excp_event_out.ecode = wr_csr_req.estat.r_esubcode_ecode[5:0];
-    assign excp_event_out.int_no = int_vec_r[0][12:2];
+    assign excp_event_out.int_no = is[12:2];
 `endif
 
 endmodule
