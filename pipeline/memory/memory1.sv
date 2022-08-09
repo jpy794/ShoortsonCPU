@@ -93,7 +93,7 @@ module Memory1 (
 
     /* for this stage */
     logic chk_excp;
-    assign chk_excp = pass_in_r.valid & (is_mem | is_srch_inv);
+    assign chk_excp = pass_in_r.valid & ((is_mem & ~is_atomic) | (is_atomic & is_store & llbit) | is_srch_inv);
 
     logic eu_do;
     assign eu_do = pass_in_r.valid & ~excp_valid & ~int_valid;
