@@ -170,7 +170,7 @@ module Memory1 (
 
     /* tlb op */
     always_comb begin
-        tlb_req.tlb_op = (eu_do &  & ~stall_o) ? pass_in_r.tlb_op : TLBNOP;     // difftest not happy here too
+        tlb_req.tlb_op = (eu_do & ~stall_o) ? pass_in_r.tlb_op : TLBNOP;     // difftest not happy here too
         tlb_req.invtlb_op = pass_in_r.rd;
         tlb_req.invtlb_asid = pass_in_r.invtlb_asid;
         tlb_req.invtlb_vppn = pass_in_r.rkd_data[31:13];
