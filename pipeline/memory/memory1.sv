@@ -139,7 +139,7 @@ module Memory1 (
     assign modify_state_req.pc = pass_in_r.is_ertn ? rd_csr.era : pass_in_r.pc_plus4;
     assign modify_state_flush = modify_state_req.valid;
 
-    assign is_ertn = eu_do & pass_in_r.is_ertn;                 // difftest not happy here
+    assign is_ertn = eu_do & pass_in_r.is_ertn & ~stall_o;                 // difftest not happy here
 
     always_comb begin
         wr_pc_req = bp_miss_req;
@@ -170,7 +170,7 @@ module Memory1 (
 
     /* tlb op */
     always_comb begin
-        tlb_req.tlb_op = eu_do ? pass_in_r.tlb_op : TLBNOP;     // difftest not happy here too
+        tlb_req.tlb_op = (eu_do &  & ~stall_o) ? pass_in_r.tlb_op : TLBNOP;     // difftest not happy here too
         tlb_req.invtlb_op = pass_in_r.rd;
         tlb_req.invtlb_asid = pass_in_r.invtlb_asid;
         tlb_req.invtlb_vppn = pass_in_r.rkd_data[31:13];
