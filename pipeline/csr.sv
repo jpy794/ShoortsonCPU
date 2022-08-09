@@ -248,6 +248,7 @@ module RegCSR (
                     clr_llbit: begin
                         csr.llbctl.r_rollb <= 1'b0;
                     end
+                    default: ;
                 endcase
             end
         end
