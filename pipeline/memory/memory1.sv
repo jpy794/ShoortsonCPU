@@ -78,7 +78,7 @@ module Memory1 (
     assign icache_op_busy_stall = eu_do & is_icac & ~icache_op_ready;
 
     logic dcache_busy_stall;
-    assign dcache_busy_stall = eu_do & is_mem & ~dcache_ready;
+    assign dcache_busy_stall = eu_do & (is_mem | is_dcac) & ~dcache_ready;
     
     assign stall_o = stall_i | dcache_busy_stall | icache_op_busy_stall;
 
@@ -186,8 +186,8 @@ module Memory1 (
 
     logic is_icac, is_dcac, is_srch_inv;
     always_comb begin
-        is_icac = is_cac && (cacop_code[2:0] == 2'b00);
-        is_dcac = is_cac && (cacop_code[2:0] == 2'b01);
+        is_icac = is_cac && (cacop_code[2:0] == 3'b000);
+        is_dcac = is_cac && (cacop_code[2:0] == 3'b001);
         is_srch_inv = is_cac && (cacop_code[4:3] == CAC_SRCH_INV);
     end
 

@@ -731,7 +731,7 @@ module Decode (
                     is_tlb      |
                     inst_ertn   |
                     inst_idle   |
-                    inst_cacop && (simm12[3:0] != 4'd8 && simm12[3:0] != 4'd9);     // invalidate hit i$ and d$
+                    inst_cacop && (rd != 5'b10_000 && rd != 5'b10_001);     // invalidate hit i$ and d$
 
     logic invtlb_badop;
     assign invtlb_badop = rd != 5'h0 &&
