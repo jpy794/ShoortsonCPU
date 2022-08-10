@@ -127,6 +127,12 @@ module Memory1 (
     end
     /* pipeline end */
 
+    /* 
+        FIX THIS: 
+        exception(e.g. tlbr in if1) will overwrite branch miss's req to write pc,
+        thus leading to fatal error, there's a kernel panic observed that is caused by this
+    */
+
     /* branch taken write pc request */
     wr_pc_req_t bp_miss_req;
     assign bp_miss_req.valid = pass_in_r.bp_miss_wr_pc_req.valid & eu_do;
