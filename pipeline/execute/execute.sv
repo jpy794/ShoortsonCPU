@@ -6,6 +6,9 @@ module Execute (
     /* branch resolved */
     output br_resolved_t br_resolved,
 
+    output wr_pc_req_t wr_pc_req,
+    output logic bp_miss_flush,
+
     /* forwarding */
     output forward_req_t fwd_req,
 
@@ -138,11 +141,14 @@ module Execute (
     
     /* branch and btb fill */
     u32_t npc;
-    assign npc = br_taken ? alu_out : pass_in_r.pc + 4;
-    assign pass_out.bp_miss_wr_pc_req.valid = valid_o & pass_in_r.is_bru & pass_in_r.next.is_predict & (npc != pass_in_r.next.pc);
-    assign pass_out.bp_miss_wr_pc_req.pc = npc;
+    assign npc = br_taken ? alu_out : pass_out.pc_plus4;
 
-    assign br_resolved.valid = valid_o & pass_in_r.is_bru;
+    /* branch taken write pc request */
+    assign wr_pc_req.valid = eu_do & valid_o & pass_in_r.is_bru & pass_in_r.next.is_predict & (npc != pass_in_r.next.pc);
+    assign wr_pc_req.pc = npc;
+    assign bp_miss_flush = wr_pc_req.valid;
+
+    assign br_resolved.valid = eu_do & valid_o & pass_in_r.is_bru;
     assign br_resolved.taken = br_taken;
     assign br_resolved.pc = pass_in_r.pc;
     assign br_resolved.target_pc = alu_out;

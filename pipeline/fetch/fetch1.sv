@@ -14,6 +14,9 @@ module Fetch1 (
     input wr_pc_req_t if2_wr_pc_req,
 
     /* execute stage set pc */
+    input wr_pc_req_t ex_wr_pc_req,
+
+    /* mem1 (modify state) */
     input wr_pc_req_t mem1_wr_pc_req,
 
     /* writeback stage set pc */
@@ -125,6 +128,10 @@ module Fetch1 (
         end
         else if(mem1_wr_pc_req.valid) begin
             npc = mem1_wr_pc_req.pc;
+            pass_out.next.is_predict = 0;
+        end
+        else if(ex_wr_pc_req.valid) begin
+            npc = ex_wr_pc_req.pc;
             pass_out.next.is_predict = 0;
         end
         else if(if2_wr_pc_req.valid) begin

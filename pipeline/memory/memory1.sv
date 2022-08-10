@@ -3,8 +3,7 @@
 module Memory1 (
     input clk, rst_n,
 
-    /* branch taken */
-    output logic bp_miss_flush,
+    /* modify state */
     output wr_pc_req_t wr_pc_req,
 
     /* forward */
@@ -133,12 +132,6 @@ module Memory1 (
         thus leading to fatal error, there's a kernel panic observed that is caused by this
     */
 
-    /* branch taken write pc request */
-    wr_pc_req_t bp_miss_req;
-    assign bp_miss_req.valid = pass_in_r.bp_miss_wr_pc_req.valid & eu_do;
-    assign bp_miss_req.pc = pass_in_r.bp_miss_wr_pc_req.pc;
-    assign bp_miss_flush = bp_miss_req.valid;
-
     /* modify state inst write pc req */
     wr_pc_req_t modify_state_req;
     assign modify_state_req.valid = pass_in_r.is_modify_state & eu_do;
@@ -148,12 +141,7 @@ module Memory1 (
     assign is_ertn = eu_do & pass_in_r.is_ertn & ~stall_o;                 // difftest not happy here
 
     always_comb begin
-        wr_pc_req = bp_miss_req;
-        unique case(1'b1)
-            bp_miss_req.valid:      wr_pc_req = bp_miss_req;
-            modify_state_req.valid: wr_pc_req = modify_state_req;
-            default: ;
-        endcase
+        wr_pc_req = modify_state_req;
     end
 
     assign csr_addr = pass_in_r.csr_addr;

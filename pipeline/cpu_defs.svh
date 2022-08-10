@@ -441,9 +441,6 @@ typedef struct packed {
 
     u32_t ex_out;
 
-    /* delay branch taken to mem1 stage */
-    wr_pc_req_t bp_miss_wr_pc_req;
-
     /* for inst executed in wb */
     logic is_wr_rd;
     virt_t pc_plus4;

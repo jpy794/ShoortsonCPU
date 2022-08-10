@@ -150,7 +150,7 @@ module CPUTop (
         .ex_resolved_in(ex_resolved_br)
     );
 
-    wr_pc_req_t if2_wr_pc_req, mem1_wr_pc_req, excp_wr_pc_req;
+    wr_pc_req_t if2_wr_pc_req, ex_wr_pc_req, mem1_wr_pc_req, excp_wr_pc_req;
     Fetch1 U_Fetch1 (
         .clk, .rst_n,
 
@@ -159,6 +159,7 @@ module CPUTop (
         .btb_predict(btb_pre),
 
         .if2_wr_pc_req(if2_wr_pc_req),
+        .ex_wr_pc_req(ex_wr_pc_req),
         .mem1_wr_pc_req(mem1_wr_pc_req),
         .excp_wr_pc_req(excp_wr_pc_req),
 
@@ -237,6 +238,8 @@ module CPUTop (
         .clk, .rst_n,
 
         .br_resolved(ex_resolved_br),
+        .wr_pc_req(ex_wr_pc_req),
+        .bp_miss_flush,
 
         /* forwarding */
         .fwd_req(ex_fwd_req),
@@ -264,7 +267,6 @@ module CPUTop (
         .clk, .rst_n,
 
         /* flush ctrl */
-        .bp_miss_flush,
         .modify_state_flush,
         .wr_pc_req(mem1_wr_pc_req),
         .is_ertn,
@@ -402,7 +404,7 @@ module CPUTop (
     assign if1_flush_i = bp_update_flush | bp_miss_flush | excp_flush | modify_state_flush;
     assign if2_flush_i = bp_miss_flush | excp_flush | modify_state_flush;
     assign id_flush_i = bp_miss_flush | excp_flush | modify_state_flush;
-    assign ex_flush_i = bp_miss_flush | excp_flush | modify_state_flush;
+    assign ex_flush_i = excp_flush | modify_state_flush;
     assign mem1_flush_i = excp_flush;
     assign mem2_flush_i = 1'b0;
     assign wb_flush_i = 1'b0;
