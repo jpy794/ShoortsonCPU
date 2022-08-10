@@ -100,7 +100,7 @@ module Writeback (
             cmt_st_vaddr    <= pass_in_r.va;
             cmt_st_data     <= pass_in_r.st_data;
             cmt_csr_rstat_en<= csr_we && (csr_addr == 'h5);                 // TO BE FIXED: csr_rd
-            cmt_csr_data    <= pass_in_r.csr.estat;
+            cmt_csr_data    <= pass_in_r.old_estat;
 
             cmt_wen     <=  reg_we;
             cmt_wdest   <=  reg_idx;

@@ -121,6 +121,7 @@ module Memory2 (
     `PASS(is_ertn);
     `PASS(is_modify_csr);
     assign pass_out.csr = rd_csr;
+    `PASS(old_estat);
     
     `PASS(is_ld);
     `PASS(is_st);

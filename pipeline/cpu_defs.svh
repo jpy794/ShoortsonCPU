@@ -510,6 +510,7 @@ typedef struct packed {
     logic is_ertn;
     logic is_modify_csr;
     csr_t csr;
+    csr_estat_t old_estat;
 
     logic is_wr_csr;
     csr_addr_t csr_addr;
@@ -548,6 +549,7 @@ typedef struct packed {
     logic is_ertn;
     logic is_modify_csr;
     csr_t csr;
+    csr_estat_t old_estat;
 
     logic is_wr_csr;
     csr_addr_t csr_addr;

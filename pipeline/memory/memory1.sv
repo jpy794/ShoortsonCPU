@@ -316,6 +316,7 @@ module Memory1 (
     `PASS(inst);
     `PASS(is_modify_csr);
     `PASS(csr);
+    assign pass_out.old_estat = rd_csr.estat;
 
     `PASS(is_rdcnt);
     `PASS(cntval_64);
