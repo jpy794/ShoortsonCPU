@@ -494,6 +494,9 @@ logic rlru_from_dcache;
 logic re_rdirty_from_dcache;
 logic wb_rdirty_from_dcache;
 logic hit_wb_rdirty_from_dcache;
+logic re_rv_from_dcache;
+logic wb_rv_from_dcache;
+logic hit_wb_rv_from_dcache;
 logic hit_from_dcache;
 logic [`TAG_WIDTH]re_rtag_from_dcache;
 logic [`TAG_WIDTH]wb_rtag_from_dcache;
@@ -623,7 +626,7 @@ always_comb begin
             if(~hit_from_dcache)begin
                 unique case(reg_dcache_op)
                     DCACHE_REQ_LOAD_ATOM: begin
-                        if(re_rdirty_from_dcache)begin
+                        if(re_rdirty_from_dcache && re_rv_from_dcache)begin
                             dcache_ns = D_REQ_STORE_LOAD_BLOCK;
                         end
                         else begin
@@ -631,7 +634,7 @@ always_comb begin
                         end
                     end
                     DCACHE_REQ_LOAD_WORD: begin
-                        if(re_rdirty_from_dcache)begin
+                        if(re_rdirty_from_dcache && re_rv_from_dcache)begin
                             dcache_ns = D_REQ_STORE_LOAD_BLOCK;
                         end
                         else begin
@@ -639,7 +642,7 @@ always_comb begin
                         end
                     end
                     DCACHE_REQ_LOAD_HALF_WORD: begin
-                        if(re_rdirty_from_dcache)begin
+                        if(re_rdirty_from_dcache && re_rv_from_dcache)begin
                             dcache_ns = D_REQ_STORE_LOAD_BLOCK;
                         end
                         else begin
@@ -647,7 +650,7 @@ always_comb begin
                         end
                     end
                     DCACHE_REQ_LOAD_BYTE: begin
-                        if(re_rdirty_from_dcache)begin
+                        if(re_rdirty_from_dcache && re_rv_from_dcache)begin
                             dcache_ns = D_REQ_STORE_LOAD_BLOCK;
                         end
                         else begin
@@ -661,7 +664,7 @@ always_comb begin
                         end
                     end
                     DCACHE_REQ_STORE_WORD: begin
-                        if(re_rdirty_from_dcache)begin
+                        if(re_rdirty_from_dcache && re_rv_from_dcache)begin
                             dcache_ns = D_REQ_STORE_LOAD_BLOCK;
                         end 
                         else begin
@@ -669,7 +672,7 @@ always_comb begin
                         end
                     end
                     DCACHE_REQ_STORE_HALF_WORD: begin
-                        if(re_rdirty_from_dcache)begin
+                        if(re_rdirty_from_dcache && re_rv_from_dcache)begin
                             dcache_ns = D_REQ_STORE_LOAD_BLOCK;
                         end 
                         else begin
@@ -677,7 +680,7 @@ always_comb begin
                         end
                     end
                     DCACHE_REQ_STORE_BYTE: begin
-                        if(re_rdirty_from_dcache)begin
+                        if(re_rdirty_from_dcache && re_rv_from_dcache)begin
                             dcache_ns = D_REQ_STORE_LOAD_BLOCK;
                         end 
                         else begin
@@ -722,7 +725,7 @@ always_comb begin
                         dcache_ns = D_STORE;
                     end
                     DCACHE_REQ_HIT_INVALIDATA: begin
-                        if(hit_wb_rdirty_from_dcache)begin
+                        if(hit_wb_rdirty_from_dcache && hit_wb_rv_from_dcache)begin
                             dcache_ns = D_HIT_WRITE_V_DIRTY;
                         end
                         else begin
@@ -762,7 +765,7 @@ always_comb begin
             dcache_ns = dcache_nobusy_ns;
         end
         D_INDEX_WRITE_V: begin
-            if(wb_rdirty_from_dcache)begin
+            if(wb_rdirty_from_dcache && wb_rv_from_dcache)begin
                 dcache_ns = D_REQ_STORE_BLOCK;
             end
             else begin
@@ -894,6 +897,9 @@ always_comb begin
             ad_to_dcache = {{20{1'b0}}, dcache_va};
         end
         D_WRITE_TAG: begin
+            ad_to_dcache = {{20{1'b0}}, dcache_va};
+        end
+        D_WAIT: begin
             ad_to_dcache = {{20{1'b0}}, dcache_va};
         end
         default: ;
@@ -1066,7 +1072,10 @@ DCache dcache(.clk(clk),
                 .re_rtag_to_cache(re_rtag_from_dcache),
                 .wb_rtag_to_cache(wb_rtag_from_dcache),
                 .hit(hit_from_dcache),
-                .dcache_cs(dcache_cs)
+                .dcache_cs(dcache_cs),
+                .re_rv_to_cache(re_rv_from_dcache),
+                .hit_wb_rv_to_cache(hit_wb_rv_from_dcache),
+                .wb_rv_to_cache(wb_rv_from_dcache)
 );
 
 Cache_pipline U_Cache_pipline (.clk(clk), .rstn(rstn), 

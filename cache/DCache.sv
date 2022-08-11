@@ -26,7 +26,11 @@ module DCache (
     output logic hit,
     output logic [`TAG_WIDTH]wb_rtag_to_cache,
     output logic [`TAG_WIDTH]re_rtag_to_cache,
-    input dcache_state_t dcache_cs
+    input dcache_state_t dcache_cs,
+
+    output logic re_rv_to_cache,
+    output logic hit_wb_rv_to_cache,
+    output logic wb_rv_to_cache
 );
     logic [`INDEX_WIDTH]way_rad;
     logic [`INDEX_WIDTH]way_wad;
@@ -522,6 +526,10 @@ module DCache (
     assign re_rdirty_to_cache = way_rdirty[~real_rlru];
     assign wb_rdirty_to_cache = way_rdirty[reg_ad[0]];
     assign hit_wb_rdirty_to_cache = way_rdirty[way_hit[1]];
+
+    assign re_rv_to_cache = way_rv[~real_rlru];
+    assign wb_rv_to_cache = way_rv[reg_ad[0]];
+    assign hit_wb_rv_to_cache = way_rdirty[way_hit[1]];
 
 
     always_comb begin
