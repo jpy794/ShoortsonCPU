@@ -95,16 +95,19 @@ always_comb begin
         end
         ICACHE_WRITE_TAG: begin
             for(i = 0; i < `WAY_NUM; i = i + 1)begin
-                way_wen[i] = `DATA_WRITE_UNABLE;
-                way_wv_en[i] = `UNABLE;      
+                way_wen[i] = `DATA_WRITE_UNABLE;      
             end
             if(ad[0])begin
                 way_wtag_en[0] = `UNABLE;
                 way_wtag_en[1] = `ENABLE;
+                way_wv_en[0] = `UNABLE;
+                way_wv_en[1] = `ENABLE;
             end
             else begin
                 way_wtag_en[0] = `ENABLE;
                 way_wtag_en[1] = `UNABLE;
+                way_wv_en[0] = `ENABLE;
+                way_wv_en[1] = `UNABLE;
             end 
         end
         ICACHE_INDEX_WRITE_V: begin

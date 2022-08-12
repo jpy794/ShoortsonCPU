@@ -182,17 +182,20 @@ module DCache (
                     for(k = 0; k < `BLOCK_NUM; k = k + 1)begin
                         way_wen[k][i] = `DATA_WRITE_UNABLE;
                     end
-                    way_wv_en[i] = `UNABLE;
                     way_wllit_en[i] = `UNABLE;
                     way_wdirty_en[i] = `UNABLE;
                 end
                 if(ad[0])begin
                     way_wtag_en[0] = `UNABLE;
                     way_wtag_en[1] = `ENABLE;
+                    way_wv_en[0] = `UNABLE;
+                    way_wv_en[1] = `ENABLE;
                 end
                 else begin
                     way_wtag_en[0] = `ENABLE;
                     way_wtag_en[1] = `UNABLE;
+                    way_wv_en[0] = `ENABLE;
+                    way_wv_en[1] = `UNABLE;
                 end
             end
             D_INDEX_WRITE_V: begin
