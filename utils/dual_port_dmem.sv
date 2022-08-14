@@ -1,7 +1,6 @@
 module DualPortDmem #(
   parameter WID = 32,
-  parameter SIZE = 256,
-  parameter INIT = 0
+  parameter SIZE = 256
 )(
   input logic clk,
   input logic wea,
@@ -10,8 +9,7 @@ module DualPortDmem #(
   output logic [WID-1:0] douta, doutb
 );
 
-    (* ram_style = "distributed" *) logic [WID-1:0] ram [SIZE-1:0]; integer i;
-    initial for (i = 0; i < SIZE; i = i + 1) ram[i] = INIT;
+    (* ram_style = "distributed" *) logic [WID-1:0] ram [SIZE-1:0];
 
     always_ff @(posedge clk) begin
         if(wea) begin

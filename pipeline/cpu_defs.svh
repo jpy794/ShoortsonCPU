@@ -305,7 +305,7 @@ typedef struct packed {
 localparam INST_ALIGN_WID = 2;
 
 localparam BRHISTORY_LENGTH = 4;
-localparam BTB_SIZE = 128;
+localparam BTB_SIZE = 1024;
 localparam BTB_IDX_WID = $clog2(BTB_SIZE);
 localparam BTB_TARGET_WID = 32 - INST_ALIGN_WID;
 localparam BTB_TAG_WID = BTB_TARGET_WID - BTB_IDX_WID;
