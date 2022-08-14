@@ -153,6 +153,19 @@ module Execute (
     assign br_resolved.pc = pass_in_r.pc;
     assign br_resolved.target_pc = alu_out;
 
+    always_ff @(posedge clk) begin
+        if (br_resolved.valid) begin
+            $display("[bp test] branch instruction");
+            if (pass_in_r.next.is_predict) begin
+                if (wr_pc_req.valid) $display("[bp test] bp miss");
+                else $display("[bp test] bp hit");
+            end
+            else begin
+                $display("[bp test] br advance");
+            end
+        end
+    end
+
     /* mul */
     logic mul_en, mul_signed;
     u64_t mul_out;
